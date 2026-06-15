@@ -70,6 +70,7 @@
                 </select>
                 <input type="text" id="search-groups" class="team-search-input" placeholder="🔍 Buscar equipo..." oninput="renderPhase('groups')">
                 <span class="badge phase-multiplier">×1 puntos</span>
+                <button class="view-toggle-btn" id="view-toggle-groups" onclick="toggleView('groups')">⊞ Cuadrícula</button>
             </div>
 
             <table id="groups-table">
@@ -88,6 +89,8 @@
                     </tr>
                 </tbody>
             </table>
+
+            <div class="card-grid-container" id="card-grid-groups"></div>
 
             <div class="card-container" id="cards-groups">
                 <div class="card-nav">
@@ -109,6 +112,7 @@
                 </select>
                 <input type="text" id="search-round16" class="team-search-input" placeholder="🔍 Buscar equipo..." oninput="renderPhase('round16')">
                 <span class="badge phase-multiplier">×1 puntos</span>
+                <button class="view-toggle-btn" id="view-toggle-round16" onclick="toggleView('round16')">⊞ Cuadrícula</button>
             </div>
 
             <table id="round16-table">
@@ -126,6 +130,8 @@
                     </tr>
                 </tbody>
             </table>
+
+            <div class="card-grid-container" id="card-grid-round16"></div>
 
             <div class="card-container" id="cards-round16">
                 <div class="card-nav">
@@ -147,6 +153,7 @@
                 </select>
                 <input type="text" id="search-round8" class="team-search-input" placeholder="🔍 Buscar equipo..." oninput="renderPhase('round8')">
                 <span class="badge phase-multiplier">×1 puntos</span>
+                <button class="view-toggle-btn" id="view-toggle-round8" onclick="toggleView('round8')">⊞ Cuadrícula</button>
             </div>
 
             <table id="round8-table">
@@ -164,6 +171,8 @@
                     </tr>
                 </tbody>
             </table>
+
+            <div class="card-grid-container" id="card-grid-round8"></div>
 
             <div class="card-container" id="cards-round8">
                 <div class="card-nav">
@@ -185,6 +194,7 @@
                 </select>
                 <input type="text" id="search-quarters" class="team-search-input" placeholder="🔍 Buscar equipo..." oninput="renderPhase('quarters')">
                 <span class="badge phase-multiplier">×2 puntos</span>
+                <button class="view-toggle-btn" id="view-toggle-quarters" onclick="toggleView('quarters')">⊞ Cuadrícula</button>
             </div>
 
             <table id="quarters-table">
@@ -202,6 +212,8 @@
                     </tr>
                 </tbody>
             </table>
+
+            <div class="card-grid-container" id="card-grid-quarters"></div>
 
             <div class="card-container" id="cards-quarters">
                 <div class="card-nav">
@@ -223,6 +235,7 @@
                 </select>
                 <input type="text" id="search-semi" class="team-search-input" placeholder="🔍 Buscar equipo..." oninput="renderPhase('semi')">
                 <span class="badge phase-multiplier">×3 puntos</span>
+                <button class="view-toggle-btn" id="view-toggle-semi" onclick="toggleView('semi')">⊞ Cuadrícula</button>
             </div>
 
             <table id="semi-table">
@@ -240,6 +253,8 @@
                     </tr>
                 </tbody>
             </table>
+
+            <div class="card-grid-container" id="card-grid-semi"></div>
 
             <div class="card-container" id="cards-semi">
                 <div class="card-nav">
@@ -261,6 +276,7 @@
                 </select>
                 <input type="text" id="search-final" class="team-search-input" placeholder="🔍 Buscar equipo..." oninput="renderPhase('final')">
                 <span class="badge phase-multiplier">×5 puntos</span>
+                <button class="view-toggle-btn" id="view-toggle-final" onclick="toggleView('final')">⊞ Cuadrícula</button>
             </div>
 
             <table id="final-table">
@@ -278,6 +294,8 @@
                     </tr>
                 </tbody>
             </table>
+
+            <div class="card-grid-container" id="card-grid-final"></div>
 
             <div class="card-container" id="cards-final">
                 <div class="card-nav">

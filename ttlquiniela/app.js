@@ -18,6 +18,7 @@ let appState = {
 let cardState      = {};  // { phaseId: { matches, index } }
 let sortState      = {};  // { tableId: { colIndex, direction } }
 let pinnedCols     = {};  // { phaseId: participantName | null }
+let viewMode       = {};  // { phaseId: 'table' | 'grid' }
 let collapsedGroups = {}; // { groupLetter: bool }
 
 // ==================== TEAM FLAGS ====================
@@ -409,6 +410,8 @@ async function renderPhase(phaseId) {
   setupSortableHeaders(tableId, participants, numFixed, sortedMatches, phaseId);
   renderProgressIndicator(phaseId, allMatches);
   renderPhaseCards(phaseId, sortedMatches, participants);
+  renderCardGrid(phaseId, sortedMatches, participants, selectedParticipant);
+  buildStickyPortal(phaseId);
 }
 
 // ==================== STICKY COLUMNS ====================
@@ -592,6 +595,67 @@ function previousCard(phase) {
   showCard(phase);
 }
 
+// ==================== CARD GRID VIEW ====================
+
+function toggleView(phaseId) {
+  viewMode[phaseId] = viewMode[phaseId] === 'grid' ? 'table' : 'grid';
+  const btn = document.getElementById(`view-toggle-${phaseId}`);
+  if (btn) btn.textContent = viewMode[phaseId] === 'grid' ? '☰ Tabla' : '⊞ Cuadrícula';
+  renderPhase(phaseId);
+}
+
+function renderCardGrid(phaseId, sortedMatches, participants, selectedParticipant) {
+  const gridContainer = document.getElementById(`card-grid-${phaseId}`);
+  const tableWrapper  = document.querySelector(`#${phaseId} .table-wrapper`);
+  const isGrid = viewMode[phaseId] === 'grid';
+
+  if (tableWrapper) tableWrapper.style.display = isGrid ? 'none' : '';
+  if (!gridContainer) return;
+  gridContainer.style.display = isGrid ? 'grid' : 'none';
+  if (!isGrid) return;
+
+  gridContainer.innerHTML = sortedMatches.map(match => {
+    const hasResult = match.result != null &&
+      match.result.goalsTeamA !== null && match.result.goalsTeamA !== undefined;
+    const flagL = getFlag(match.teamLocal);
+    const flagV = getFlag(match.teamVisitor);
+    const score = hasResult
+      ? `<strong>${match.result.goalsTeamA}-${match.result.goalsTeamB}</strong>`
+      : '<span class="grid-vs-pending">vs</span>';
+    const statusBadge = hasResult
+      ? '<span class="status-badge finished">Finalizado</span>'
+      : '<span class="status-badge pending">Pendiente</span>';
+
+    const predsHtml = participants.map(p => {
+      const pred  = match.predictions[p];
+      const isHL  = selectedParticipant && p === selectedParticipant ? ' grid-hl' : '';
+      if (!pred || !pred.prediction || pred.prediction === 'NaN-NaN') {
+        return `<div class="grid-pred-row no-match${isHL}">
+          <span class="grid-pred-name">${p}</span>
+          <span class="score-pill"><span class="pill-score">-</span><span class="pill-pts">0pts</span></span>
+        </div>`;
+      }
+      return `<div class="grid-pred-row ${pred.type}${isHL}">
+        <span class="grid-pred-name">${p}</span>
+        <span class="score-pill"><span class="pill-score">${pred.prediction}</span><span class="pill-pts">${pred.points}pts</span></span>
+      </div>`;
+    }).join('');
+
+    return `<div class="grid-match-card">
+      <div class="grid-card-header">
+        <span class="grid-match-num">#${match.id}${match.group ? ` · Grupo ${match.group}` : ''}</span>
+        ${statusBadge}
+      </div>
+      <div class="grid-teams">
+        <span class="grid-team">${flagL} ${match.teamLocal}</span>
+        <span class="grid-score">${score}</span>
+        <span class="grid-team grid-team-right">${flagV} ${match.teamVisitor}</span>
+      </div>
+      <div class="grid-predictions">${predsHtml}</div>
+    </div>`;
+  }).join('');
+}
+
 // ==================== TOOLTIP (FLOATING) ====================
 
 function setupTooltips() {
@@ -643,12 +707,96 @@ function showSuccess(message) {
 
 // ==================== INIT ====================
 
+// ==================== STICKY HEADER PORTAL ====================
+
+const stickyPortals    = {};   // { phaseId: { portal, observer, syncScroll } }
+
+function updateHeaderHeight() {
+  const h = document.querySelector('header')?.offsetHeight ?? 0;
+  document.documentElement.style.setProperty('--header-h', `${h}px`);
+}
+
+function buildStickyPortal(phaseId) {
+  const table  = document.getElementById(`${phaseId}-table`);
+  const wrapper = table?.closest('.table-wrapper');
+  const thead  = table?.querySelector('thead');
+  if (!table || !wrapper || !thead) return;
+
+  // Tear down previous portal for this phase
+  if (stickyPortals[phaseId]) {
+    stickyPortals[phaseId].observer.disconnect();
+    wrapper.removeEventListener('scroll', stickyPortals[phaseId].syncScroll);
+  }
+
+  // Get or create the portal div (sibling before table-wrapper)
+  let portal = document.getElementById(`sticky-portal-${phaseId}`);
+  if (!portal) {
+    portal = document.createElement('div');
+    portal.id = `sticky-portal-${phaseId}`;
+    portal.className = 'sticky-header-portal';
+    wrapper.parentNode.insertBefore(portal, wrapper);
+  }
+
+  // Build cloned thead (no sticky-left — portal handles its own overflow)
+  const clonedThead = thead.cloneNode(true);
+  clonedThead.querySelectorAll('th').forEach(th => {
+    th.style.position = '';
+    th.style.left     = '';
+  });
+
+  const portalTable = document.createElement('table');
+  portalTable.className = table.className;
+  portalTable.appendChild(clonedThead);
+  portal.innerHTML = '';
+  portal.appendChild(portalTable);
+
+  // Sync column widths + horizontal scroll
+  function syncScroll() {
+    const liveCells   = Array.from(thead.querySelectorAll('th'));
+    const portalCells = Array.from(portal.querySelectorAll('th'));
+    liveCells.forEach((th, i) => {
+      if (portalCells[i]) {
+        portalCells[i].style.width    = th.offsetWidth + 'px';
+        portalCells[i].style.minWidth = th.offsetWidth + 'px';
+      }
+    });
+    portalTable.style.width     = table.offsetWidth + 'px';
+    portalTable.style.transform = `translateX(-${wrapper.scrollLeft}px)`;
+  }
+
+  wrapper.addEventListener('scroll', syncScroll, { passive: true });
+
+  // Show portal only when original thead has scrolled above the nav bar
+  const headerH = document.querySelector('header')?.offsetHeight ?? 0;
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      const show = !entry.isIntersecting;
+      portal.style.display = show ? 'block' : 'none';
+      if (show) syncScroll();
+    });
+  }, { rootMargin: `-${headerH}px 0px 0px 0px`, threshold: 0 });
+
+  observer.observe(thead);
+
+  stickyPortals[phaseId] = { portal, observer, syncScroll };
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('🚀 Inicializando Quiniela Mundialista 2026...');
   initDarkMode();
   setupNavigation();
   setupDOM();
+  updateHeaderHeight();
+  window.addEventListener('resize', updateHeaderHeight);
   await loadAllData();
 });
+
+// Convert vertical wheel to horizontal scroll on the table wrapper
+document.addEventListener('wheel', e => {
+  const wrapper = e.target.closest('.table-wrapper');
+  if (!wrapper) return;
+  e.preventDefault();
+  wrapper.scrollLeft += e.deltaY * 1.5;
+}, { passive: false });
 
 console.log('✅ app.js cargado');
