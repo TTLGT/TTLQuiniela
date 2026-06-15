@@ -93,8 +93,8 @@ function parseMatchesFromSheet(sheetData, participantName) {
       const goalsVisitor = (row[4] || '').trim();
       const teamVisitor = (row[5] || '').trim();
 
-      // Validar que sea un partido válido
-      if (teamLocal && teamVisitor && goalsLocal !== '' && goalsVisitor !== '') {
+      // Validar que sea un partido válido con goles numéricos
+      if (teamLocal && teamVisitor && /^\d+$/.test(goalsLocal) && /^\d+$/.test(goalsVisitor)) {
         const key = `${currentPhase}_${matchId}`;
         matches[key] = {
           id: matchId,

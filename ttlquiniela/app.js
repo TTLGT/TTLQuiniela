@@ -236,13 +236,22 @@ async function renderPhase(phaseId) {
     return;
   }
 
-  // Encabezados dinámicos: Participante 1, Participante 2, etc.
+  // Encabezados dinámicos con nombre de cada participante
   const participants = Object.keys(appState.scores).sort();
   const headersHtml = participants.map(p => `<th>${p}</th>`).join('');
 
-  // Regenerar encabezados
+  // Regenerar encabezados siempre (incluyendo grupos que tiene columna Grupo extra)
   const thead = table.querySelector('thead tr');
-  if (phaseId !== 'groups') {
+  if (phaseId === 'groups') {
+    thead.innerHTML = `
+      <th>Partido</th>
+      <th>Grupo</th>
+      <th>Local</th>
+      <th>Visitante</th>
+      <th>Resultado Real</th>
+      ${headersHtml}
+    `;
+  } else {
     thead.innerHTML = `
       <th>Partido</th>
       <th>Local</th>
@@ -257,11 +266,13 @@ async function renderPhase(phaseId) {
       ? `${match.result.goalsTeamA}-${match.result.goalsTeamB}`
       : '<span style="color: #999;">-</span>';
 
+    const groupCell = phaseId === 'groups' ? `<td>${match.group || '-'}</td>` : '';
+
     const predictionsHtml = participants.map(participant => {
       const pred = match.predictions[participant];
-      if (!pred) return '<td>-</td>';
+      if (!pred || pred.prediction === 'NaN-NaN') return '<td>-</td>';
 
-      const className = `${pred.type}`;
+      const className = pred.type;
       const predText = `${pred.prediction} <strong>${pred.points}pts</strong>`;
       return `<td class="${className}">${predText}</td>`;
     }).join('');
@@ -269,6 +280,7 @@ async function renderPhase(phaseId) {
     html += `
       <tr>
         <td>${match.id}</td>
+        ${groupCell}
         <td>${match.teamLocal}</td>
         <td>${match.teamVisitor}</td>
         <td><strong>${resultHtml}</strong></td>
