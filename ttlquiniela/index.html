@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiniela Mundialista 2026</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header>
+        <h1>⚽ Quiniela Mundialista 2026</h1>
+        <nav class="nav-tabs">
+            <button class="nav-btn active" data-tab="general">Tabla General</button>
+            <button class="nav-btn" data-tab="groups">Fase de Grupos</button>
+            <button class="nav-btn" data-tab="round16">Dieciseisavos</button>
+            <button class="nav-btn" data-tab="round8">Octavos</button>
+            <button class="nav-btn" data-tab="quarters">Cuartos</button>
+            <button class="nav-btn" data-tab="semi">Semifinal</button>
+            <button class="nav-btn" data-tab="final">Final</button>
+        </nav>
+    </header>
+
+    <main>
+        <!-- TABLA GENERAL -->
+        <section id="general" class="active">
+            <h2 class="section-title">📊 Tabla General</h2>
+            
+            <div class="controls-bar">
+                <button id="refresh-btn" onclick="refreshResults()">🔄 Actualizar Resultados</button>
+            </div>
+
+            <div id="general-error" class="error" style="display: none;"></div>
+            <div id="general-success" class="success" style="display: none;"></div>
+
+            <table id="general-table">
+                <thead>
+                    <tr>
+                        <th>Posición</th>
+                        <th>Participante</th>
+                        <th>Equipo</th>
+                        <th>Grupos</th>
+                        <th>16vos</th>
+                        <th>8vos</th>
+                        <th>Cuartos</th>
+                        <th>Semifinal</th>
+                        <th>Final</th>
+                        <th>TOTAL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="10" class="loading">Cargando datos...</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="charts-container" id="charts-container"></div>
+        </section>
+
+        <!-- FASE DE GRUPOS -->
+        <section id="groups">
+            <h2 class="section-title">🏆 Fase de Grupos</h2>
+            
+            <div class="controls-bar">
+                <label for="participant-groups">Destacar participante:</label>
+                <select id="participant-groups" onchange="renderPhase('groups')">
+                    <option value="">Todos</option>
+                </select>
+                <span class="badge phase-multiplier">×1 puntos</span>
+            </div>
+
+            <table id="groups-table">
+                <thead>
+                    <tr>
+                        <th>Partido</th>
+                        <th>Grupo</th>
+                        <th>Local</th>
+                        <th>Visitante</th>
+                        <th>Resultado Real</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="5" class="loading">Cargando partidos...</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="card-container" id="cards-groups">
+                <div class="card-nav">
+                    <button onclick="previousCard('groups')">← Anterior</button>
+                    <span class="card-counter"><span id="card-current-groups">1</span> / <span id="card-total-groups">0</span></span>
+                    <button onclick="nextCard('groups')">Siguiente →</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- DIECISEISAVOS -->
+        <section id="round16">
+            <h2 class="section-title">🥊 Dieciseisavos</h2>
+            
+            <div class="controls-bar">
+                <label for="participant-round16">Destacar participante:</label>
+                <select id="participant-round16" onchange="renderPhase('round16')">
+                    <option value="">Todos</option>
+                </select>
+                <span class="badge phase-multiplier">×1 puntos</span>
+            </div>
+
+            <table id="round16-table">
+                <thead>
+                    <tr>
+                        <th>Partido</th>
+                        <th>Local</th>
+                        <th>Visitante</th>
+                        <th>Resultado Real</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="4" class="loading">Cargando partidos...</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="card-container" id="cards-round16">
+                <div class="card-nav">
+                    <button onclick="previousCard('round16')">← Anterior</button>
+                    <span class="card-counter"><span id="card-current-round16">1</span> / <span id="card-total-round16">0</span></span>
+                    <button onclick="nextCard('round16')">Siguiente →</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- OCTAVOS -->
+        <section id="round8">
+            <h2 class="section-title">🎯 Octavos de Final</h2>
+            
+            <div class="controls-bar">
+                <label for="participant-round8">Destacar participante:</label>
+                <select id="participant-round8" onchange="renderPhase('round8')">
+                    <option value="">Todos</option>
+                </select>
+                <span class="badge phase-multiplier">×1 puntos</span>
+            </div>
+
+            <table id="round8-table">
+                <thead>
+                    <tr>
+                        <th>Partido</th>
+                        <th>Local</th>
+                        <th>Visitante</th>
+                        <th>Resultado Real</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="4" class="loading">Cargando partidos...</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="card-container" id="cards-round8">
+                <div class="card-nav">
+                    <button onclick="previousCard('round8')">← Anterior</button>
+                    <span class="card-counter"><span id="card-current-round8">1</span> / <span id="card-total-round8">0</span></span>
+                    <button onclick="nextCard('round8')">Siguiente →</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- CUARTOS -->
+        <section id="quarters">
+            <h2 class="section-title">🏅 Cuartos de Final</h2>
+            
+            <div class="controls-bar">
+                <label for="participant-quarters">Destacar participante:</label>
+                <select id="participant-quarters" onchange="renderPhase('quarters')">
+                    <option value="">Todos</option>
+                </select>
+                <span class="badge phase-multiplier">×2 puntos</span>
+            </div>
+
+            <table id="quarters-table">
+                <thead>
+                    <tr>
+                        <th>Partido</th>
+                        <th>Local</th>
+                        <th>Visitante</th>
+                        <th>Resultado Real</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="4" class="loading">Cargando partidos...</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="card-container" id="cards-quarters">
+                <div class="card-nav">
+                    <button onclick="previousCard('quarters')">← Anterior</button>
+                    <span class="card-counter"><span id="card-current-quarters">1</span> / <span id="card-total-quarters">0</span></span>
+                    <button onclick="nextCard('quarters')">Siguiente →</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SEMIFINAL -->
+        <section id="semi">
+            <h2 class="section-title">👑 Semifinal</h2>
+            
+            <div class="controls-bar">
+                <label for="participant-semi">Destacar participante:</label>
+                <select id="participant-semi" onchange="renderPhase('semi')">
+                    <option value="">Todos</option>
+                </select>
+                <span class="badge phase-multiplier">×3 puntos</span>
+            </div>
+
+            <table id="semi-table">
+                <thead>
+                    <tr>
+                        <th>Partido</th>
+                        <th>Local</th>
+                        <th>Visitante</th>
+                        <th>Resultado Real</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="4" class="loading">Cargando partidos...</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="card-container" id="cards-semi">
+                <div class="card-nav">
+                    <button onclick="previousCard('semi')">← Anterior</button>
+                    <span class="card-counter"><span id="card-current-semi">1</span> / <span id="card-total-semi">0</span></span>
+                    <button onclick="nextCard('semi')">Siguiente →</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- FINAL -->
+        <section id="final">
+            <h2 class="section-title">🏆 Final</h2>
+            
+            <div class="controls-bar">
+                <label for="participant-final">Destacar participante:</label>
+                <select id="participant-final" onchange="renderPhase('final')">
+                    <option value="">Todos</option>
+                </select>
+                <span class="badge phase-multiplier">×5 puntos</span>
+            </div>
+
+            <table id="final-table">
+                <thead>
+                    <tr>
+                        <th>Partido</th>
+                        <th>Local</th>
+                        <th>Visitante</th>
+                        <th>Resultado Real</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="4" class="loading">Cargando partidos...</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="card-container" id="cards-final">
+                <div class="card-nav">
+                    <button onclick="previousCard('final')">← Anterior</button>
+                    <span class="card-counter"><span id="card-current-final">1</span> / <span id="card-total-final">0</span></span>
+                    <button onclick="nextCard('final')">Siguiente →</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Scripts -->
+    <script src="config.js"></script>
+    <script src="equipos.js"></script>
+    <script src="teams.js"></script>
+    <script src="inspect-sheets.js"></script>
+    <script src="app.js"></script>
+    <script src="sheets.js"></script>
+    <script src="scores.js"></script>
+    <script src="scoring.js"></script>
+    <script src="charts.js"></script>
+</body>
+</html>

@@ -1,0 +1,568 @@
+/* ============================================
+   QUINIELA MUNDIALISTA 2026 — Estilos Base
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --primary-dark: #041561;
+  --primary-accent: #041688;
+  --primary-btn: #062DA1;
+  --alert-red: #B30000;
+  --section-header: #CC0000;
+  --text-dark: #041561;
+  --bg-light: #f5f5f5;
+  --success-green: #28a745;
+  --warning-yellow: #ffc107;
+  --border-gray: #ddd;
+}
+
+html {
+  font-size: 16px;
+}
+
+body {
+  font-family: 'Lexend', 'Roboto', sans-serif;
+  background-color: var(--bg-light);
+  color: var(--text-dark);
+  line-height: 1.6;
+}
+
+/* ============================================
+   HEADER Y NAVEGACIÓN
+   ============================================ */
+
+header {
+  background-color: var(--primary-dark);
+  color: white;
+  padding: 1.5rem 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+header h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.nav-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  border-bottom: 3px solid var(--primary-accent);
+}
+
+.nav-tabs button {
+  background-color: transparent;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.25rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border-bottom: 3px solid transparent;
+}
+
+.nav-tabs button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-tabs button.active {
+  border-bottom-color: var(--primary-btn);
+  background-color: rgba(6, 45, 161, 0.2);
+}
+
+/* ============================================
+   CONTENEDOR PRINCIPAL
+   ============================================ */
+
+main {
+  max-width: 1400px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+section {
+  display: none;
+}
+
+section.active {
+  display: block;
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+   SECCIONES Y TÍTULOS
+   ============================================ */
+
+.section-title {
+  background-color: var(--section-header);
+  color: white;
+  padding: 1rem 1.5rem;
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.section-subtitle {
+  color: var(--primary-dark);
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 1.5rem 0 1rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--primary-btn);
+}
+
+/* ============================================
+   TABLAS
+   ============================================ */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+thead {
+  background-color: var(--primary-accent);
+  color: white;
+  font-weight: 600;
+}
+
+th {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 2px solid var(--primary-btn);
+}
+
+td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-gray);
+}
+
+tbody tr:hover {
+  background-color: #f9f9f9;
+}
+
+tbody tr:nth-child(even) {
+  background-color: #f5f5f5;
+}
+
+/* Colores de resultado */
+td.exact-match {
+  background-color: rgba(40, 167, 69, 0.15);
+  color: var(--success-green);
+  font-weight: 600;
+}
+
+td.winner-match {
+  background-color: rgba(255, 193, 7, 0.15);
+  color: #856404;
+  font-weight: 600;
+}
+
+td.no-match {
+  background-color: rgba(220, 220, 220, 0.3);
+  color: #666;
+}
+
+/* ============================================
+   BOTONES Y CONTROLES
+   ============================================ */
+
+button, .btn {
+  background-color: var(--primary-btn);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+}
+
+button:hover, .btn:hover {
+  background-color: var(--primary-accent);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(6, 45, 161, 0.3);
+}
+
+button:active, .btn:active {
+  transform: translateY(0);
+}
+
+button.secondary {
+  background-color: var(--border-gray);
+  color: var(--text-dark);
+}
+
+button.secondary:hover {
+  background-color: #999;
+  color: white;
+}
+
+button.danger {
+  background-color: var(--alert-red);
+}
+
+button.danger:hover {
+  background-color: #900;
+}
+
+/* ============================================
+   SELECTORES Y INPUTS
+   ============================================ */
+
+select, input {
+  padding: 0.75rem;
+  border: 1px solid var(--border-gray);
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  transition: border-color 0.3s ease;
+}
+
+select:focus, input:focus {
+  outline: none;
+  border-color: var(--primary-btn);
+  box-shadow: 0 0 8px rgba(6, 45, 161, 0.2);
+}
+
+/* ============================================
+   TARJETAS (MOBILE VIEW)
+   ============================================ */
+
+.card-container {
+  display: none;
+  position: relative;
+  perspective: 1000px;
+}
+
+.card-container.active {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.match-card {
+  background-color: white;
+  border-radius: 8px;
+  padding: 2rem 1.5rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  text-align: center;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.match-card .match-header {
+  margin-bottom: 1rem;
+  border-bottom: 2px solid var(--border-gray);
+  padding-bottom: 0.75rem;
+}
+
+.match-card .match-date {
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 0.25rem;
+}
+
+.match-card .match-phase {
+  font-size: 0.9rem;
+  color: var(--primary-btn);
+  font-weight: 600;
+}
+
+.match-card .teams {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 1.5rem 0;
+  gap: 1rem;
+}
+
+.match-card .team {
+  flex: 1;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.match-card .score {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin: 1rem 0;
+}
+
+.match-card .prediction {
+  margin: 1rem 0;
+  padding: 1rem;
+  background-color: var(--bg-light);
+  border-radius: 4px;
+}
+
+.match-card .prediction-label {
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 0.25rem;
+}
+
+.match-card .prediction-score {
+  font-size: 1.5rem;
+  color: var(--primary-btn);
+  font-weight: 600;
+}
+
+.match-card .points {
+  font-size: 1.25rem;
+  font-weight: 700;
+  padding: 0.75rem;
+  border-radius: 4px;
+}
+
+.match-card .points.exact {
+  background-color: rgba(40, 167, 69, 0.2);
+  color: var(--success-green);
+}
+
+.match-card .points.winner {
+  background-color: rgba(255, 193, 7, 0.2);
+  color: #f39c12;
+}
+
+.match-card .points.none {
+  background-color: rgba(220, 220, 220, 0.3);
+  color: #666;
+}
+
+.card-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.card-nav button {
+  flex: 1;
+}
+
+.card-counter {
+  text-align: center;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+/* ============================================
+   GRÁFICAS
+   ============================================ */
+
+.charts-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.chart-wrapper {
+  background-color: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.chart-wrapper h3 {
+  color: var(--primary-dark);
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+canvas {
+  max-height: 300px;
+}
+
+/* ============================================
+   CONTROLES Y UTILIDADES
+   ============================================ */
+
+.controls-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background-color: white;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.controls-bar label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-left: 0.5rem;
+}
+
+.badge.active {
+  background-color: var(--success-green);
+  color: white;
+}
+
+.badge.eliminated {
+  background-color: var(--alert-red);
+  color: white;
+}
+
+.badge.phase-multiplier {
+  background-color: var(--primary-btn);
+  color: white;
+}
+
+/* ============================================
+   ESTADO Y ALERTAS
+   ============================================ */
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+}
+
+.error {
+  background-color: rgba(179, 0, 0, 0.1);
+  border: 1px solid var(--alert-red);
+  color: var(--alert-red);
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.success {
+  background-color: rgba(40, 167, 69, 0.1);
+  border: 1px solid var(--success-green);
+  color: var(--success-green);
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+  header h1 {
+    font-size: 1.4rem;
+  }
+
+  .nav-tabs {
+    gap: 0.25rem;
+  }
+
+  .nav-tabs button {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  main {
+    margin: 1rem auto;
+    padding: 0 0.5rem;
+  }
+
+  table {
+    font-size: 0.85rem;
+  }
+
+  th, td {
+    padding: 0.5rem;
+  }
+
+  .charts-container {
+    grid-template-columns: 1fr;
+  }
+
+  .controls-bar {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  canvas {
+    max-height: 250px;
+  }
+}
+
+@media (max-width: 480px) {
+  header h1 {
+    font-size: 1.2rem;
+  }
+
+  header {
+    padding: 1rem;
+  }
+
+  .nav-tabs button {
+    padding: 0.4rem 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .match-card {
+    padding: 1rem;
+    min-height: 350px;
+  }
+
+  .match-card .score {
+    font-size: 2.5rem;
+  }
+
+  table {
+    font-size: 0.75rem;
+  }
+
+  th, td {
+    padding: 0.35rem;
+  }
+}
