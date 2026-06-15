@@ -23,34 +23,36 @@ let collapsedGroups = {}; // { groupLetter: bool }
 // ==================== TEAM FLAGS ====================
 
 const TEAM_FLAGS = {
-  'Mexico': '🇲🇽', 'USA': '🇺🇸', 'Canada': '🇨🇦',
-  'Argentina': '🇦🇷', 'Brasil': '🇧🇷', 'Uruguay': '🇺🇾',
-  'Paraguay': '🇵🇾', 'Colombia': '🇨🇴', 'Ecuador': '🇪🇨',
-  'Peru': '🇵🇪', 'Venezuela': '🇻🇪', 'Chile': '🇨🇱',
-  'Bolivia': '🇧🇴', 'España': '🇪🇸', 'Portugal': '🇵🇹',
-  'Francia': '🇫🇷', 'Alemania': '🇩🇪', 'Paises Bajos': '🇳🇱',
-  'Belgica': '🇧🇪', 'Italia': '🇮🇹', 'Suiza': '🇨🇭',
-  'Austria': '🇦🇹', 'República Checa': '🇨🇿', 'Polonia': '🇵🇱',
-  'Croacia': '🇭🇷', 'Serbia': '🇷🇸', 'Bosnia y Herzegovina': '🇧🇦',
-  'Ucrania': '🇺🇦', 'Grecia': '🇬🇷', 'Rumania': '🇷🇴',
-  'Hungria': '🇭🇺', 'Noruega': '🇳🇴', 'Suecia': '🇸🇪',
-  'Turquia': '🇹🇷', 'Inglaterra': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'Escocia': '🏴󠁧󠁢󠁳󠁣󠁴󠁿',
-  'Gales': '🏴󠁧󠁢󠁷󠁬󠁳󠁿', 'Irlanda': '🇮🇪',
-  'Japon': '🇯🇵', 'Corea del Sur': '🇰🇷', 'China': '🇨🇳',
-  'Australia': '🇦🇺', 'Qatar': '🇶🇦', 'Arabia Saudita': '🇸🇦',
-  'Iran': '🇮🇷', 'Irak': '🇮🇶', 'Jordania': '🇯🇴',
-  'Uzbekistan': '🇺🇿', 'Emiratos Arabes': '🇦🇪',
-  'Marruecos': '🇲🇦', 'Egipto': '🇪🇬', 'Senegal': '🇸🇳',
-  'Nigeria': '🇳🇬', 'Ghana': '🇬🇭', 'Camerun': '🇨🇲',
-  'Sudafrica': '🇿🇦', 'Costa de Marfil': '🇨🇮',
-  'Argelia': '🇩🇿', 'Tunez': '🇹🇳', 'Cabo Verde': '🇨🇻',
-  'RD Congo': '🇨🇩', 'Kenia': '🇰🇪',
-  'Haiti': '🇭🇹', 'Panama': '🇵🇦', 'Costa Rica': '🇨🇷',
-  'Honduras': '🇭🇳', 'Jamaica': '🇯🇲', 'Curacao': '🇨🇼',
+  'Mexico': 'mx', 'USA': 'us', 'Canada': 'ca',
+  'Argentina': 'ar', 'Brasil': 'br', 'Uruguay': 'uy',
+  'Paraguay': 'py', 'Colombia': 'co', 'Ecuador': 'ec',
+  'Peru': 'pe', 'Venezuela': 've', 'Chile': 'cl',
+  'Bolivia': 'bo', 'España': 'es', 'Portugal': 'pt',
+  'Francia': 'fr', 'Alemania': 'de', 'Paises Bajos': 'nl',
+  'Holanda': 'nl', 'Belgica': 'be', 'Italia': 'it', 'Suiza': 'ch',
+  'Austria': 'at', 'República Checa': 'cz', 'Polonia': 'pl',
+  'Croacia': 'hr', 'Serbia': 'rs', 'Bosnia y Herzegovina': 'ba',
+  'Ucrania': 'ua', 'Grecia': 'gr', 'Rumania': 'ro',
+  'Hungria': 'hu', 'Noruega': 'no', 'Suecia': 'se',
+  'Turquia': 'tr', 'Inglaterra': 'gb-eng', 'Escocia': 'gb-sct',
+  'Gales': 'gb-wls', 'Irlanda': 'ie',
+  'Japon': 'jp', 'Corea del Sur': 'kr', 'China': 'cn',
+  'Australia': 'au', 'Qatar': 'qa', 'Arabia Saudita': 'sa',
+  'Iran': 'ir', 'Irak': 'iq', 'Jordania': 'jo',
+  'Uzbekistan': 'uz', 'Emiratos Arabes': 'ae',
+  'Marruecos': 'ma', 'Egipto': 'eg', 'Senegal': 'sn',
+  'Nigeria': 'ng', 'Ghana': 'gh', 'Camerun': 'cm',
+  'Sudafrica': 'za', 'Costa de Marfil': 'ci',
+  'Argelia': 'dz', 'Tunez': 'tn', 'Cabo Verde': 'cv',
+  'RD Congo': 'cd', 'Kenia': 'ke',
+  'Haiti': 'ht', 'Panama': 'pa', 'Costa Rica': 'cr',
+  'Honduras': 'hn', 'Jamaica': 'jm', 'Curacao': 'cw',
 };
 
 function getFlag(teamName) {
-  return TEAM_FLAGS[teamName] || '';
+  const code = TEAM_FLAGS[teamName];
+  if (!code) return '';
+  return `<img src="https://flagcdn.com/20x15/${code}.png" width="20" height="15" alt="${teamName}" style="vertical-align:middle;margin-right:2px;">`;
 }
 
 // ==================== DARK MODE ====================
