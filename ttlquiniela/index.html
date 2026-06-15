@@ -10,6 +10,7 @@
 <body>
     <header>
         <h1>⚽ Quiniela Mundialista 2026</h1>
+        <button id="dark-mode-btn" class="dark-mode-btn" onclick="toggleDarkMode()">🌙 Modo Oscuro</button>
         <nav class="nav-tabs">
             <button class="nav-btn active" data-tab="general">Tabla General</button>
             <button class="nav-btn" data-tab="groups">Fase de Grupos</button>
@@ -67,6 +68,7 @@
                 <select id="participant-groups" onchange="renderPhase('groups')">
                     <option value="">Todos</option>
                 </select>
+                <input type="text" id="search-groups" class="team-search-input" placeholder="🔍 Buscar equipo..." oninput="renderPhase('groups')">
                 <span class="badge phase-multiplier">×1 puntos</span>
             </div>
 
@@ -105,6 +107,7 @@
                 <select id="participant-round16" onchange="renderPhase('round16')">
                     <option value="">Todos</option>
                 </select>
+                <input type="text" id="search-round16" class="team-search-input" placeholder="🔍 Buscar equipo..." oninput="renderPhase('round16')">
                 <span class="badge phase-multiplier">×1 puntos</span>
             </div>
 
@@ -142,6 +145,7 @@
                 <select id="participant-round8" onchange="renderPhase('round8')">
                     <option value="">Todos</option>
                 </select>
+                <input type="text" id="search-round8" class="team-search-input" placeholder="🔍 Buscar equipo..." oninput="renderPhase('round8')">
                 <span class="badge phase-multiplier">×1 puntos</span>
             </div>
 
@@ -179,6 +183,7 @@
                 <select id="participant-quarters" onchange="renderPhase('quarters')">
                     <option value="">Todos</option>
                 </select>
+                <input type="text" id="search-quarters" class="team-search-input" placeholder="🔍 Buscar equipo..." oninput="renderPhase('quarters')">
                 <span class="badge phase-multiplier">×2 puntos</span>
             </div>
 
@@ -216,6 +221,7 @@
                 <select id="participant-semi" onchange="renderPhase('semi')">
                     <option value="">Todos</option>
                 </select>
+                <input type="text" id="search-semi" class="team-search-input" placeholder="🔍 Buscar equipo..." oninput="renderPhase('semi')">
                 <span class="badge phase-multiplier">×3 puntos</span>
             </div>
 
@@ -253,6 +259,7 @@
                 <select id="participant-final" onchange="renderPhase('final')">
                     <option value="">Todos</option>
                 </select>
+                <input type="text" id="search-final" class="team-search-input" placeholder="🔍 Buscar equipo..." oninput="renderPhase('final')">
                 <span class="badge phase-multiplier">×5 puntos</span>
             </div>
 

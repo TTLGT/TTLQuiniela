@@ -566,3 +566,618 @@ canvas {
     padding: 0.35rem;
   }
 }
+
+/* ============================================
+   UI IMPROVEMENTS — DARK MODE
+   ============================================ */
+
+body.dark-mode {
+  --bg-light: #0f1117;
+  --text-dark: #c9d1d9;
+  --border-gray: #30363d;
+  background-color: var(--bg-light);
+  color: var(--text-dark);
+}
+
+body.dark-mode header {
+  background-color: #010409;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+
+body.dark-mode main {
+  color: var(--text-dark);
+}
+
+body.dark-mode table {
+  background-color: #161b22;
+  color: var(--text-dark);
+}
+
+body.dark-mode thead {
+  background-color: #021040;
+}
+
+body.dark-mode thead th {
+  background-color: #021040;
+  color: #c9d1d9;
+}
+
+body.dark-mode tbody tr:nth-child(even) {
+  background-color: #1c2128;
+}
+
+body.dark-mode tbody tr:hover {
+  background-color: #21262d;
+}
+
+body.dark-mode td {
+  border-bottom-color: #30363d;
+}
+
+body.dark-mode .controls-bar,
+body.dark-mode .chart-wrapper,
+body.dark-mode .legend,
+body.dark-mode .progress-indicator {
+  background-color: #161b22;
+  color: var(--text-dark);
+}
+
+body.dark-mode .section-title {
+  background-color: #7a0000;
+}
+
+body.dark-mode select,
+body.dark-mode input[type="text"],
+body.dark-mode .team-search-input {
+  background-color: #21262d;
+  color: var(--text-dark);
+  border-color: var(--border-gray);
+}
+
+body.dark-mode .sticky-col {
+  background-color: #161b22;
+}
+
+body.dark-mode tbody tr:nth-child(even) .sticky-col {
+  background-color: #1c2128;
+}
+
+body.dark-mode tbody tr:hover .sticky-col {
+  background-color: #21262d;
+}
+
+body.dark-mode tfoot tr {
+  background-color: #010409;
+}
+
+body.dark-mode tfoot .sticky-col {
+  background-color: #010409;
+}
+
+body.dark-mode .group-header-row {
+  background-color: #021040 !important;
+}
+
+body.dark-mode .group-header-row:hover {
+  background-color: #062DA1 !important;
+}
+
+/* ============================================
+   DARK MODE TOGGLE BUTTON
+   ============================================ */
+
+header {
+  position: relative;
+}
+
+.dark-mode-btn {
+  position: absolute;
+  right: 1.5rem;
+  top: 1.5rem;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.35);
+  color: white;
+  padding: 0.35rem 0.85rem;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.dark-mode-btn:hover {
+  background: rgba(255,255,255,0.15);
+  transform: none;
+  box-shadow: none;
+}
+
+@media (max-width: 480px) {
+  .dark-mode-btn {
+    top: 0.6rem;
+    right: 0.5rem;
+    font-size: 0.68rem;
+    padding: 0.25rem 0.5rem;
+  }
+}
+
+/* ============================================
+   TABLE WRAPPER — HORIZONTAL SCROLL
+   ============================================ */
+
+.table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 2rem;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+.table-wrapper table {
+  margin-bottom: 0;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+/* ============================================
+   STICKY LEFT COLUMNS
+   ============================================ */
+
+.sticky-col {
+  position: sticky;
+  z-index: 2;
+  background-color: white;
+}
+
+thead .sticky-col {
+  background-color: var(--primary-accent);
+  z-index: 3;
+}
+
+tfoot .sticky-col {
+  background-color: var(--primary-dark);
+  z-index: 2;
+}
+
+tbody tr:nth-child(even) .sticky-col {
+  background-color: #f5f5f5;
+}
+
+tbody tr:hover .sticky-col {
+  background-color: #f0f4ff;
+}
+
+/* ============================================
+   SCORE PILLS
+   ============================================ */
+
+.score-pill {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  line-height: 1.3;
+  min-width: 50px;
+  font-size: 0.82rem;
+}
+
+.score-pill .pill-score { font-weight: 600; }
+.score-pill .pill-pts  { font-size: 0.7rem; font-weight: 700; }
+
+td.exact-match  { background-color: transparent; }
+td.winner-match { background-color: transparent; }
+td.no-match     { background-color: transparent; }
+
+td.exact-match .score-pill {
+  background-color: rgba(40,167,69,0.18);
+  color: #1a7a35;
+  border: 1px solid rgba(40,167,69,0.3);
+}
+
+td.winner-match .score-pill {
+  background-color: rgba(255,193,7,0.22);
+  color: #7a5000;
+  border: 1px solid rgba(255,193,7,0.4);
+}
+
+td.no-match .score-pill {
+  background-color: rgba(180,180,180,0.15);
+  color: #888;
+  border: 1px solid rgba(180,180,180,0.3);
+}
+
+body.dark-mode td.exact-match .score-pill {
+  background-color: rgba(40,167,69,0.25);
+  color: #56d472;
+  border-color: rgba(40,167,69,0.4);
+}
+
+body.dark-mode td.winner-match .score-pill {
+  background-color: rgba(255,193,7,0.2);
+  color: #ffc107;
+  border-color: rgba(255,193,7,0.35);
+}
+
+body.dark-mode td.no-match .score-pill {
+  background-color: rgba(100,100,100,0.2);
+  color: #777;
+  border-color: rgba(100,100,100,0.3);
+}
+
+/* ============================================
+   COLUMN HIGHLIGHT (selected participant)
+   ============================================ */
+
+.col-highlighted {
+  background-color: rgba(6,45,161,0.07) !important;
+}
+
+thead .col-highlighted {
+  background-color: rgba(255,255,255,0.22) !important;
+}
+
+tfoot .col-highlighted {
+  background-color: rgba(255,255,255,0.12) !important;
+}
+
+body.dark-mode .col-highlighted {
+  background-color: rgba(100,130,255,0.12) !important;
+}
+
+body.dark-mode thead .col-highlighted {
+  background-color: rgba(100,130,255,0.28) !important;
+}
+
+/* ============================================
+   RUNNING TOTAL FOOTER
+   ============================================ */
+
+tfoot tr {
+  background-color: var(--primary-dark);
+  color: white;
+}
+
+tfoot td {
+  padding: 0.75rem 1rem;
+  border-top: 2px solid var(--primary-btn);
+  font-weight: 700;
+  border-bottom: none;
+}
+
+/* ============================================
+   COLOR LEGEND
+   ============================================ */
+
+.legend {
+  display: flex;
+  gap: 1.25rem;
+  align-items: center;
+  padding: 0.6rem 1.25rem;
+  background-color: white;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.legend-title {
+  font-weight: 700;
+  color: var(--primary-dark);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-right: 0.25rem;
+}
+
+body.dark-mode .legend-title {
+  color: #8b96a7;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.legend-swatch {
+  width: 28px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  display: inline-block;
+}
+
+.legend-swatch.exact  { background-color: rgba(40,167,69,0.18); border-color: rgba(40,167,69,0.3); }
+.legend-swatch.winner { background-color: rgba(255,193,7,0.22);  border-color: rgba(255,193,7,0.4); }
+.legend-swatch.none   { background-color: rgba(180,180,180,0.15); border-color: rgba(180,180,180,0.3); }
+
+/* ============================================
+   STATUS BADGE (Finalizado / Pendiente)
+   ============================================ */
+
+.status-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.1rem 0.45rem;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+
+.status-badge.finished { background-color: rgba(40,167,69,0.15); color: #28a745; }
+.status-badge.pending  { background-color: rgba(120,120,120,0.12); color: #888; }
+
+.result-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  line-height: 1.2;
+}
+
+/* ============================================
+   PROGRESS INDICATOR
+   ============================================ */
+
+.progress-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  padding: 0.55rem 1.25rem;
+  background-color: white;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.progress-bar-track {
+  flex: 1;
+  max-width: 180px;
+  min-width: 80px;
+  height: 6px;
+  background-color: rgba(0,0,0,0.08);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #28a745, #5cb85c);
+  border-radius: 20px;
+  transition: width 0.6s ease;
+}
+
+body.dark-mode .progress-bar-track {
+  background-color: rgba(255,255,255,0.1);
+}
+
+/* ============================================
+   TOOLTIP (JS-based floating)
+   ============================================ */
+
+#tt-floating {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ============================================
+   TEAM SEARCH INPUT
+   ============================================ */
+
+.team-search-input {
+  padding: 0.45rem 0.85rem;
+  border: 1px solid var(--border-gray);
+  border-radius: 20px;
+  font-size: 0.88rem;
+  min-width: 150px;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.team-search-input:focus {
+  outline: none;
+  border-color: var(--primary-btn);
+  box-shadow: 0 0 0 3px rgba(6,45,161,0.12);
+}
+
+/* ============================================
+   SORTABLE COLUMN HEADERS
+   ============================================ */
+
+th.sortable {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+th.sortable:hover {
+  background-color: rgba(255,255,255,0.15);
+}
+
+.sort-icon {
+  display: inline-block;
+  font-size: 0.62rem;
+  margin-left: 3px;
+  opacity: 0.5;
+  vertical-align: middle;
+}
+
+th.sort-asc .sort-icon,
+th.sort-desc .sort-icon {
+  opacity: 1;
+  color: #ffc107;
+}
+
+/* ============================================
+   COLLAPSIBLE GROUP HEADERS
+   ============================================ */
+
+.group-header-row {
+  background-color: var(--primary-dark) !important;
+  color: white;
+  cursor: pointer;
+  user-select: none;
+}
+
+.group-header-row td {
+  padding: 0.4rem 1rem;
+  font-weight: 700;
+  font-size: 0.88rem;
+  letter-spacing: 0.3px;
+  color: white;
+  border-bottom: none;
+}
+
+.group-header-row:hover {
+  background-color: var(--primary-btn) !important;
+}
+
+.group-toggle-icon {
+  display: inline-block;
+  margin-right: 0.5rem;
+  transition: transform 0.22s ease;
+}
+
+.group-header-row.collapsed .group-toggle-icon {
+  transform: rotate(-90deg);
+}
+
+tr.group-data-row.hidden {
+  display: none;
+}
+
+/* ============================================
+   IMPROVED ACTIVE NAV TAB
+   ============================================ */
+
+.nav-tabs button.active {
+  border-bottom-color: #ffc107 !important;
+  background-color: rgba(255,255,255,0.15);
+  color: #ffd966;
+}
+
+/* ============================================
+   PHASE MULTIPLIER CHIP
+   ============================================ */
+
+.badge.phase-multiplier {
+  background: linear-gradient(135deg, #062DA1, #041688);
+  color: white;
+  font-size: 0.82rem;
+  padding: 0.35rem 0.95rem;
+  border-radius: 20px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 6px rgba(6,45,161,0.3);
+}
+
+/* ============================================
+   COLUMN PIN BUTTON
+   ============================================ */
+
+.pin-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.62rem;
+  padding: 0 0 0 3px;
+  color: rgba(255,255,255,0.35);
+  vertical-align: middle;
+  line-height: 1;
+  opacity: 0.6;
+}
+
+.pin-btn:hover,
+.pin-btn.pinned {
+  color: #ffc107;
+  background: transparent;
+  transform: none;
+  box-shadow: none;
+  opacity: 1;
+}
+
+.col-pinned {
+  position: sticky !important;
+  z-index: 5 !important;
+  background-color: white !important;
+}
+
+thead .col-pinned {
+  background-color: var(--primary-accent) !important;
+  z-index: 6 !important;
+}
+
+tfoot .col-pinned {
+  background-color: var(--primary-dark) !important;
+  z-index: 5 !important;
+}
+
+body.dark-mode .col-pinned {
+  background-color: #161b22 !important;
+}
+
+body.dark-mode thead .col-pinned {
+  background-color: #021040 !important;
+}
+
+body.dark-mode tfoot .col-pinned {
+  background-color: #010409 !important;
+}
+
+/* ============================================
+   MOBILE CARD VIEW — PREDICTIONS LIST
+   ============================================ */
+
+.card-predictions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 0.5rem;
+  background: var(--bg-light);
+  border-radius: 4px;
+  margin: 0.5rem 0;
+}
+
+.card-pred-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.card-pred-name { font-weight: 500; }
+
+.card-pred-row.exact-match  { background-color: rgba(40,167,69,0.12); }
+.card-pred-row.winner-match { background-color: rgba(255,193,7,0.12); }
+.card-pred-row.no-match     { background-color: transparent; }
+
+body.dark-mode .card-predictions {
+  background-color: #1c2128;
+}
+
+body.dark-mode .card-pred-row.exact-match  { background-color: rgba(40,167,69,0.2); }
+body.dark-mode .card-pred-row.winner-match { background-color: rgba(255,193,7,0.15); }
+
+/* Show/hide table vs cards based on screen size */
+@media (max-width: 768px) {
+  .table-wrapper { display: none; }
+  .card-container { display: block !important; }
+  .card-container .card-nav { display: flex; }
+}
+
+@media (min-width: 769px) {
+  .card-container { display: none !important; }
+}

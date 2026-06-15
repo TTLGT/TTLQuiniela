@@ -2,7 +2,8 @@
    APP.JS — Lógica Principal de la Aplicación
    ============================================ */
 
-// Estado global de la app
+// ==================== ESTADO GLOBAL ====================
+
 let appState = {
   participants: [],
   matches: {},
@@ -13,16 +14,61 @@ let appState = {
   lastUpdated: null
 };
 
-// Inicializar la aplicación
-document.addEventListener('DOMContentLoaded', async () => {
-  console.log('🚀 Inicializando Quiniela Mundialista 2026...');
+// UI state
+let cardState      = {};  // { phaseId: { matches, index } }
+let sortState      = {};  // { tableId: { colIndex, direction } }
+let pinnedCols     = {};  // { phaseId: participantName | null }
+let collapsedGroups = {}; // { groupLetter: bool }
 
-  // Setup de navegación
-  setupNavigation();
+// ==================== TEAM FLAGS ====================
 
-  // Cargar datos iniciales
-  await loadAllData();
-});
+const TEAM_FLAGS = {
+  'Mexico': '🇲🇽', 'USA': '🇺🇸', 'Canada': '🇨🇦',
+  'Argentina': '🇦🇷', 'Brasil': '🇧🇷', 'Uruguay': '🇺🇾',
+  'Paraguay': '🇵🇾', 'Colombia': '🇨🇴', 'Ecuador': '🇪🇨',
+  'Peru': '🇵🇪', 'Venezuela': '🇻🇪', 'Chile': '🇨🇱',
+  'Bolivia': '🇧🇴', 'España': '🇪🇸', 'Portugal': '🇵🇹',
+  'Francia': '🇫🇷', 'Alemania': '🇩🇪', 'Paises Bajos': '🇳🇱',
+  'Belgica': '🇧🇪', 'Italia': '🇮🇹', 'Suiza': '🇨🇭',
+  'Austria': '🇦🇹', 'República Checa': '🇨🇿', 'Polonia': '🇵🇱',
+  'Croacia': '🇭🇷', 'Serbia': '🇷🇸', 'Bosnia y Herzegovina': '🇧🇦',
+  'Ucrania': '🇺🇦', 'Grecia': '🇬🇷', 'Rumania': '🇷🇴',
+  'Hungria': '🇭🇺', 'Noruega': '🇳🇴', 'Suecia': '🇸🇪',
+  'Turquia': '🇹🇷', 'Inglaterra': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'Escocia': '🏴󠁧󠁢󠁳󠁣󠁴󠁿',
+  'Gales': '🏴󠁧󠁢󠁷󠁬󠁳󠁿', 'Irlanda': '🇮🇪',
+  'Japon': '🇯🇵', 'Corea del Sur': '🇰🇷', 'China': '🇨🇳',
+  'Australia': '🇦🇺', 'Qatar': '🇶🇦', 'Arabia Saudita': '🇸🇦',
+  'Iran': '🇮🇷', 'Irak': '🇮🇶', 'Jordania': '🇯🇴',
+  'Uzbekistan': '🇺🇿', 'Emiratos Arabes': '🇦🇪',
+  'Marruecos': '🇲🇦', 'Egipto': '🇪🇬', 'Senegal': '🇸🇳',
+  'Nigeria': '🇳🇬', 'Ghana': '🇬🇭', 'Camerun': '🇨🇲',
+  'Sudafrica': '🇿🇦', 'Costa de Marfil': '🇨🇮',
+  'Argelia': '🇩🇿', 'Tunez': '🇹🇳', 'Cabo Verde': '🇨🇻',
+  'RD Congo': '🇨🇩', 'Kenia': '🇰🇪',
+  'Haiti': '🇭🇹', 'Panama': '🇵🇦', 'Costa Rica': '🇨🇷',
+  'Honduras': '🇭🇳', 'Jamaica': '🇯🇲', 'Curacao': '🇨🇼',
+};
+
+function getFlag(teamName) {
+  return TEAM_FLAGS[teamName] || '';
+}
+
+// ==================== DARK MODE ====================
+
+function initDarkMode() {
+  if (localStorage.getItem('darkMode') === 'true') {
+    document.body.classList.add('dark-mode');
+    const btn = document.getElementById('dark-mode-btn');
+    if (btn) btn.textContent = '☀️ Modo Claro';
+  }
+}
+
+function toggleDarkMode() {
+  const isDark = document.body.classList.toggle('dark-mode');
+  localStorage.setItem('darkMode', isDark);
+  const btn = document.getElementById('dark-mode-btn');
+  if (btn) btn.textContent = isDark ? '☀️ Modo Claro' : '🌙 Modo Oscuro';
+}
 
 // ==================== NAVEGACIÓN ====================
 
@@ -30,23 +76,54 @@ function setupNavigation() {
   const navButtons = document.querySelectorAll('.nav-btn');
   navButtons.forEach(btn => {
     btn.addEventListener('click', () => {
-      // Remover clase active de todos los botones
       navButtons.forEach(b => b.classList.remove('active'));
-      // Agregar active al botón clickeado
       btn.classList.add('active');
-
-      // Ocultar todas las secciones
-      document.querySelectorAll('section').forEach(section => {
-        section.classList.remove('active');
-      });
-
-      // Mostrar la sección correspondiente
-      const tabId = btn.getAttribute('data-tab');
-      const section = document.getElementById(tabId);
-      if (section) {
-        section.classList.add('active');
-      }
+      document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+      const section = document.getElementById(btn.getAttribute('data-tab'));
+      if (section) section.classList.add('active');
     });
+  });
+}
+
+// ==================== DOM SETUP ====================
+
+function setupDOM() {
+  // Wrap each table in a scroll container
+  document.querySelectorAll('section table').forEach(table => {
+    if (table.parentElement.classList.contains('table-wrapper')) return;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'table-wrapper';
+    table.parentNode.insertBefore(wrapper, table);
+    wrapper.appendChild(table);
+  });
+
+  // Inject legend before each table-wrapper in phase sections
+  const legend = `
+    <div class="legend">
+      <span class="legend-title">Leyenda:</span>
+      <span class="legend-item"><span class="legend-swatch exact"></span> Exacto (3pts)</span>
+      <span class="legend-item"><span class="legend-swatch winner"></span> Ganador correcto (1pt)</span>
+      <span class="legend-item"><span class="legend-swatch none"></span> Sin acierto (0pts)</span>
+    </div>`;
+
+  ['groups','round16','round8','quarters','semi','final'].forEach(phaseId => {
+    const wrapper = document.querySelector(`#${phaseId} .table-wrapper`);
+    if (!wrapper) return;
+
+    // Progress indicator
+    if (!document.getElementById(`progress-${phaseId}`)) {
+      const prog = document.createElement('div');
+      prog.className = 'progress-indicator';
+      prog.id = `progress-${phaseId}`;
+      wrapper.parentNode.insertBefore(prog, wrapper);
+    }
+
+    // Legend
+    if (!document.querySelector(`#${phaseId} .legend`)) {
+      const legEl = document.createElement('div');
+      legEl.innerHTML = legend;
+      wrapper.parentNode.insertBefore(legEl.firstElementChild, wrapper);
+    }
   });
 }
 
@@ -55,30 +132,15 @@ function setupNavigation() {
 async function loadAllData() {
   try {
     console.log('📥 Cargando datos...');
-
-    // Paso 1: Obtener predicciones de Google Sheets
-    console.log('  1️⃣ Leyendo predicciones...');
     appState.predictions = await readPredictionsFromSheets();
-
-    // Paso 2: Obtener resultados reales
-    console.log('  2️⃣ Leyendo resultados reales...');
     const worldcupData = await fetchWorldCupResults();
-
-    // Paso 3: Calcular puntuación
-    console.log('  3️⃣ Calculando puntuación...');
     appState.scores = calculateParticipantScores(appState.predictions, worldcupData);
     appState.participants = getRanking(appState.scores);
-
-    // Paso 4: Renderizar datos
-    console.log('  4️⃣ Renderizando interfaz...');
     await renderAllViews();
-
-    // Paso 5: Mostrar gráficas
-    console.log('  5️⃣ Generando gráficas...');
     initializeCharts();
-
-    console.log('✅ Datos cargados exitosamente');
+    setupTooltips();
     appState.lastUpdated = new Date();
+    console.log('✅ Datos cargados exitosamente');
   } catch (error) {
     console.error('❌ Error cargando datos:', error);
     showError('Error al cargar los datos. Verifica la consola (F12) para más detalles.');
@@ -88,129 +150,91 @@ async function loadAllData() {
 // ==================== REFRESH ====================
 
 async function refreshResults() {
+  const btn = document.getElementById('refresh-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Actualizando...';
   try {
-    const btn = document.getElementById('refresh-btn');
-    btn.disabled = true;
-    btn.textContent = '⏳ Actualizando...';
-
-    // Recargar datos
     await loadAllData();
-
-    // Mostrar feedback
     showSuccess('✅ Resultados actualizados correctamente');
-
-    // Restaurar botón
-    btn.disabled = false;
-    btn.textContent = '🔄 Actualizar Resultados';
   } catch (error) {
     console.error('❌ Error actualizando:', error);
     showError('Error al actualizar los resultados.');
-    document.getElementById('refresh-btn').disabled = false;
-    document.getElementById('refresh-btn').textContent = '🔄 Actualizar Resultados';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔄 Actualizar Resultados';
   }
 }
 
-// ==================== RENDERIZADO ====================
+// ==================== RENDERIZADO GENERAL ====================
 
 async function renderAllViews() {
-  try {
-    // Renderizar Tabla General
-    await renderGeneralTable();
-
-    // Renderizar vistas por fase
-    await renderPhase('groups');
-    await renderPhase('round16');
-    await renderPhase('round8');
-    await renderPhase('quarters');
-    await renderPhase('semi');
-    await renderPhase('final');
-  } catch (error) {
-    console.error('❌ Error renderizando vistas:', error);
+  await renderGeneralTable();
+  for (const phase of ['groups','round16','round8','quarters','semi','final']) {
+    await renderPhase(phase);
   }
 }
 
 async function renderGeneralTable() {
-  console.log('  📊 Renderizando Tabla General...');
   const tbody = document.querySelector('#general-table tbody');
-
   if (!appState.participants || appState.participants.length === 0) {
     tbody.innerHTML = '<tr><td colspan="10" class="loading">Sin datos disponibles</td></tr>';
     return;
   }
 
-  let html = '';
+  tbody.innerHTML = appState.participants.map(p => `
+    <tr>
+      <td><strong>#${p.position}</strong></td>
+      <td>${p.participant}</td>
+      <td>${getFlag(p.team)} ${p.team || '-'}</td>
+      <td>${p.groups}</td>
+      <td>${p.round16}</td>
+      <td>${p.round8}</td>
+      <td>${p.quarters}</td>
+      <td>${p.semi}</td>
+      <td>${p.final}</td>
+      <td><strong style="color:var(--primary-btn);font-size:1.1rem">${p.total}</strong></td>
+    </tr>
+  `).join('');
 
-  for (const participant of appState.participants) {
-    const teamStatus = getTeamStatus(participant.team); // 🟢 o 🔴
-    
-    html += `
-      <tr>
-        <td><strong>#${participant.position}</strong></td>
-        <td>${participant.participant} ${teamStatus}</td>
-        <td>${participant.team || '-'}</td>
-        <td>${participant.groups}</td>
-        <td>${participant.round16}</td>
-        <td>${participant.round8}</td>
-        <td>${participant.quarters}</td>
-        <td>${participant.semi}</td>
-        <td>${participant.final}</td>
-        <td><strong style="color: var(--primary-btn); font-size: 1.1rem;">${participant.total}</strong></td>
-      </tr>
-    `;
-  }
-
-  tbody.innerHTML = html;
-
-  // Populate participant selectors para ver stats individuales
-  const phases = ['groups', 'round16', 'round8', 'quarters', 'semi', 'final'];
-  const participants = appState.participants.map(p => p.participant).sort();
-
-  for (const phase of phases) {
-    const select = document.querySelector(`#participant-${phase}`);
-    if (select) {
-      select.innerHTML = '<option value="">Todos</option>';
-      for (const name of participants) {
-        select.innerHTML += `<option value="${name}">${name}</option>`;
-      }
-    }
+  // Populate participant selectors
+  const names = appState.participants.map(p => p.participant).sort();
+  for (const phaseId of ['groups','round16','round8','quarters','semi','final']) {
+    const sel = document.querySelector(`#participant-${phaseId}`);
+    if (!sel) continue;
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">Todos</option>' +
+      names.map(n => `<option value="${n}"${n === prev ? ' selected' : ''}>${n}</option>`).join('');
   }
 }
 
 function getTeamStatus(teamName) {
-  // TODO: Verificar si el equipo está eliminado
-  // Comparar con los resultados de worldcup.json
-  // Por ahora retornar 🟢 (activo)
   return '🟢';
 }
 
-async function renderPhase(phaseId) {
-  console.log(`  📊 Renderizando fase: ${phaseId}...`);
+// ==================== PHASE RENDERING ====================
 
+const PHASE_NAMES = {
+  groups:   'FASE DE GRUPOS',
+  round16:  'DIECISEISAVOS',
+  round8:   'OCTAVOS',
+  quarters: 'CUARTOS',
+  semi:     'SEMIFINAL',
+  final:    'FINAL'
+};
+
+async function renderPhase(phaseId) {
   const tableId = `${phaseId}-table`;
-  const table = document.querySelector(`#${tableId}`);
+  const table = document.getElementById(tableId);
   if (!table) return;
 
   const tbody = table.querySelector('tbody');
-  const selectedParticipant = document.querySelector(`#participant-${phaseId}`)?.value;
+  const selectedParticipant = document.querySelector(`#participant-${phaseId}`)?.value || '';
+  const phaseName = PHASE_NAMES[phaseId];
 
-  // Mapeo de phaseId a nombre de fase para el sheet
-  const phaseNameMap = {
-    'groups': 'FASE DE GRUPOS',
-    'round16': 'DIECISEISAVOS',
-    'round8': 'OCTAVOS',
-    'quarters': 'CUARTOS',
-    'semi': 'SEMIFINAL',
-    'final': 'FINAL'
-  };
-
-  const phaseName = phaseNameMap[phaseId];
-  let html = '';
-
-  // Recolectar todos los partidos de esta fase
+  // Collect matches
   const matchesByNumber = {};
-
   for (const [participantName, scoreData] of Object.entries(appState.scores)) {
-    for (const [matchKey, matchData] of Object.entries(scoreData.matches || {})) {
+    for (const [, matchData] of Object.entries(scoreData.matches || {})) {
       if (matchData.phase && matchData.phase.includes(phaseName.split(' ')[0])) {
         const matchNum = matchData.id;
         if (!matchesByNumber[matchNum]) {
@@ -228,104 +252,401 @@ async function renderPhase(phaseId) {
     }
   }
 
-  // Renderizar tabla
-  const sortedMatches = Object.values(matchesByNumber).sort((a, b) => a.id - b.id);
+  const allMatches = Object.values(matchesByNumber).sort((a, b) => a.id - b.id);
 
-  if (sortedMatches.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="10" class="loading">Sin partidos en esta fase</td></tr>';
+  if (allMatches.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="10" class="loading">Sin partidos en esta fase</td></tr>`;
+    const tf = table.querySelector('tfoot');
+    if (tf) tf.innerHTML = '';
+    renderProgressIndicator(phaseId, []);
     return;
   }
 
-  // Encabezados dinámicos con nombre de cada participante
   const participants = Object.keys(appState.scores).sort();
-  const headersHtml = participants.map(p => `<th>${p}</th>`).join('');
+  const isGroups = phaseId === 'groups';
+  const numFixed = isGroups ? 5 : 4;
 
-  // Regenerar encabezados siempre (incluyendo grupos que tiene columna Grupo extra)
+  // Apply search filter
+  const search = (document.querySelector(`#search-${phaseId}`)?.value || '').toLowerCase().trim();
+  const sortedMatches = search
+    ? allMatches.filter(m =>
+        (m.teamLocal  || '').toLowerCase().includes(search) ||
+        (m.teamVisitor || '').toLowerCase().includes(search))
+    : allMatches;
+
+  // Build thead
   const thead = table.querySelector('thead tr');
-  if (phaseId === 'groups') {
+  const pinned = pinnedCols[phaseId] || null;
+  const st = sortState[tableId];
+
+  const participantHeaders = participants.map((p, i) => {
+    const colIdx = numFixed + i;
+    const isHL     = selectedParticipant && p === selectedParticipant ? ' col-highlighted' : '';
+    const isPinned = pinned === p ? ' col-pinned' : '';
+    let sortCls = 'sortable';
+    if (st && st.colIndex === colIdx) sortCls += st.direction === 'asc' ? ' sort-asc' : ' sort-desc';
+    const sortIcon = (st && st.colIndex === colIdx)
+      ? (st.direction === 'asc' ? '↑' : '↓') : '↕';
+    return `<th class="${sortCls}${isHL}${isPinned}" data-colidx="${colIdx}" data-participant="${p}">
+      ${p}
+      <button class="pin-btn${pinned === p ? ' pinned' : ''}" title="Fijar columna"
+        onclick="event.stopPropagation();togglePinColumn('${phaseId}','${p}')">📌</button>
+      <span class="sort-icon">${sortIcon}</span>
+    </th>`;
+  }).join('');
+
+  if (isGroups) {
     thead.innerHTML = `
-      <th>Partido</th>
-      <th>Grupo</th>
-      <th>Local</th>
-      <th>Visitante</th>
-      <th>Resultado Real</th>
-      ${headersHtml}
-    `;
+      <th class="sticky-col">Partido</th>
+      <th class="sticky-col">Grupo</th>
+      <th class="sticky-col">Local</th>
+      <th class="sticky-col">Visitante</th>
+      <th class="sticky-col">Resultado Real</th>
+      ${participantHeaders}`;
   } else {
     thead.innerHTML = `
-      <th>Partido</th>
-      <th>Local</th>
-      <th>Visitante</th>
-      <th>Resultado Real</th>
-      ${headersHtml}
-    `;
+      <th class="sticky-col">Partido</th>
+      <th class="sticky-col">Local</th>
+      <th class="sticky-col">Visitante</th>
+      <th class="sticky-col">Resultado Real</th>
+      ${participantHeaders}`;
   }
 
+  // Build tbody
+  let html = '';
+  let currentGroup = null;
+  const totalCols = numFixed + participants.length;
+
   for (const match of sortedMatches) {
-    const resultHtml = match.result
-      ? `${match.result.goalsTeamA}-${match.result.goalsTeamB}`
-      : '<span style="color: #999;">-</span>';
+    // Collapsible group header row
+    if (isGroups && match.group && match.group !== currentGroup) {
+      currentGroup = match.group;
+      const isCollapsed = collapsedGroups[currentGroup] ? ' collapsed' : '';
+      html += `
+        <tr class="group-header-row${isCollapsed}" data-group="${currentGroup}"
+            onclick="toggleGroup('${currentGroup}','${tableId}')">
+          <td colspan="${totalCols}">
+            <span class="group-toggle-icon">▼</span> Grupo ${currentGroup}
+          </td>
+        </tr>`;
+    }
 
-    const groupCell = phaseId === 'groups' ? `<td>${match.group || '-'}</td>` : '';
+    const hasResult = match.result != null &&
+      match.result.goalsTeamA !== null && match.result.goalsTeamA !== undefined &&
+      match.result.goalsTeamB !== null && match.result.goalsTeamB !== undefined;
 
-    const predictionsHtml = participants.map(participant => {
-      const pred = match.predictions[participant];
-      if (!pred || pred.prediction === 'NaN-NaN') return '<td>-</td>';
+    const resultText = hasResult
+      ? `<strong>${match.result.goalsTeamA}-${match.result.goalsTeamB}</strong>`
+      : '<span style="color:#999">-</span>';
+    const statusBadge = hasResult
+      ? '<span class="status-badge finished">Finalizado</span>'
+      : '<span class="status-badge pending">Pendiente</span>';
 
-      const className = pred.type;
-      const predText = `${pred.prediction} <strong>${pred.points}pts</strong>`;
-      return `<td class="${className}">${predText}</td>`;
+    const groupRowAttr  = isGroups ? ` data-group="${match.group}"` : '';
+    const groupHidden   = isGroups && collapsedGroups[match.group] ? ' hidden' : '';
+    const groupCell     = isGroups ? `<td class="sticky-col">${match.group || '-'}</td>` : '';
+    const flagL = getFlag(match.teamLocal);
+    const flagV = getFlag(match.teamVisitor);
+
+    const predsHtml = participants.map((p, i) => {
+      const pred   = match.predictions[p];
+      const colIdx = numFixed + i;
+      const isHL     = selectedParticipant && p === selectedParticipant ? ' col-highlighted' : '';
+      const isPinned = pinned === p ? ' col-pinned' : '';
+
+      if (!pred || !pred.prediction || pred.prediction === 'NaN-NaN') {
+        return `<td class="no-match${isHL}${isPinned}" data-colidx="${colIdx}">
+          <span class="score-pill"><span class="pill-score">-</span><span class="pill-pts">0pts</span></span>
+        </td>`;
+      }
+
+      const actual  = hasResult ? `${match.result.goalsTeamA}-${match.result.goalsTeamB}` : 'Sin resultado';
+      const tip     = `Pronóstico: ${pred.prediction} | Real: ${actual} | +${pred.points}pts`;
+
+      return `<td class="${pred.type}${isHL}${isPinned}" data-colidx="${colIdx}" data-tooltip="${tip}">
+        <span class="score-pill">
+          <span class="pill-score">${pred.prediction}</span>
+          <span class="pill-pts">${pred.points}pts</span>
+        </span>
+      </td>`;
     }).join('');
 
     html += `
-      <tr>
-        <td>${match.id}</td>
+      <tr class="group-data-row${groupHidden}"${groupRowAttr}>
+        <td class="sticky-col">${match.id}</td>
         ${groupCell}
-        <td>${match.teamLocal}</td>
-        <td>${match.teamVisitor}</td>
-        <td><strong>${resultHtml}</strong></td>
-        ${predictionsHtml}
-      </tr>
-    `;
+        <td class="sticky-col">${flagL} ${match.teamLocal}</td>
+        <td class="sticky-col">${flagV} ${match.teamVisitor}</td>
+        <td class="sticky-col"><div class="result-cell">${resultText}${statusBadge}</div></td>
+        ${predsHtml}
+      </tr>`;
   }
 
-  tbody.innerHTML = html || '<tr><td colspan="10" class="loading">Sin datos</td></tr>';
+  tbody.innerHTML = html || `<tr><td colspan="${totalCols}" class="loading">Sin datos</td></tr>`;
+
+  // Running total tfoot
+  let tfoot = table.querySelector('tfoot');
+  if (!tfoot) { tfoot = document.createElement('tfoot'); table.appendChild(tfoot); }
+
+  const totalCells = participants.map((p, i) => {
+    const colIdx   = numFixed + i;
+    const isHL     = selectedParticipant && p === selectedParticipant ? ' col-highlighted' : '';
+    const isPinned = pinned === p ? ' col-pinned' : '';
+    const pts      = appState.scores[p]?.[phaseId] ?? 0;
+    return `<td class="${isHL}${isPinned}" data-colidx="${colIdx}"><strong>${pts}pts</strong></td>`;
+  }).join('');
+
+  const fixedFooter = isGroups
+    ? `<td class="sticky-col"><strong>TOTAL</strong></td><td class="sticky-col"></td><td class="sticky-col"></td><td class="sticky-col"></td><td class="sticky-col"></td>`
+    : `<td class="sticky-col"><strong>TOTAL</strong></td><td class="sticky-col"></td><td class="sticky-col"></td><td class="sticky-col"></td>`;
+
+  tfoot.innerHTML = `<tr>${fixedFooter}${totalCells}</tr>`;
+
+  // Apply sticky left widths, setup sortable headers, render progress + cards
+  applyStickyColumns(tableId, numFixed);
+  setupSortableHeaders(tableId, participants, numFixed, sortedMatches, phaseId);
+  renderProgressIndicator(phaseId, allMatches);
+  renderPhaseCards(phaseId, sortedMatches, participants);
 }
 
-// ==================== NAVEGACIÓN DE TARJETAS ====================
+// ==================== STICKY COLUMNS ====================
+
+function applyStickyColumns(tableId, numCols) {
+  requestAnimationFrame(() => {
+    const table = document.getElementById(tableId);
+    if (!table) return;
+    const headerCells = Array.from(table.querySelectorAll('thead tr th'));
+    if (!headerCells.length) return;
+
+    let leftOffset = 0;
+    for (let i = 0; i < Math.min(numCols, headerCells.length); i++) {
+      const w = headerCells[i].offsetWidth;
+      table.querySelectorAll(
+        `thead tr th:nth-child(${i+1}), tbody tr td:nth-child(${i+1}), tfoot tr td:nth-child(${i+1})`
+      ).forEach(cell => { cell.style.left = `${leftOffset}px`; });
+      leftOffset += w;
+    }
+  });
+}
+
+// ==================== COLLAPSIBLE GROUPS ====================
+
+function toggleGroup(groupLetter, tableId) {
+  collapsedGroups[groupLetter] = !collapsedGroups[groupLetter];
+  const table = document.getElementById(tableId);
+  if (!table) return;
+  table.querySelector(`.group-header-row[data-group="${groupLetter}"]`)
+    ?.classList.toggle('collapsed', !!collapsedGroups[groupLetter]);
+  table.querySelectorAll(`tr.group-data-row[data-group="${groupLetter}"]`)
+    .forEach(row => row.classList.toggle('hidden', !!collapsedGroups[groupLetter]));
+}
+
+// ==================== SORTABLE COLUMNS ====================
+
+function setupSortableHeaders(tableId, participants, numFixed, sortedMatches, phaseId) {
+  const table = document.getElementById(tableId);
+  if (!table) return;
+
+  table.querySelectorAll('thead th.sortable').forEach(th => {
+    th.addEventListener('click', () => {
+      const colIdx = parseInt(th.dataset.colidx);
+      if (isNaN(colIdx)) return;
+      const cur = sortState[tableId] || {};
+      const dir = (cur.colIndex === colIdx && cur.direction === 'desc') ? 'asc' : 'desc';
+      sortState[tableId] = { colIndex: colIdx, direction: dir };
+
+      // Update icons
+      table.querySelectorAll('thead th.sortable').forEach(h => {
+        h.classList.remove('sort-asc', 'sort-desc');
+        const icon = h.querySelector('.sort-icon');
+        if (icon) icon.textContent = '↕';
+      });
+      th.classList.add(dir === 'asc' ? 'sort-asc' : 'sort-desc');
+      const icon = th.querySelector('.sort-icon');
+      if (icon) icon.textContent = dir === 'asc' ? '↑' : '↓';
+
+      // Sort data rows
+      const tbody = table.querySelector('tbody');
+      const rows  = Array.from(tbody.querySelectorAll('tr.group-data-row'));
+      rows.sort((a, b) => {
+        const aCell = a.querySelector(`td[data-colidx="${colIdx}"]`);
+        const bCell = b.querySelector(`td[data-colidx="${colIdx}"]`);
+        const aVal  = parseInt(aCell?.querySelector('.pill-pts')?.textContent) || 0;
+        const bVal  = parseInt(bCell?.querySelector('.pill-pts')?.textContent) || 0;
+        return dir === 'desc' ? bVal - aVal : aVal - bVal;
+      });
+
+      // Re-insert rows (group header rows stay in place)
+      rows.forEach(row => tbody.appendChild(row));
+    });
+  });
+}
+
+// ==================== COLUMN PINNING ====================
+
+function togglePinColumn(phaseId, participantName) {
+  pinnedCols[phaseId] = pinnedCols[phaseId] === participantName ? null : participantName;
+  renderPhase(phaseId);
+}
+
+// ==================== PROGRESS INDICATOR ====================
+
+function renderProgressIndicator(phaseId, allMatches) {
+  const el = document.getElementById(`progress-${phaseId}`);
+  if (!el) return;
+
+  if (!allMatches.length) { el.innerHTML = ''; return; }
+
+  const total  = allMatches.length;
+  const played = allMatches.filter(m =>
+    m.result != null &&
+    m.result.goalsTeamA !== null && m.result.goalsTeamA !== undefined
+  ).length;
+  const pct = Math.round((played / total) * 100);
+
+  el.innerHTML = `
+    <span>⚽ <strong>${played}</strong> de <strong>${total}</strong> partidos jugados</span>
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" style="width:${pct}%"></div>
+    </div>
+    <span style="font-weight:700;color:var(--primary-btn)">${pct}%</span>`;
+}
+
+// ==================== MOBILE CARD VIEW ====================
+
+function renderPhaseCards(phaseId, sortedMatches, participants) {
+  const container = document.getElementById(`cards-${phaseId}`);
+  if (!container) return;
+
+  if (!sortedMatches.length) { container.innerHTML = ''; return; }
+
+  cardState[phaseId] = { matches: sortedMatches, index: 0 };
+  showCard(phaseId);
+}
+
+function showCard(phaseId) {
+  const state = cardState[phaseId];
+  if (!state || !state.matches.length) return;
+  const container = document.getElementById(`cards-${phaseId}`);
+  if (!container) return;
+
+  const match = state.matches[state.index];
+  const participants = Object.keys(appState.scores).sort();
+  const hasResult = match.result != null &&
+    match.result.goalsTeamA !== null && match.result.goalsTeamA !== undefined;
+
+  const predsHtml = participants.map(p => {
+    const pred = match.predictions[p];
+    if (!pred || !pred.prediction || pred.prediction === 'NaN-NaN') {
+      return `<div class="card-pred-row no-match">
+        <span class="card-pred-name">${p}</span>
+        <span class="score-pill"><span class="pill-score">-</span><span class="pill-pts">0pts</span></span>
+      </div>`;
+    }
+    return `<div class="card-pred-row ${pred.type}">
+      <span class="card-pred-name">${p}</span>
+      <span class="score-pill"><span class="pill-score">${pred.prediction}</span><span class="pill-pts">${pred.points}pts</span></span>
+    </div>`;
+  }).join('');
+
+  const flagL = getFlag(match.teamLocal);
+  const flagV = getFlag(match.teamVisitor);
+  const statusBadge = hasResult
+    ? '<span class="status-badge finished" style="display:block;text-align:center;margin:0.3rem 0">Finalizado</span>'
+    : '<span class="status-badge pending" style="display:block;text-align:center;margin:0.3rem 0">Pendiente</span>';
+
+  container.innerHTML = `
+    <div class="match-card">
+      <div class="match-header">
+        <div class="match-phase">Partido ${match.id}${match.group ? ` — Grupo ${match.group}` : ''}</div>
+      </div>
+      <div class="teams">
+        <div class="team">${flagL} ${match.teamLocal}</div>
+        <div style="font-weight:700;color:#999;font-size:1.2rem">vs</div>
+        <div class="team">${flagV} ${match.teamVisitor}</div>
+      </div>
+      <div class="score">${hasResult ? `${match.result.goalsTeamA} - ${match.result.goalsTeamB}` : '? - ?'}</div>
+      ${statusBadge}
+      <div class="card-predictions">${predsHtml}</div>
+    </div>
+    <div class="card-nav">
+      <button onclick="previousCard('${phaseId}')">← Anterior</button>
+      <span class="card-counter">${state.index + 1} / ${state.matches.length}</span>
+      <button onclick="nextCard('${phaseId}')">Siguiente →</button>
+    </div>`;
+}
 
 function nextCard(phase) {
-  // TODO: Implementar navegación
-  console.log('Siguiente tarjeta:', phase);
+  const state = cardState[phase];
+  if (!state) return;
+  state.index = Math.min(state.index + 1, state.matches.length - 1);
+  showCard(phase);
 }
 
 function previousCard(phase) {
-  // TODO: Implementar navegación
-  console.log('Tarjeta anterior:', phase);
+  const state = cardState[phase];
+  if (!state) return;
+  state.index = Math.max(state.index - 1, 0);
+  showCard(phase);
+}
+
+// ==================== TOOLTIP (FLOATING) ====================
+
+function setupTooltips() {
+  if (document.getElementById('tt-floating')) return;
+
+  const tt = document.createElement('div');
+  tt.id = 'tt-floating';
+  tt.style.cssText = [
+    'position:fixed', 'background:rgba(4,21,97,0.95)', 'color:white',
+    'padding:5px 10px', 'border-radius:4px', 'font-size:0.72rem',
+    'font-family:Lexend,Roboto,sans-serif', 'pointer-events:none',
+    'z-index:9999', 'white-space:nowrap', 'box-shadow:0 2px 10px rgba(0,0,0,0.25)',
+    'display:none', 'max-width:280px', 'white-space:normal', 'line-height:1.4'
+  ].join(';');
+  document.body.appendChild(tt);
+
+  document.addEventListener('mouseover', e => {
+    const cell = e.target.closest('[data-tooltip]');
+    if (!cell) { tt.style.display = 'none'; return; }
+    tt.textContent = cell.dataset.tooltip;
+    tt.style.display = 'block';
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (tt.style.display === 'none') return;
+    if (!e.target.closest('[data-tooltip]')) { tt.style.display = 'none'; return; }
+    tt.style.left = `${e.clientX + 14}px`;
+    tt.style.top  = `${e.clientY - 38}px`;
+  });
+
+  document.addEventListener('mouseout', e => {
+    if (e.target.closest('[data-tooltip]') && !e.relatedTarget?.closest('[data-tooltip]')) {
+      tt.style.display = 'none';
+    }
+  });
 }
 
 // ==================== MENSAJES ====================
 
 function showError(message) {
-  const errorDiv = document.getElementById('general-error');
-  if (errorDiv) {
-    errorDiv.textContent = message;
-    errorDiv.style.display = 'block';
-    setTimeout(() => {
-      errorDiv.style.display = 'none';
-    }, 5000);
-  }
+  const el = document.getElementById('general-error');
+  if (el) { el.textContent = message; el.style.display = 'block'; setTimeout(() => el.style.display='none', 5000); }
 }
 
 function showSuccess(message) {
-  const successDiv = document.getElementById('general-success');
-  if (successDiv) {
-    successDiv.textContent = message;
-    successDiv.style.display = 'block';
-    setTimeout(() => {
-      successDiv.style.display = 'none';
-    }, 5000);
-  }
+  const el = document.getElementById('general-success');
+  if (el) { el.textContent = message; el.style.display = 'block'; setTimeout(() => el.style.display='none', 5000); }
 }
+
+// ==================== INIT ====================
+
+document.addEventListener('DOMContentLoaded', async () => {
+  console.log('🚀 Inicializando Quiniela Mundialista 2026...');
+  initDarkMode();
+  setupNavigation();
+  setupDOM();
+  await loadAllData();
+});
 
 console.log('✅ app.js cargado');
