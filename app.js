@@ -290,6 +290,13 @@ async function renderPhase(phaseId) {
   const isGroups = phaseId === 'groups';
   const numFixed = isGroups ? 3 : 2;
 
+  // Populate team datalist from all matches in this phase
+  const teamDl = document.querySelector(`#datalist-team-${phaseId}`);
+  if (teamDl) {
+    const teamNames = [...new Set(allMatches.flatMap(m => [m.teamLocal, m.teamVisitor].filter(Boolean)))].sort();
+    teamDl.innerHTML = teamNames.map(t => `<option value="${t}">`).join('');
+  }
+
   // Apply search filter
   const search = (document.querySelector(`#search-${phaseId}`)?.value || '').toLowerCase().trim();
   const sortedMatches = search
