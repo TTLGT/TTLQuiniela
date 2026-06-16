@@ -35,7 +35,7 @@ const TEAM_FLAGS = {
   'Turquia': 'tr', 'Inglaterra': 'gb-eng', 'Escocia': 'gb-sct',
   'Gales': 'gb-wls', 'Irlanda': 'ie',
   'Japon': 'jp', 'Corea del Sur': 'kr', 'China': 'cn',
-  'Australia': 'au', 'Qatar': 'qa', 'Arabia Saudita': 'sa',
+  'Australia': 'au', 'Nueva Zelanda': 'nz', 'Qatar': 'qa', 'Arabia Saudita': 'sa',
   'Iran': 'ir', 'Irak': 'iq', 'Jordania': 'jo',
   'Uzbekistan': 'uz', 'Emiratos Arabes': 'ae',
   'Marruecos': 'ma', 'Egipto': 'eg', 'Senegal': 'sn',
@@ -74,13 +74,19 @@ function toggleDarkMode() {
 
 function setupNavigation() {
   const navButtons = document.querySelectorAll('.nav-btn');
+  const phaseFixedCols = { groups: 5, round16: 4, round8: 4, quarters: 4, semi: 4, final: 4 };
   navButtons.forEach(btn => {
     btn.addEventListener('click', () => {
       navButtons.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
-      const section = document.getElementById(btn.getAttribute('data-tab'));
+      const tabId = btn.getAttribute('data-tab');
+      const section = document.getElementById(tabId);
       if (section) section.classList.add('active');
+      // Re-apply sticky left offsets now that the section is visible (offsetWidth was 0 while hidden)
+      if (phaseFixedCols[tabId]) {
+        applyStickyColumns(`${tabId}-table`, phaseFixedCols[tabId]);
+      }
     });
   });
 }
@@ -264,7 +270,7 @@ async function renderPhase(phaseId) {
 
   const participants = Object.keys(appState.scores).sort();
   const isGroups = phaseId === 'groups';
-  const numFixed = isGroups ? 5 : 4;
+  const numFixed = isGroups ? 3 : 2;
 
   // Apply search filter
   const search = (document.querySelector(`#search-${phaseId}`)?.value || '').toLowerCase().trim();
@@ -295,15 +301,11 @@ async function renderPhase(phaseId) {
     thead.innerHTML = `
       <th class="sticky-col">Partido</th>
       <th class="sticky-col">Grupo</th>
-      <th class="sticky-col">Equipo 1</th>
-      <th class="sticky-col">Equipo 2</th>
       <th class="sticky-col">Resultado Real</th>
       ${participantHeaders}`;
   } else {
     thead.innerHTML = `
       <th class="sticky-col">Partido</th>
-      <th class="sticky-col">Equipo 1</th>
-      <th class="sticky-col">Equipo 2</th>
       <th class="sticky-col">Resultado Real</th>
       ${participantHeaders}`;
   }
@@ -317,16 +319,21 @@ async function renderPhase(phaseId) {
       match.result.goalsTeamA !== null && match.result.goalsTeamA !== undefined &&
       match.result.goalsTeamB !== null && match.result.goalsTeamB !== undefined;
 
+    const flagL = getFlag(match.teamLocal);
+    const flagV = getFlag(match.teamVisitor);
+
     const resultText = hasResult
-      ? `<strong>${match.result.goalsTeamA}-${match.result.goalsTeamB}</strong>`
+      ? `<div class="result-scoreboard">
+          <span class="rsb-side rsb-local">${flagL}<span class="rsb-name">${match.teamLocal}</span></span>
+          <span class="rsb-goals"><strong>${match.result.goalsTeamA}</strong><span class="rsb-sep">–</span><strong>${match.result.goalsTeamB}</strong></span>
+          <span class="rsb-side rsb-visitor"><span class="rsb-name">${match.teamVisitor}</span>${flagV}</span>
+        </div>`
       : '<span style="color:#999">-</span>';
     const statusBadge = hasResult
       ? '<span class="status-badge finished">Finalizado</span>'
       : '<span class="status-badge pending">Pendiente</span>';
 
     const groupCell = isGroups ? `<td class="sticky-col">${match.group || '-'}</td>` : '';
-    const flagL = getFlag(match.teamLocal);
-    const flagV = getFlag(match.teamVisitor);
 
     const predsHtml = participants.map((p, i) => {
       const pred   = match.predictions[p];
@@ -353,8 +360,6 @@ async function renderPhase(phaseId) {
       <tr>
         <td class="sticky-col">${match.id}</td>
         ${groupCell}
-        <td class="sticky-col">${flagL} ${match.teamLocal}</td>
-        <td class="sticky-col">${flagV} ${match.teamVisitor}</td>
         <td class="sticky-col"><div class="result-cell">${resultText}${statusBadge}<a href="https://futbol-libres.su/" target="_blank" class="watch-link">📺 Ver</a></div></td>
         ${predsHtml}
       </tr>`;
@@ -374,8 +379,8 @@ async function renderPhase(phaseId) {
   }).join('');
 
   const fixedFooter = isGroups
-    ? `<td class="sticky-col"><strong>TOTAL</strong></td><td class="sticky-col"></td><td class="sticky-col"></td><td class="sticky-col"></td><td class="sticky-col"></td>`
-    : `<td class="sticky-col"><strong>TOTAL</strong></td><td class="sticky-col"></td><td class="sticky-col"></td><td class="sticky-col"></td>`;
+    ? `<td class="sticky-col"><strong>TOTAL</strong></td><td class="sticky-col"></td><td class="sticky-col"></td>`
+    : `<td class="sticky-col"><strong>TOTAL</strong></td><td class="sticky-col"></td>`;
 
   tfoot.innerHTML = `<tr>${fixedFooter}${totalCells}</tr>`;
 
@@ -389,12 +394,16 @@ async function renderPhase(phaseId) {
 
 // ==================== STICKY COLUMNS ====================
 
+// Tracks pending IntersectionObservers so we don't create duplicates per table
+const _stickyObservers = {};
+
 function applyStickyColumns(tableId, numCols) {
-  requestAnimationFrame(() => {
+  const applyOffsets = () => {
     const table = document.getElementById(tableId);
-    if (!table) return;
+    if (!table) return false;
     const headerCells = Array.from(table.querySelectorAll('thead tr th'));
-    if (!headerCells.length) return;
+    if (!headerCells.length) return false;
+    if (headerCells[0].offsetWidth === 0) return false; // still hidden
 
     let leftOffset = 0;
     for (let i = 0; i < Math.min(numCols, headerCells.length); i++) {
@@ -404,6 +413,25 @@ function applyStickyColumns(tableId, numCols) {
       ).forEach(cell => { cell.style.left = `${leftOffset}px`; });
       leftOffset += w;
     }
+    return true;
+  };
+
+  requestAnimationFrame(() => {
+    if (applyOffsets()) return;
+
+    // Table is hidden; observe and apply the moment it enters the viewport
+    const table = document.getElementById(tableId);
+    if (!table) return;
+    if (_stickyObservers[tableId]) _stickyObservers[tableId].disconnect();
+    const obs = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        obs.disconnect();
+        delete _stickyObservers[tableId];
+        requestAnimationFrame(applyOffsets);
+      }
+    });
+    obs.observe(table);
+    _stickyObservers[tableId] = obs;
   });
 }
 

@@ -966,6 +966,45 @@ body.dark-mode .legend-title {
   line-height: 1.2;
 }
 
+.result-scoreboard {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+}
+
+.rsb-side {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.75rem;
+  color: #333;
+}
+
+.rsb-local  { flex-direction: row; }
+.rsb-visitor { flex-direction: row-reverse; }
+
+.rsb-name {
+  max-width: 6rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rsb-goals {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.rsb-sep {
+  color: #888;
+  font-size: 0.85rem;
+  margin: 0 0.1rem;
+}
+
 /* ============================================
    PROGRESS INDICATOR
    ============================================ */
