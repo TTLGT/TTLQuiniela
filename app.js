@@ -202,14 +202,12 @@ async function renderGeneralTable() {
     </tr>
   `).join('');
 
-  // Populate participant selectors
+  // Populate participant datalists
   const names = appState.participants.map(p => p.participant).sort();
   for (const phaseId of ['groups','round16','round8','quarters','semi','final']) {
-    const sel = document.querySelector(`#participant-${phaseId}`);
-    if (!sel) continue;
-    const prev = sel.value;
-    sel.innerHTML = '<option value="">Todos</option>' +
-      names.map(n => `<option value="${n}"${n === prev ? ' selected' : ''}>${n}</option>`).join('');
+    const dl = document.querySelector(`#datalist-${phaseId}`);
+    if (!dl) continue;
+    dl.innerHTML = names.map(n => `<option value="${n}">`).join('');
   }
 }
 
@@ -269,6 +267,10 @@ async function renderPhase(phaseId) {
   }
 
   const participants = Object.keys(appState.scores).sort();
+  if (selectedParticipant && participants.includes(selectedParticipant)) {
+    participants.splice(participants.indexOf(selectedParticipant), 1);
+    participants.unshift(selectedParticipant);
+  }
   const isGroups = phaseId === 'groups';
   const numFixed = isGroups ? 3 : 2;
 
@@ -507,6 +509,11 @@ function showCard(phaseId) {
 
   const match = state.matches[state.index];
   const participants = Object.keys(appState.scores).sort();
+  const _selP = document.querySelector(`#participant-${phaseId}`)?.value || '';
+  if (_selP && participants.includes(_selP)) {
+    participants.splice(participants.indexOf(_selP), 1);
+    participants.unshift(_selP);
+  }
   const hasResult = match.result != null &&
     match.result.goalsTeamA !== null && match.result.goalsTeamA !== undefined;
 
