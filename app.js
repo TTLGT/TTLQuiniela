@@ -325,6 +325,11 @@ async function renderPhase(phaseId) {
     const matchDT = findMatchDateTime(match.teamLocal, match.teamVisitor);
     let dateTimeHtml = '';
     let isLive = false;
+    const _td = new Date();
+    const todayStr = `${_td.getFullYear()}-${String(_td.getMonth()+1).padStart(2,'0')}-${String(_td.getDate()).padStart(2,'0')}`;
+    const watchLink = matchDT && matchDT.date === todayStr
+      ? '<a href="https://futbol-libres.su/" target="_blank" class="watch-link">📺 Ver</a>'
+      : '';
     if (matchDT && matchDT.date) {
       const [, month, day] = matchDT.date.split('-');
       const monthNames = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
@@ -383,7 +388,7 @@ async function renderPhase(phaseId) {
       <tr>
         <td class="sticky-col">${match.id}</td>
         ${groupCell}
-        <td class="sticky-col"><div class="result-cell">${dateTimeHtml}${resultText}${statusBadge}<a href="https://futbol-libres.su/" target="_blank" class="watch-link">📺 Ver</a></div></td>
+        <td class="sticky-col"><div class="result-cell">${dateTimeHtml}${resultText}${statusBadge}${watchLink}</div></td>
         ${predsHtml}
       </tr>`;
   }
