@@ -90,18 +90,17 @@ function calculateParticipantScores(predictions, results) {
         continue;
       }
 
-      // Buscar resultado real
-      const actualResult = findMatchResultByTeams(
-        results,
-        prediction.teamLocal,
-        prediction.teamVisitor
-      );
-
-      // Si no hay resultado, intentar resultado manual
-      const finalResult = actualResult || getMatchResult(
+      // Manual results take priority over the feed
+      const manualResult = getMatchResult(
         prediction.teamLocal,
         prediction.teamVisitor,
         ''
+      );
+
+      const finalResult = manualResult || findMatchResultByTeams(
+        results,
+        prediction.teamLocal,
+        prediction.teamVisitor
       );
 
       if (finalResult) {
