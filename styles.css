@@ -537,7 +537,12 @@ canvas {
     font-size: 0.85rem;
   }
 
+  body {
+    overflow-x: hidden;
+  }
+
   main {
+    min-width: 0;
     margin: 1rem auto;
     padding: 0 0.5rem;
   }
