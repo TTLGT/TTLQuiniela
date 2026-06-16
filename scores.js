@@ -23,6 +23,60 @@ let resultsCache = null;
 // Caché de fechas/horarios de todos los partidos (incluyendo pendientes)
 let scheduleCache = null;
 
+// Caché de horarios ESPN en UTC
+let espnTimeCache = null;
+
+function utcToGuatemala(utcStr) {
+  // Guatemala = UTC-6, no DST
+  const d = new Date(utcStr);
+  const gt = new Date(d.getTime() - 6 * 60 * 60 * 1000);
+  return {
+    date: gt.toISOString().slice(0, 10),
+    time: `${String(gt.getUTCHours()).padStart(2, '0')}:${String(gt.getUTCMinutes()).padStart(2, '0')}`
+  };
+}
+
+async function fetchESPNTimes() {
+  if (espnTimeCache) return espnTimeCache;
+
+  const cache = {};
+  const today = new Date();
+  const dates = [];
+  for (let i = -1; i <= 21; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() + i);
+    dates.push(d.toISOString().slice(0, 10).replace(/-/g, ''));
+  }
+
+  const results = await Promise.all(
+    dates.map(date =>
+      fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${date}&lang=es&region=gt`)
+        .then(r => r.json())
+        .catch(() => null)
+    )
+  );
+
+  for (const data of results) {
+    if (!data?.events) continue;
+    for (const event of data.events) {
+      const utcStr = event.date;
+      const competitors = event.competitions?.[0]?.competitors || [];
+      const rawHome = competitors.find(c => c.homeAway === 'home')?.team?.name;
+      const rawAway = competitors.find(c => c.homeAway === 'away')?.team?.name;
+      const team1 = normalizeTeamName(rawHome);
+      const team2 = normalizeTeamName(rawAway);
+      if (team1 && team2 && utcStr) {
+        cache[`${team1} vs ${team2}`] = utcStr;
+        cache[`${team2} vs ${team1}`] = utcStr;
+      }
+    }
+  }
+
+  espnTimeCache = cache;
+  console.log(`✅ ESPN: ${Object.keys(cache).length / 2} partidos con horario GT cargados`);
+  return cache;
+}
+
 async function fetchWorldCupResults() {
   console.log('🌍 Descargando resultados del feed worldcup.json...');
 
@@ -167,12 +221,22 @@ function processMatchSchedule(match, schedule) {
 }
 
 function findMatchDateTime(teamLocal, teamVisitor) {
-  // Check manual schedule first (takes priority over the feed)
-  const manualKey1 = `${teamLocal} vs ${teamVisitor}`;
-  const manualKey2 = `${teamVisitor} vs ${teamLocal}`;
-  if (MANUAL_SCHEDULE[manualKey1]) return MANUAL_SCHEDULE[manualKey1];
-  if (MANUAL_SCHEDULE[manualKey2]) return MANUAL_SCHEDULE[manualKey2];
+  // 1. Manual schedule (highest priority)
+  const key1 = `${teamLocal} vs ${teamVisitor}`;
+  const key2 = `${teamVisitor} vs ${teamLocal}`;
+  if (MANUAL_SCHEDULE[key1]) return MANUAL_SCHEDULE[key1];
+  if (MANUAL_SCHEDULE[key2]) return MANUAL_SCHEDULE[key2];
 
+  // 2. ESPN times in Guatemala (UTC-6)
+  if (espnTimeCache) {
+    const utcStr = espnTimeCache[key1] || espnTimeCache[key2];
+    if (utcStr) {
+      const gt = utcToGuatemala(utcStr);
+      return { date: gt.date, time: gt.time, utcStr };
+    }
+  }
+
+  // 3. Fallback: openfootball feed schedule (local venue time, not Guatemala)
   const schedule = scheduleCache || {};
   for (const [, entry] of Object.entries(schedule)) {
     if (

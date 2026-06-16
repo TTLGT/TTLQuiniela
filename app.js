@@ -149,8 +149,12 @@ function setupDOM() {
 async function loadAllData() {
   try {
     console.log('📥 Cargando datos...');
-    appState.predictions = await readPredictionsFromSheets();
-    const worldcupData = await fetchWorldCupResults();
+    const [predictions, worldcupData] = await Promise.all([
+      readPredictionsFromSheets(),
+      fetchWorldCupResults()
+    ]);
+    await fetchESPNTimes();
+    appState.predictions = predictions;
     appState.scores = calculateParticipantScores(appState.predictions, worldcupData);
     appState.participants = getRanking(appState.scores);
     await renderAllViews();
@@ -351,9 +355,11 @@ async function renderPhase(phaseId) {
       dateTimeHtml = `<div class="match-datetime">${day} ${monthName}${timeStr}</div>`;
 
       if (!hasResult && matchDT.time) {
-        const kickoff = new Date(`${matchDT.date}T${matchDT.time}:00`);
+        const kickoff = matchDT.utcStr
+          ? new Date(matchDT.utcStr)
+          : new Date(`${matchDT.date}T${matchDT.time}:00`);
         const minutesElapsed = (Date.now() - kickoff.getTime()) / 60000;
-        isLive = minutesElapsed >= 0 && minutesElapsed <= 105;
+        isLive = minutesElapsed >= 0 && minutesElapsed <= 135;
       }
     }
 
