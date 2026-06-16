@@ -299,14 +299,14 @@ async function renderPhase(phaseId) {
 
   if (isGroups) {
     thead.innerHTML = `
-      <th class="sticky-col">Partido</th>
+      <th class="sticky-col">#</th>
       <th class="sticky-col">Grupo</th>
-      <th class="sticky-col">Resultado Real</th>
+      <th class="sticky-col">Partido</th>
       ${participantHeaders}`;
   } else {
     thead.innerHTML = `
+      <th class="sticky-col">#</th>
       <th class="sticky-col">Partido</th>
-      <th class="sticky-col">Resultado Real</th>
       ${participantHeaders}`;
   }
 

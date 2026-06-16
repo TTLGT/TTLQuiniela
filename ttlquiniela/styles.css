@@ -925,14 +925,16 @@ body.dark-mode .legend-title {
    ============================================ */
 
 .status-badge {
-  display: inline-block;
+  display: block;
   font-size: 0.65rem;
   font-weight: 700;
-  padding: 0.1rem 0.45rem;
+  padding: 0.18rem 0.6rem;
   border-radius: 20px;
   text-transform: uppercase;
   letter-spacing: 0.4px;
   white-space: nowrap;
+  align-self: stretch;
+  text-align: center;
 }
 
 .status-badge.finished { background-color: rgba(40,167,69,0.15); color: #28a745; }
@@ -962,15 +964,17 @@ body.dark-mode .legend-title {
 .result-cell {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 0.2rem;
   line-height: 1.2;
+  text-align: center;
 }
 
 .result-scoreboard {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.35rem;
-  white-space: nowrap;
 }
 
 .rsb-side {
@@ -985,10 +989,9 @@ body.dark-mode .legend-title {
 .rsb-visitor { flex-direction: row-reverse; }
 
 .rsb-name {
-  max-width: 6rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  word-break: normal;
+  max-width: 9rem;
 }
 
 .rsb-goals {
