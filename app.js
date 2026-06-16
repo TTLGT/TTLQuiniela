@@ -557,6 +557,11 @@ function showCard(phaseId) {
     const minutesElapsed = (Date.now() - kickoff.getTime()) / 60000;
     cardIsLive = minutesElapsed >= 0 && minutesElapsed <= 105;
   }
+  const _cardToday = new Date();
+  const cardTodayStr = `${_cardToday.getFullYear()}-${String(_cardToday.getMonth()+1).padStart(2,'0')}-${String(_cardToday.getDate()).padStart(2,'0')}`;
+  const cardWatchLink = cardMatchDT && cardMatchDT.date === cardTodayStr
+    ? '<a href="https://futbol-libres.su/" target="_blank" class="watch-link watch-link-card">📺 Ver partidos en vivo</a>'
+    : '';
   const statusBadge = hasResult
     ? '<span class="status-badge finished" style="display:block;text-align:center;margin:0.3rem 0">Finalizado</span>'
     : cardIsLive
@@ -575,7 +580,7 @@ function showCard(phaseId) {
       </div>
       <div class="score">${hasResult ? `${match.result.goalsTeamA} - ${match.result.goalsTeamB}` : '? - ?'}</div>
       ${statusBadge}
-      <a href="https://futbol-libres.su/" target="_blank" class="watch-link watch-link-card">📺 Ver partidos en vivo</a>
+      ${cardWatchLink}
       <div class="card-predictions">${predsHtml}</div>
     </div>
     <div class="card-nav">
@@ -633,6 +638,11 @@ function renderCardGrid(phaseId, sortedMatches, participants, selectedParticipan
       const minutesElapsed = (Date.now() - kickoff.getTime()) / 60000;
       gridIsLive = minutesElapsed >= 0 && minutesElapsed <= 105;
     }
+    const _gridToday = new Date();
+    const gridTodayStr = `${_gridToday.getFullYear()}-${String(_gridToday.getMonth()+1).padStart(2,'0')}-${String(_gridToday.getDate()).padStart(2,'0')}`;
+    const gridWatchLink = gridMatchDT && gridMatchDT.date === gridTodayStr
+      ? '<a href="https://futbol-libres.su/" target="_blank" class="watch-link watch-link-grid">📺 Ver partidos en vivo</a>'
+      : '';
     const statusBadge = hasResult
       ? '<span class="status-badge finished">Finalizado</span>'
       : gridIsLive
@@ -664,7 +674,7 @@ function renderCardGrid(phaseId, sortedMatches, participants, selectedParticipan
         <span class="grid-score">${score}</span>
         <span class="grid-team grid-team-right">${flagV} ${match.teamVisitor}</span>
       </div>
-      <a href="https://futbol-libres.su/" target="_blank" class="watch-link watch-link-grid">📺 Ver partidos en vivo</a>
+      ${gridWatchLink}
       <div class="grid-predictions">${predsHtml}</div>
     </div>`;
   }).join('');
