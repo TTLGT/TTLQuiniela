@@ -1196,6 +1196,7 @@ body.dark-mode .card-pred-row.winner-match { background-color: rgba(255,193,7,0.
 /* Show/hide table vs cards based on screen size */
 @media (max-width: 768px) {
   .table-wrapper { display: none; }
+  #general .table-wrapper { display: block; overflow-x: auto; }
   .card-container { display: block !important; }
   .card-container .card-nav { display: flex; }
 }
@@ -1345,3 +1346,59 @@ body.dark-mode .grid-match-card {
 body.dark-mode .grid-pred-row.exact-match  { background-color: rgba(40, 167, 69, 0.2); }
 body.dark-mode .grid-pred-row.winner-match { background-color: rgba(255, 193, 7, 0.15); }
 body.dark-mode .grid-vs-pending            { color: #666; }
+
+/* ============================================
+   TABLA GENERAL — COMPACT LAYOUT
+   ============================================ */
+
+#general table {
+  font-size: 0.88rem;
+  width: auto;
+  min-width: 0;
+  line-height: 1.35;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#general th {
+  padding: 0.4rem 0.75rem;
+  white-space: nowrap;
+  font-size: 0.82rem;
+}
+
+#general td {
+  padding: 0.3rem 0.65rem;
+  white-space: nowrap;
+}
+
+/* Numeric phase columns — fixed narrower width */
+#general table th:nth-child(n+4),
+#general table td:nth-child(n+4) {
+  width: 68px;
+  min-width: 68px;
+  max-width: 68px;
+}
+
+#general .controls-bar {
+  padding: 0.4rem 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+#general .section-title {
+  padding: 0.55rem 1rem;
+  font-size: 1.1rem;
+  margin-bottom: 0.2rem;
+}
+
+#general .charts-container {
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+#general .chart-wrapper {
+  padding: 0.85rem;
+}
+
+body.dark-mode #general table {
+  font-size: 0.78rem;
+}
