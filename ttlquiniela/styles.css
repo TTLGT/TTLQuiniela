@@ -159,14 +159,16 @@ thead {
 }
 
 th {
-  padding: 1rem;
-  text-align: left;
+  padding: 0.45rem 0.6rem;
+  text-align: center;
   border-bottom: 2px solid var(--primary-btn);
 }
 
 td {
-  padding: 0.75rem 1rem;
+  padding: 0.35rem 0.55rem;
   border-bottom: 1px solid var(--border-gray);
+  text-align: center;
+  vertical-align: middle;
 }
 
 tbody tr:hover {
@@ -654,13 +656,6 @@ body.dark-mode tfoot .sticky-col {
   background-color: #010409;
 }
 
-body.dark-mode .group-header-row {
-  background-color: #021040 !important;
-}
-
-body.dark-mode .group-header-row:hover {
-  background-color: #062DA1 !important;
-}
 
 /* ============================================
    DARK MODE TOGGLE BUTTON
@@ -758,8 +753,8 @@ tfoot .sticky-col {
 }
 
 .sticky-header-portal thead th {
-  padding: 1rem;
-  text-align: left;
+  padding: 0.45rem 0.6rem;
+  text-align: center;
   border-bottom: 2px solid var(--primary-btn);
   background-color: var(--primary-accent);
   color: white;
@@ -796,9 +791,9 @@ tbody tr:hover .sticky-col {
 .score-pill .pill-score { font-weight: 600; }
 .score-pill .pill-pts  { font-size: 0.7rem; font-weight: 700; }
 
-td.exact-match  { background-color: transparent; }
-td.winner-match { background-color: transparent; }
-td.no-match     { background-color: transparent; }
+td.exact-match  { background-color: transparent; text-align: center; }
+td.winner-match { background-color: transparent; text-align: center; }
+td.no-match     { background-color: transparent; text-align: center; }
 
 td.exact-match .score-pill {
   background-color: rgba(40,167,69,0.18);
@@ -870,7 +865,7 @@ tfoot tr {
 }
 
 tfoot td {
-  padding: 0.75rem 1rem;
+  padding: 0.35rem 0.55rem;
   border-top: 2px solid var(--primary-btn);
   font-weight: 700;
   border-bottom: none;
@@ -942,6 +937,27 @@ body.dark-mode .legend-title {
 
 .status-badge.finished { background-color: rgba(40,167,69,0.15); color: #28a745; }
 .status-badge.pending  { background-color: rgba(120,120,120,0.12); color: #888; }
+
+.watch-link {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #e53935;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.watch-link:hover { text-decoration: underline; }
+.watch-link-card {
+  display: block;
+  text-align: center;
+  font-size: 0.8rem;
+  margin: 0.3rem 0;
+}
+.watch-link-grid {
+  display: block;
+  font-size: 0.7rem;
+  margin: 0.25rem 0 0.1rem;
+}
 
 .result-cell {
   display: flex;
@@ -1026,7 +1042,9 @@ body.dark-mode .progress-bar-track {
 th.sortable {
   cursor: pointer;
   user-select: none;
-  white-space: nowrap;
+  text-align: center;
+  white-space: normal;
+  min-width: 60px;
 }
 
 th.sortable:hover {
@@ -1047,43 +1065,6 @@ th.sort-desc .sort-icon {
   color: #ffc107;
 }
 
-/* ============================================
-   COLLAPSIBLE GROUP HEADERS
-   ============================================ */
-
-.group-header-row {
-  background-color: var(--primary-dark) !important;
-  color: white;
-  cursor: pointer;
-  user-select: none;
-}
-
-.group-header-row td {
-  padding: 0.4rem 1rem;
-  font-weight: 700;
-  font-size: 0.88rem;
-  letter-spacing: 0.3px;
-  color: white;
-  border-bottom: none;
-}
-
-.group-header-row:hover {
-  background-color: var(--primary-btn) !important;
-}
-
-.group-toggle-icon {
-  display: inline-block;
-  margin-right: 0.5rem;
-  transition: transform 0.22s ease;
-}
-
-.group-header-row.collapsed .group-toggle-icon {
-  transform: rotate(-90deg);
-}
-
-tr.group-data-row.hidden {
-  display: none;
-}
 
 /* ============================================
    IMPROVED ACTIVE NAV TAB
@@ -1110,58 +1091,6 @@ tr.group-data-row.hidden {
   box-shadow: 0 2px 6px rgba(6,45,161,0.3);
 }
 
-/* ============================================
-   COLUMN PIN BUTTON
-   ============================================ */
-
-.pin-btn {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-size: 0.62rem;
-  padding: 0 0 0 3px;
-  color: rgba(255,255,255,0.35);
-  vertical-align: middle;
-  line-height: 1;
-  opacity: 0.6;
-}
-
-.pin-btn:hover,
-.pin-btn.pinned {
-  color: #ffc107;
-  background: transparent;
-  transform: none;
-  box-shadow: none;
-  opacity: 1;
-}
-
-.col-pinned {
-  position: sticky !important;
-  z-index: 5 !important;
-  background-color: white !important;
-}
-
-thead .col-pinned {
-  background-color: var(--primary-accent) !important;
-  z-index: 6 !important;
-}
-
-tfoot .col-pinned {
-  background-color: var(--primary-dark) !important;
-  z-index: 5 !important;
-}
-
-body.dark-mode .col-pinned {
-  background-color: #161b22 !important;
-}
-
-body.dark-mode thead .col-pinned {
-  background-color: #021040 !important;
-}
-
-body.dark-mode tfoot .col-pinned {
-  background-color: #010409 !important;
-}
 
 /* ============================================
    MOBILE CARD VIEW — PREDICTIONS LIST

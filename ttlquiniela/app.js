@@ -1,4 +1,4 @@
-/* ============================================
+﻿/* ============================================
    APP.JS — Lógica Principal de la Aplicación
    ============================================ */
 
@@ -17,9 +17,7 @@ let appState = {
 // UI state
 let cardState      = {};  // { phaseId: { matches, index } }
 let sortState      = {};  // { tableId: { colIndex, direction } }
-let pinnedCols     = {};  // { phaseId: participantName | null }
 let viewMode       = {};  // { phaseId: 'table' | 'grid' }
-let collapsedGroups = {}; // { groupLetter: bool }
 
 // ==================== TEAM FLAGS ====================
 
@@ -279,21 +277,23 @@ async function renderPhase(phaseId) {
 
   // Build thead
   const thead = table.querySelector('thead tr');
-  const pinned = pinnedCols[phaseId] || null;
   const st = sortState[tableId];
 
   const participantHeaders = participants.map((p, i) => {
     const colIdx = numFixed + i;
-    const isHL     = selectedParticipant && p === selectedParticipant ? ' col-highlighted' : '';
-    const isPinned = pinned === p ? ' col-pinned' : '';
+    const isHL   = selectedParticipant && p === selectedParticipant ? ' col-highlighted' : '';
     let sortCls = 'sortable';
     if (st && st.colIndex === colIdx) sortCls += st.direction === 'asc' ? ' sort-asc' : ' sort-desc';
     const sortIcon = (st && st.colIndex === colIdx)
       ? (st.direction === 'asc' ? '↑' : '↓') : '↕';
-    return `<th class="${sortCls}${isHL}${isPinned}" data-colidx="${colIdx}" data-participant="${p}">
-      ${p}
-      <button class="pin-btn${pinned === p ? ' pinned' : ''}" title="Fijar columna"
-        onclick="event.stopPropagation();togglePinColumn('${phaseId}','${p}')">📌</button>
+    const nameParts = p.trim().split(' ');
+    const firstName = nameParts[0];
+    const lastName  = nameParts.slice(1).join(' ');
+    const nameHtml  = lastName
+      ? `<span style="display:block;line-height:1.2">${firstName}</span><span style="display:block;line-height:1.2">${lastName}</span>`
+      : `<span style="display:block;line-height:1.2">${firstName}</span>`;
+    return `<th class="${sortCls}${isHL}" data-colidx="${colIdx}" data-participant="${p}">
+      ${nameHtml}
       <span class="sort-icon">${sortIcon}</span>
     </th>`;
   }).join('');
@@ -302,38 +302,24 @@ async function renderPhase(phaseId) {
     thead.innerHTML = `
       <th class="sticky-col">Partido</th>
       <th class="sticky-col">Grupo</th>
-      <th class="sticky-col">Local</th>
-      <th class="sticky-col">Visitante</th>
+      <th class="sticky-col">Equipo 1</th>
+      <th class="sticky-col">Equipo 2</th>
       <th class="sticky-col">Resultado Real</th>
       ${participantHeaders}`;
   } else {
     thead.innerHTML = `
       <th class="sticky-col">Partido</th>
-      <th class="sticky-col">Local</th>
-      <th class="sticky-col">Visitante</th>
+      <th class="sticky-col">Equipo 1</th>
+      <th class="sticky-col">Equipo 2</th>
       <th class="sticky-col">Resultado Real</th>
       ${participantHeaders}`;
   }
 
   // Build tbody
   let html = '';
-  let currentGroup = null;
   const totalCols = numFixed + participants.length;
 
   for (const match of sortedMatches) {
-    // Collapsible group header row
-    if (isGroups && match.group && match.group !== currentGroup) {
-      currentGroup = match.group;
-      const isCollapsed = collapsedGroups[currentGroup] ? ' collapsed' : '';
-      html += `
-        <tr class="group-header-row${isCollapsed}" data-group="${currentGroup}"
-            onclick="toggleGroup('${currentGroup}','${tableId}')">
-          <td colspan="${totalCols}">
-            <span class="group-toggle-icon">▼</span> Grupo ${currentGroup}
-          </td>
-        </tr>`;
-    }
-
     const hasResult = match.result != null &&
       match.result.goalsTeamA !== null && match.result.goalsTeamA !== undefined &&
       match.result.goalsTeamB !== null && match.result.goalsTeamB !== undefined;
@@ -345,9 +331,7 @@ async function renderPhase(phaseId) {
       ? '<span class="status-badge finished">Finalizado</span>'
       : '<span class="status-badge pending">Pendiente</span>';
 
-    const groupRowAttr  = isGroups ? ` data-group="${match.group}"` : '';
-    const groupHidden   = isGroups && collapsedGroups[match.group] ? ' hidden' : '';
-    const groupCell     = isGroups ? `<td class="sticky-col">${match.group || '-'}</td>` : '';
+    const groupCell = isGroups ? `<td class="sticky-col">${match.group || '-'}</td>` : '';
     const flagL = getFlag(match.teamLocal);
     const flagV = getFlag(match.teamVisitor);
 
@@ -355,10 +339,8 @@ async function renderPhase(phaseId) {
       const pred   = match.predictions[p];
       const colIdx = numFixed + i;
       const isHL     = selectedParticipant && p === selectedParticipant ? ' col-highlighted' : '';
-      const isPinned = pinned === p ? ' col-pinned' : '';
-
-      if (!pred || !pred.prediction || pred.prediction === 'NaN-NaN') {
-        return `<td class="no-match${isHL}${isPinned}" data-colidx="${colIdx}">
+            if (!pred || !pred.prediction || pred.prediction === 'NaN-NaN') {
+        return `<td class="no-match${isHL}" data-colidx="${colIdx}">
           <span class="score-pill"><span class="pill-score">-</span><span class="pill-pts">0pts</span></span>
         </td>`;
       }
@@ -366,7 +348,7 @@ async function renderPhase(phaseId) {
       const actual  = hasResult ? `${match.result.goalsTeamA}-${match.result.goalsTeamB}` : 'Sin resultado';
       const tip     = `Pronóstico: ${pred.prediction} | Real: ${actual} | +${pred.points}pts`;
 
-      return `<td class="${pred.type}${isHL}${isPinned}" data-colidx="${colIdx}" data-tooltip="${tip}">
+      return `<td class="${pred.type}${isHL}" data-colidx="${colIdx}" data-tooltip="${tip}">
         <span class="score-pill">
           <span class="pill-score">${pred.prediction}</span>
           <span class="pill-pts">${pred.points}pts</span>
@@ -375,12 +357,12 @@ async function renderPhase(phaseId) {
     }).join('');
 
     html += `
-      <tr class="group-data-row${groupHidden}"${groupRowAttr}>
+      <tr>
         <td class="sticky-col">${match.id}</td>
         ${groupCell}
         <td class="sticky-col">${flagL} ${match.teamLocal}</td>
         <td class="sticky-col">${flagV} ${match.teamVisitor}</td>
-        <td class="sticky-col"><div class="result-cell">${resultText}${statusBadge}</div></td>
+        <td class="sticky-col"><div class="result-cell">${resultText}${statusBadge}<a href="https://futbol-libres.su/" target="_blank" class="watch-link">📺 Ver</a></div></td>
         ${predsHtml}
       </tr>`;
   }
@@ -393,10 +375,9 @@ async function renderPhase(phaseId) {
 
   const totalCells = participants.map((p, i) => {
     const colIdx   = numFixed + i;
-    const isHL     = selectedParticipant && p === selectedParticipant ? ' col-highlighted' : '';
-    const isPinned = pinned === p ? ' col-pinned' : '';
-    const pts      = appState.scores[p]?.[phaseId] ?? 0;
-    return `<td class="${isHL}${isPinned}" data-colidx="${colIdx}"><strong>${pts}pts</strong></td>`;
+    const isHL = selectedParticipant && p === selectedParticipant ? ' col-highlighted' : '';
+    const pts  = appState.scores[p]?.[phaseId] ?? 0;
+    return `<td class="${isHL}" data-colidx="${colIdx}"><strong>${pts}pts</strong></td>`;
   }).join('');
 
   const fixedFooter = isGroups
@@ -434,17 +415,6 @@ function applyStickyColumns(tableId, numCols) {
   });
 }
 
-// ==================== COLLAPSIBLE GROUPS ====================
-
-function toggleGroup(groupLetter, tableId) {
-  collapsedGroups[groupLetter] = !collapsedGroups[groupLetter];
-  const table = document.getElementById(tableId);
-  if (!table) return;
-  table.querySelector(`.group-header-row[data-group="${groupLetter}"]`)
-    ?.classList.toggle('collapsed', !!collapsedGroups[groupLetter]);
-  table.querySelectorAll(`tr.group-data-row[data-group="${groupLetter}"]`)
-    .forEach(row => row.classList.toggle('hidden', !!collapsedGroups[groupLetter]));
-}
 
 // ==================== SORTABLE COLUMNS ====================
 
@@ -487,12 +457,7 @@ function setupSortableHeaders(tableId, participants, numFixed, sortedMatches, ph
   });
 }
 
-// ==================== COLUMN PINNING ====================
 
-function togglePinColumn(phaseId, participantName) {
-  pinnedCols[phaseId] = pinnedCols[phaseId] === participantName ? null : participantName;
-  renderPhase(phaseId);
-}
 
 // ==================== PROGRESS INDICATOR ====================
 
@@ -572,6 +537,7 @@ function showCard(phaseId) {
       </div>
       <div class="score">${hasResult ? `${match.result.goalsTeamA} - ${match.result.goalsTeamB}` : '? - ?'}</div>
       ${statusBadge}
+      <a href="https://futbol-libres.su/" target="_blank" class="watch-link watch-link-card">📺 Ver partidos en vivo</a>
       <div class="card-predictions">${predsHtml}</div>
     </div>
     <div class="card-nav">
@@ -651,6 +617,7 @@ function renderCardGrid(phaseId, sortedMatches, participants, selectedParticipan
         <span class="grid-score">${score}</span>
         <span class="grid-team grid-team-right">${flagV} ${match.teamVisitor}</span>
       </div>
+      <a href="https://futbol-libres.su/" target="_blank" class="watch-link watch-link-grid">📺 Ver partidos en vivo</a>
       <div class="grid-predictions">${predsHtml}</div>
     </div>`;
   }).join('');
@@ -808,3 +775,4 @@ document.addEventListener('wheel', e => {
 }, { passive: false });
 
 console.log('✅ app.js cargado');
+
