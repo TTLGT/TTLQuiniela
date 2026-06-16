@@ -87,6 +87,7 @@ function setupNavigation() {
       if (phaseFixedCols[tabId]) {
         applyStickyColumns(`${tabId}-table`, phaseFixedCols[tabId]);
       }
+      updateBackToTopVisibility();
     });
   });
 }
@@ -611,7 +612,24 @@ function toggleView(phaseId) {
   const btn = document.getElementById(`view-toggle-${phaseId}`);
   if (btn) btn.textContent = viewMode[phaseId] === 'grid' ? '☰ Tabla' : '⊞ Cuadrícula';
   renderPhase(phaseId);
+  updateBackToTopVisibility();
 }
+
+function updateBackToTopVisibility() {
+  const topBtn = document.getElementById('back-to-top-btn');
+  if (!topBtn) return;
+  const activeSection = document.querySelector('section.active');
+  const phaseId = activeSection ? activeSection.id : null;
+  const isGrid = phaseId && viewMode[phaseId] === 'grid';
+  const scrolledDown = window.scrollY > 200;
+  topBtn.classList.toggle('visible', !!(isGrid && scrolledDown));
+}
+
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+window.addEventListener('scroll', updateBackToTopVisibility, { passive: true });
 
 function renderCardGrid(phaseId, sortedMatches, participants, selectedParticipant) {
   const gridContainer = document.getElementById(`card-grid-${phaseId}`);

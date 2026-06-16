@@ -1336,6 +1336,45 @@ body.dark-mode .card-pred-row.winner-match { background-color: rgba(255,193,7,0.
   box-shadow: 0 1px 4px rgba(6, 45, 161, 0.3);
 }
 
+/* Back-to-top button (mobile grid view only) */
+#back-to-top-btn {
+  display: none;
+  position: fixed;
+  bottom: 24px;
+  right: 20px;
+  z-index: 999;
+  background: #062da1;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(6, 45, 161, 0.5);
+  transition: opacity 0.2s, transform 0.2s;
+  align-items: center;
+  justify-content: center;
+}
+
+#back-to-top-btn.visible {
+  display: flex;
+}
+
+#back-to-top-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(6, 45, 161, 0.6);
+}
+
+body.dark-mode #back-to-top-btn {
+  background: #3a5bc7;
+}
+
+@media (min-width: 769px) {
+  #back-to-top-btn { display: none !important; }
+}
+
 /* Dark mode */
 body.dark-mode .grid-match-card {
   background: #1c2128;
