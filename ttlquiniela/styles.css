@@ -124,9 +124,16 @@ section.active {
   padding: 1rem 1.5rem;
   font-size: 1.4rem;
   font-weight: 700;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.4rem;
   border-radius: 4px;
   text-align: center;
+}
+
+.phase-hint {
+  text-align: center;
+  font-size: 0.82rem;
+  color: #666;
+  margin: 0 0 1.2rem;
 }
 
 .section-subtitle {
@@ -626,6 +633,10 @@ body.dark-mode .progress-indicator {
 
 body.dark-mode .section-title {
   background-color: #7a0000;
+}
+
+body.dark-mode .phase-hint {
+  color: #888;
 }
 
 body.dark-mode select,
