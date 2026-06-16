@@ -1287,22 +1287,30 @@ body.dark-mode .card-pred-row.winner-match { background-color: rgba(255,193,7,0.
 
 /* View toggle button */
 .view-toggle-btn {
-  background: var(--primary-btn);
+  background: linear-gradient(135deg, #062DA1, #041688);
   color: white;
   border: none;
-  border-radius: 6px;
-  padding: 0.4rem 0.85rem;
+  border-radius: 20px;
+  padding: 0.45rem 1.1rem;
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s, transform 0.1s;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
   white-space: nowrap;
   flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(6, 45, 161, 0.35);
+  letter-spacing: 0.02em;
 }
 
 .view-toggle-btn:hover {
-  background: var(--primary-dark);
-  transform: translateY(-1px);
+  background: linear-gradient(135deg, #0838c4, #062DA1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(6, 45, 161, 0.45);
+}
+
+.view-toggle-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(6, 45, 161, 0.3);
 }
 
 /* Dark mode */
