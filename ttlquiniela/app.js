@@ -16,7 +16,6 @@ let appState = {
 
 // UI state
 let cardState      = {};  // { phaseId: { matches, index } }
-let sortState      = {};  // { tableId: { colIndex, direction } }
 let viewMode       = {};  // { phaseId: 'table' | 'grid' }
 
 // ==================== TEAM FLAGS ====================
@@ -277,24 +276,18 @@ async function renderPhase(phaseId) {
 
   // Build thead
   const thead = table.querySelector('thead tr');
-  const st = sortState[tableId];
 
   const participantHeaders = participants.map((p, i) => {
     const colIdx = numFixed + i;
     const isHL   = selectedParticipant && p === selectedParticipant ? ' col-highlighted' : '';
-    let sortCls = 'sortable';
-    if (st && st.colIndex === colIdx) sortCls += st.direction === 'asc' ? ' sort-asc' : ' sort-desc';
-    const sortIcon = (st && st.colIndex === colIdx)
-      ? (st.direction === 'asc' ? '↑' : '↓') : '↕';
     const nameParts = p.trim().split(' ');
     const firstName = nameParts[0];
     const lastName  = nameParts.slice(1).join(' ');
     const nameHtml  = lastName
       ? `<span style="display:block;line-height:1.2">${firstName}</span><span style="display:block;line-height:1.2">${lastName}</span>`
       : `<span style="display:block;line-height:1.2">${firstName}</span>`;
-    return `<th class="${sortCls}${isHL}" data-colidx="${colIdx}" data-participant="${p}">
+    return `<th class="${isHL.trim()}" data-colidx="${colIdx}" data-participant="${p}">
       ${nameHtml}
-      <span class="sort-icon">${sortIcon}</span>
     </th>`;
   }).join('');
 
@@ -386,9 +379,8 @@ async function renderPhase(phaseId) {
 
   tfoot.innerHTML = `<tr>${fixedFooter}${totalCells}</tr>`;
 
-  // Apply sticky left widths, setup sortable headers, render progress + cards
+  // Apply sticky left widths, render progress + cards
   applyStickyColumns(tableId, numFixed);
-  setupSortableHeaders(tableId, participants, numFixed, sortedMatches, phaseId);
   renderProgressIndicator(phaseId, allMatches);
   renderPhaseCards(phaseId, sortedMatches, participants);
   renderCardGrid(phaseId, sortedMatches, participants, selectedParticipant);
@@ -414,49 +406,6 @@ function applyStickyColumns(tableId, numCols) {
     }
   });
 }
-
-
-// ==================== SORTABLE COLUMNS ====================
-
-function setupSortableHeaders(tableId, participants, numFixed, sortedMatches, phaseId) {
-  const table = document.getElementById(tableId);
-  if (!table) return;
-
-  table.querySelectorAll('thead th.sortable').forEach(th => {
-    th.addEventListener('click', () => {
-      const colIdx = parseInt(th.dataset.colidx);
-      if (isNaN(colIdx)) return;
-      const cur = sortState[tableId] || {};
-      const dir = (cur.colIndex === colIdx && cur.direction === 'desc') ? 'asc' : 'desc';
-      sortState[tableId] = { colIndex: colIdx, direction: dir };
-
-      // Update icons
-      table.querySelectorAll('thead th.sortable').forEach(h => {
-        h.classList.remove('sort-asc', 'sort-desc');
-        const icon = h.querySelector('.sort-icon');
-        if (icon) icon.textContent = '↕';
-      });
-      th.classList.add(dir === 'asc' ? 'sort-asc' : 'sort-desc');
-      const icon = th.querySelector('.sort-icon');
-      if (icon) icon.textContent = dir === 'asc' ? '↑' : '↓';
-
-      // Sort data rows
-      const tbody = table.querySelector('tbody');
-      const rows  = Array.from(tbody.querySelectorAll('tr.group-data-row'));
-      rows.sort((a, b) => {
-        const aCell = a.querySelector(`td[data-colidx="${colIdx}"]`);
-        const bCell = b.querySelector(`td[data-colidx="${colIdx}"]`);
-        const aVal  = parseInt(aCell?.querySelector('.pill-pts')?.textContent) || 0;
-        const bVal  = parseInt(bCell?.querySelector('.pill-pts')?.textContent) || 0;
-        return dir === 'desc' ? bVal - aVal : aVal - bVal;
-      });
-
-      // Re-insert rows (group header rows stay in place)
-      rows.forEach(row => tbody.appendChild(row));
-    });
-  });
-}
-
 
 
 // ==================== PROGRESS INDICATOR ====================

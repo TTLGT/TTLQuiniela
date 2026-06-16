@@ -1035,35 +1035,6 @@ body.dark-mode .progress-bar-track {
   box-shadow: 0 0 0 3px rgba(6,45,161,0.12);
 }
 
-/* ============================================
-   SORTABLE COLUMN HEADERS
-   ============================================ */
-
-th.sortable {
-  cursor: pointer;
-  user-select: none;
-  text-align: center;
-  white-space: normal;
-  min-width: 60px;
-}
-
-th.sortable:hover {
-  background-color: rgba(255,255,255,0.15);
-}
-
-.sort-icon {
-  display: inline-block;
-  font-size: 0.62rem;
-  margin-left: 3px;
-  opacity: 0.5;
-  vertical-align: middle;
-}
-
-th.sort-asc .sort-icon,
-th.sort-desc .sort-icon {
-  opacity: 1;
-  color: #ffc107;
-}
 
 
 /* ============================================
