@@ -101,6 +101,12 @@ function setupDOM() {
     wrapper.className = 'table-wrapper';
     table.parentNode.insertBefore(wrapper, table);
     wrapper.appendChild(table);
+    wrapper.addEventListener('wheel', e => {
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        e.preventDefault();
+        wrapper.scrollLeft += e.deltaY * 1.5;
+      }
+    }, { passive: false });
   });
 
   // Inject legend before each table-wrapper in phase sections
@@ -795,14 +801,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   window.addEventListener('resize', updateHeaderHeight);
   await loadAllData();
 });
-
-// Convert vertical wheel to horizontal scroll on the table wrapper
-document.addEventListener('wheel', e => {
-  const wrapper = e.target.closest('.table-wrapper');
-  if (!wrapper) return;
-  e.preventDefault();
-  wrapper.scrollLeft += e.deltaY * 1.5;
-}, { passive: false });
 
 console.log('✅ app.js cargado');
 
