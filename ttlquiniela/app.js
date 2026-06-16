@@ -726,6 +726,7 @@ function buildStickyPortal(phaseId) {
   if (stickyPortals[phaseId]) {
     stickyPortals[phaseId].observer.disconnect();
     wrapper.removeEventListener('scroll', stickyPortals[phaseId].syncScroll);
+    window.removeEventListener('resize', stickyPortals[phaseId].syncScroll);
   }
 
   // Get or create the portal div (sibling before table-wrapper)
@@ -736,6 +737,7 @@ function buildStickyPortal(phaseId) {
     portal.className = 'sticky-header-portal';
     wrapper.parentNode.insertBefore(portal, wrapper);
   }
+  portal.style.display = 'none'; // always reset; observer will show it if needed
 
   // Build cloned thead (no sticky-left — portal handles its own overflow)
   const clonedThead = thead.cloneNode(true);
@@ -750,8 +752,13 @@ function buildStickyPortal(phaseId) {
   portal.innerHTML = '';
   portal.appendChild(portalTable);
 
-  // Sync column widths + horizontal scroll
+  // Sync column widths, horizontal scroll, and portal left/width to match the wrapper
   function syncScroll() {
+    const rect = wrapper.getBoundingClientRect();
+    portal.style.left  = rect.left + 'px';
+    portal.style.width = rect.width + 'px';
+    portal.style.right = 'auto';
+
     const liveCells   = Array.from(thead.querySelectorAll('th'));
     const portalCells = Array.from(portal.querySelectorAll('th'));
     liveCells.forEach((th, i) => {
@@ -765,6 +772,7 @@ function buildStickyPortal(phaseId) {
   }
 
   wrapper.addEventListener('scroll', syncScroll, { passive: true });
+  window.addEventListener('resize', syncScroll, { passive: true });
 
   // Show portal only when original thead has scrolled above the nav bar
   const headerH = document.querySelector('header')?.offsetHeight ?? 0;

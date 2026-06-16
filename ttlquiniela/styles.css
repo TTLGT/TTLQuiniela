@@ -666,10 +666,6 @@ body.dark-mode .group-header-row:hover {
    DARK MODE TOGGLE BUTTON
    ============================================ */
 
-header {
-  position: relative;
-}
-
 .dark-mode-btn {
   position: absolute;
   right: 1.5rem;
@@ -741,10 +737,12 @@ tfoot .sticky-col {
   z-index: 2;
 }
 
-/* Sticky header portal — sibling of table-wrapper, sticky below nav bar */
+/* Sticky header portal — fixed to viewport, right below the nav bar */
 .sticky-header-portal {
-  position: sticky;
+  position: fixed;
   top: var(--header-h, 0px);
+  left: 0;
+  right: 0;
   z-index: 50;
   overflow: hidden;
   display: none;
