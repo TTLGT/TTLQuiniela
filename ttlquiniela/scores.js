@@ -8,8 +8,19 @@ const MANUAL_RESULTS = {
   // Ejemplo: "Mexico vs USA (2026-06-12)": { goalsTeamA: 2, goalsTeamB: 1 }
 };
 
+// Fechas/horarios manuales (para partidos que el feed aún no tiene en su calendario)
+// Usa los nombres exactos de equipos tal como aparecen en la columna "Partido" de la tabla.
+// El orden local vs visitante no importa — la búsqueda funciona en ambas direcciones.
+const MANUAL_SCHEDULE = {
+  // Formato: "Local vs Visitante": { date: "YYYY-MM-DD", time: "HH:MM" }
+  // Ejemplo: "Alemania vs Curazao": { date: "2026-06-20", time: "18:00" }
+};
+
 // Caché de resultados
 let resultsCache = null;
+
+// Caché de fechas/horarios de todos los partidos (incluyendo pendientes)
+let scheduleCache = null;
 
 async function fetchWorldCupResults() {
   console.log('🌍 Descargando resultados del feed worldcup.json...');
@@ -48,11 +59,14 @@ async function fetchWorldCupResults() {
 
     console.log(`📊 Procesando ${tournaments.length} torneo(s)...`);
 
+    const normalizedSchedule = {};
+
     for (const tournament of tournaments) {
       // Caso top-level con matches
       if (tournament.matches && Array.isArray(tournament.matches)) {
         for (const match of tournament.matches) {
           processMatchResult(match, normalizedResults);
+          processMatchSchedule(match, normalizedSchedule);
         }
 
         continue;
@@ -65,11 +79,13 @@ async function fetchWorldCupResults() {
 
         for (const match of round.matches) {
           processMatchResult(match, normalizedResults);
+          processMatchSchedule(match, normalizedSchedule);
         }
       }
     }
 
     resultsCache = normalizedResults;
+    scheduleCache = normalizedSchedule;
     console.log(`✅ ${Object.keys(normalizedResults).length} resultados procesados`);
     return normalizedResults;
   } catch (error) {
@@ -115,6 +131,57 @@ function processMatchResult(match, normalizedResults) {
   };
 
   console.log(`  ⚽ ${team1} ${goalsTeam1}-${goalsTeam2} ${team2}`);
+}
+
+function processMatchSchedule(match, schedule) {
+  if (!match) return;
+
+  const rawTeam1 = typeof match.team1 === 'string' ? match.team1 : (match.team1 && match.team1.name);
+  const rawTeam2 = typeof match.team2 === 'string' ? match.team2 : (match.team2 && match.team2.name);
+
+  if (!rawTeam1 || !rawTeam2) return;
+
+  const team1 = normalizeTeamName(rawTeam1);
+  const team2 = normalizeTeamName(rawTeam2);
+
+  let date = null;
+  let time = null;
+
+  if (match.date) {
+    if (match.date.includes('T')) {
+      const parts = match.date.split('T');
+      date = parts[0];
+      time = parts[1] ? parts[1].substring(0, 5) : null;
+    } else {
+      date = match.date;
+    }
+  }
+
+  if (match.time) {
+    time = match.time.substring(0, 5);
+  }
+
+  const key = `${team1} vs ${team2}`;
+  schedule[key] = { team1, team2, date, time };
+}
+
+function findMatchDateTime(teamLocal, teamVisitor) {
+  // Check manual schedule first (takes priority over the feed)
+  const manualKey1 = `${teamLocal} vs ${teamVisitor}`;
+  const manualKey2 = `${teamVisitor} vs ${teamLocal}`;
+  if (MANUAL_SCHEDULE[manualKey1]) return MANUAL_SCHEDULE[manualKey1];
+  if (MANUAL_SCHEDULE[manualKey2]) return MANUAL_SCHEDULE[manualKey2];
+
+  const schedule = scheduleCache || {};
+  for (const [, entry] of Object.entries(schedule)) {
+    if (
+      (entry.team1 === teamLocal && entry.team2 === teamVisitor) ||
+      (entry.team1 === teamVisitor && entry.team2 === teamLocal)
+    ) {
+      return { date: entry.date, time: entry.time };
+    }
+  }
+  return null;
 }
 
 function getMatchResult(teamLocal, teamVisitor, dateStr) {

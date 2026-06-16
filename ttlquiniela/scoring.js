@@ -115,6 +115,15 @@ function calculateParticipantScores(predictions, results) {
           ...scoreData,
           result: finalResult
         };
+      } else {
+        // Pending match — include it so it shows in the table
+        scoreByPhase.matches[matchKey] = {
+          ...prediction,
+          points: 0,
+          type: 'no-match',
+          prediction: `${prediction.goalsLocal}-${prediction.goalsVisitor}`,
+          result: null
+        };
       }
     }
 

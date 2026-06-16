@@ -939,6 +939,23 @@ body.dark-mode .legend-title {
 
 .status-badge.finished { background-color: rgba(40,167,69,0.15); color: #28a745; }
 .status-badge.pending  { background-color: rgba(120,120,120,0.12); color: #888; }
+.status-badge.live     { background-color: rgba(220,53,69,0.12); color: #dc3545; animation: live-pulse 1.5s ease-in-out infinite; }
+
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.55; }
+}
+
+.match-datetime {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #555;
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+
+.result-pending .rsb-name { color: #888; }
+.result-pending .rsb-side img { opacity: 0.6; }
 
 .watch-link {
   display: inline-block;

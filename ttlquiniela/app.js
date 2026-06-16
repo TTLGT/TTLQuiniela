@@ -322,16 +322,39 @@ async function renderPhase(phaseId) {
     const flagL = getFlag(match.teamLocal);
     const flagV = getFlag(match.teamVisitor);
 
+    const matchDT = findMatchDateTime(match.teamLocal, match.teamVisitor);
+    let dateTimeHtml = '';
+    let isLive = false;
+    if (matchDT && matchDT.date) {
+      const [, month, day] = matchDT.date.split('-');
+      const monthNames = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+      const monthName = monthNames[parseInt(month, 10) - 1] || month;
+      const timeStr = matchDT.time ? ` ${matchDT.time}` : '';
+      dateTimeHtml = `<div class="match-datetime">${day} ${monthName}${timeStr}</div>`;
+
+      if (!hasResult && matchDT.time) {
+        const kickoff = new Date(`${matchDT.date}T${matchDT.time}:00`);
+        const minutesElapsed = (Date.now() - kickoff.getTime()) / 60000;
+        isLive = minutesElapsed >= 0 && minutesElapsed <= 105;
+      }
+    }
+
     const resultText = hasResult
       ? `<div class="result-scoreboard">
           <span class="rsb-side rsb-local">${flagL}<span class="rsb-name">${match.teamLocal}</span></span>
           <span class="rsb-goals"><strong>${match.result.goalsTeamA}</strong><span class="rsb-sep">–</span><strong>${match.result.goalsTeamB}</strong></span>
           <span class="rsb-side rsb-visitor"><span class="rsb-name">${match.teamVisitor}</span>${flagV}</span>
         </div>`
-      : '<span style="color:#999">-</span>';
+      : `<div class="result-scoreboard result-pending">
+          <span class="rsb-side rsb-local">${flagL}<span class="rsb-name">${match.teamLocal}</span></span>
+          <span class="rsb-goals" style="color:#aaa">vs</span>
+          <span class="rsb-side rsb-visitor"><span class="rsb-name">${match.teamVisitor}</span>${flagV}</span>
+        </div>`;
     const statusBadge = hasResult
       ? '<span class="status-badge finished">Finalizado</span>'
-      : '<span class="status-badge pending">Pendiente</span>';
+      : isLive
+        ? '<span class="status-badge live">🔴 En Curso</span>'
+        : '<span class="status-badge pending">Pendiente</span>';
 
     const groupCell = isGroups ? `<td class="sticky-col">${match.group || '-'}</td>` : '';
 
@@ -360,7 +383,7 @@ async function renderPhase(phaseId) {
       <tr>
         <td class="sticky-col">${match.id}</td>
         ${groupCell}
-        <td class="sticky-col"><div class="result-cell">${resultText}${statusBadge}<a href="https://futbol-libres.su/" target="_blank" class="watch-link">📺 Ver</a></div></td>
+        <td class="sticky-col"><div class="result-cell">${dateTimeHtml}${resultText}${statusBadge}<a href="https://futbol-libres.su/" target="_blank" class="watch-link">📺 Ver</a></div></td>
         ${predsHtml}
       </tr>`;
   }
@@ -498,9 +521,18 @@ function showCard(phaseId) {
 
   const flagL = getFlag(match.teamLocal);
   const flagV = getFlag(match.teamVisitor);
+  const cardMatchDT = findMatchDateTime(match.teamLocal, match.teamVisitor);
+  let cardIsLive = false;
+  if (!hasResult && cardMatchDT && cardMatchDT.date && cardMatchDT.time) {
+    const kickoff = new Date(`${cardMatchDT.date}T${cardMatchDT.time}:00`);
+    const minutesElapsed = (Date.now() - kickoff.getTime()) / 60000;
+    cardIsLive = minutesElapsed >= 0 && minutesElapsed <= 105;
+  }
   const statusBadge = hasResult
     ? '<span class="status-badge finished" style="display:block;text-align:center;margin:0.3rem 0">Finalizado</span>'
-    : '<span class="status-badge pending" style="display:block;text-align:center;margin:0.3rem 0">Pendiente</span>';
+    : cardIsLive
+      ? '<span class="status-badge live" style="display:block;text-align:center;margin:0.3rem 0">🔴 En Curso</span>'
+      : '<span class="status-badge pending" style="display:block;text-align:center;margin:0.3rem 0">Pendiente</span>';
 
   container.innerHTML = `
     <div class="match-card">
@@ -565,9 +597,18 @@ function renderCardGrid(phaseId, sortedMatches, participants, selectedParticipan
     const score = hasResult
       ? `<strong>${match.result.goalsTeamA}-${match.result.goalsTeamB}</strong>`
       : '<span class="grid-vs-pending">vs</span>';
+    const gridMatchDT = findMatchDateTime(match.teamLocal, match.teamVisitor);
+    let gridIsLive = false;
+    if (!hasResult && gridMatchDT && gridMatchDT.date && gridMatchDT.time) {
+      const kickoff = new Date(`${gridMatchDT.date}T${gridMatchDT.time}:00`);
+      const minutesElapsed = (Date.now() - kickoff.getTime()) / 60000;
+      gridIsLive = minutesElapsed >= 0 && minutesElapsed <= 105;
+    }
     const statusBadge = hasResult
       ? '<span class="status-badge finished">Finalizado</span>'
-      : '<span class="status-badge pending">Pendiente</span>';
+      : gridIsLive
+        ? '<span class="status-badge live">🔴 En Curso</span>'
+        : '<span class="status-badge pending">Pendiente</span>';
 
     const predsHtml = participants.map(p => {
       const pred  = match.predictions[p];
