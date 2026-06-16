@@ -506,11 +506,29 @@ canvas {
    ============================================ */
 
 @media (max-width: 768px) {
+  header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+  }
+
   header h1 {
-    font-size: 1.4rem;
+    flex: 1;
+    font-size: 1.1rem;
+    margin-bottom: 0;
+    text-align: left;
+  }
+
+  .dark-mode-btn {
+    position: static;
+    flex-shrink: 0;
   }
 
   .nav-tabs {
+    flex-basis: 100%;
+    width: 100%;
     gap: 0.25rem;
   }
 
@@ -548,11 +566,12 @@ canvas {
 
 @media (max-width: 480px) {
   header h1 {
-    font-size: 1.2rem;
+    font-size: 1rem;
   }
 
   header {
-    padding: 1rem;
+    padding: 0.6rem 0.75rem;
+    gap: 0.4rem;
   }
 
   .nav-tabs button {
@@ -698,8 +717,7 @@ body.dark-mode tfoot .sticky-col {
 
 @media (max-width: 480px) {
   .dark-mode-btn {
-    top: 0.6rem;
-    right: 0.5rem;
+    position: static;
     font-size: 0.68rem;
     padding: 0.25rem 0.5rem;
   }
