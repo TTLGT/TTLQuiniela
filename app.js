@@ -102,10 +102,15 @@ function setupDOM() {
     table.parentNode.insertBefore(wrapper, table);
     wrapper.appendChild(table);
     wrapper.addEventListener('wheel', e => {
-      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-        e.preventDefault();
-        wrapper.scrollLeft += e.deltaY * 1.5;
-      }
+      if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+      const canScrollH = wrapper.scrollWidth > wrapper.clientWidth;
+      if (!canScrollH) return;
+      const delta = e.deltaY * 1.5;
+      const atLeft = wrapper.scrollLeft <= 0 && delta < 0;
+      const atRight = wrapper.scrollLeft >= wrapper.scrollWidth - wrapper.clientWidth - 1 && delta > 0;
+      if (atLeft || atRight) return;
+      e.preventDefault();
+      wrapper.scrollLeft += delta;
     }, { passive: false });
   });
 
