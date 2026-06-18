@@ -1175,6 +1175,10 @@ body.dark-mode .legend-title {
 .result-pending .rsb-name { color: #888; }
 .result-pending .rsb-side img { opacity: 0.6; }
 
+body.dark-mode .match-datetime { color: #8b96a7; }
+body.dark-mode .rsb-name { color: #e6edf3; }
+body.dark-mode .result-pending .rsb-name { color: #9aaad8; }
+
 .watch-link {
   display: inline-block;
   font-size: 0.65rem;
