@@ -781,9 +781,11 @@ function renderTeamSection() {
       ${teams.map((t, i) => `
         <div class="tpg-card ${i === 0 ? 'tpg-first' : i === 1 ? 'tpg-second' : i === 2 ? 'tpg-third' : ''}">
           <div class="tpg-header">
-            <span class="tpg-pos">#${i+1}</span>
-            <span class="tpg-flag">${getFlag(t.team)}</span>
-            <span class="tpg-team">${esc(t.team)}</span>
+            <div class="tpg-title-row">
+              <span class="tpg-pos">#${i+1}</span>
+              <span class="tpg-flag">${getFlag(t.team)}</span>
+              <span class="tpg-team">${esc(t.team)}</span>
+            </div>
             <span class="tpg-avg">${t.avgPoints.toFixed(1)} pts avg</span>
           </div>
           <div class="tpg-members">
