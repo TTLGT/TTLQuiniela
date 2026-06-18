@@ -161,6 +161,7 @@ async function loadAllData() {
     await renderAllViews();
     initializeCharts();
     setupTooltips();
+    setupInfoPopup();
     appState.lastUpdated = new Date();
     console.log('✅ Datos cargados exitosamente');
   } catch (error) {
@@ -204,17 +205,17 @@ async function renderGeneralTable() {
   }
 
   tbody.innerHTML = appState.participants.map(p => `
-    <tr>
-      <td><strong>#${p.position}</strong></td>
-      <td>${p.participant}</td>
-      <td>${getFlag(p.team)} ${p.team || '-'}</td>
+    <tr class="${p.position <= 3 ? `top-${p.position}` : ''}">
+      <td><span class="pos-badge pos-badge--${p.position <= 3 ? ['gold','silver','bronze'][p.position-1] : 'default'}">${p.position === 1 ? '🥇' : p.position === 2 ? '🥈' : p.position === 3 ? '🥉' : `#${p.position}`}</span></td>
+      <td><span class="cell-btn" data-team-popup="${esc(p.team)}">${getFlag(p.team)} ${p.team || '-'}</span></td>
+      <td><span class="cell-btn" data-participant-popup="${esc(p.participant)}">${esc(p.participant)}</span></td>
+      <td><strong style="color:var(--primary-btn);font-size:1.1rem">${p.total}</strong></td>
       <td>${p.groups}</td>
       <td>${p.round16}</td>
       <td>${p.round8}</td>
       <td>${p.quarters}</td>
       <td>${p.semi}</td>
       <td>${p.final}</td>
-      <td><strong style="color:var(--primary-btn);font-size:1.1rem">${p.total}</strong></td>
     </tr>
   `).join('');
 
@@ -705,6 +706,145 @@ function renderCardGrid(phaseId, sortedMatches, participants, selectedParticipan
       <div class="grid-predictions">${predsHtml}</div>
     </div>`;
   }).join('');
+}
+
+// ==================== INFO POPUP (CLICK-BASED) ====================
+
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+const PHASE_ORDER_LIST = ['groups','round16','round8','quarters','semi','final'];
+const PHASE_LABEL_MAP  = { groups:'Fase de Grupos', round16:'16vos', round8:'8vos', quarters:'Cuartos', semi:'Semifinal', final:'Final' };
+
+function getPhaseIdFromStr(phase) {
+  if (!phase) return null;
+  const p = phase.toUpperCase();
+  if (p.includes('GRUPOS'))    return 'groups';
+  if (p.includes('16'))        return 'round16';
+  if (p.includes('8'))         return 'round8';
+  if (p.includes('CUARTOS'))   return 'quarters';
+  if (p.includes('SEMIFINAL')) return 'semi';
+  if (p.includes('FINAL'))     return 'final';
+  return null;
+}
+
+function setupInfoPopup() {
+  const table = document.getElementById('general-table');
+  if (!table || table._popupSetup) return;
+  table._popupSetup = true;
+
+  table.addEventListener('click', e => {
+    const teamEl        = e.target.closest('[data-team-popup]');
+    const participantEl = e.target.closest('[data-participant-popup]');
+    if (teamEl)        showTeamPopup(teamEl.dataset.teamPopup);
+    else if (participantEl) showParticipantPopup(participantEl.dataset.participantPopup);
+  });
+
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeInfoPopup(); });
+
+  const overlay = document.getElementById('info-popup-overlay');
+  if (overlay) overlay.addEventListener('click', e => { if (e.target === overlay) closeInfoPopup(); });
+}
+
+function showInfoPopup(content) {
+  document.getElementById('info-popup-content').innerHTML = content;
+  document.getElementById('info-popup-overlay').style.display = 'flex';
+}
+
+function closeInfoPopup() {
+  const overlay = document.getElementById('info-popup-overlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+function showParticipantPopup(name) {
+  const scoreData = appState.scores[name];
+  if (!scoreData) return;
+
+  const byPhase = {};
+  for (const m of Object.values(scoreData.matches || {})) {
+    const phaseId = getPhaseIdFromStr(m.phase);
+    if (!phaseId) continue;
+    (byPhase[phaseId] = byPhase[phaseId] || []).push(m);
+  }
+
+  let html = `<div class="popup-title">${getFlag(scoreData.team)} ${esc(name)}</div>`;
+
+  for (const phaseId of PHASE_ORDER_LIST) {
+    const matches = byPhase[phaseId];
+    if (!matches?.length) continue;
+    html += `<div class="popup-phase-label">${PHASE_LABEL_MAP[phaseId]}</div>
+<table class="popup-matches-table"><thead><tr>
+  <th>Partido</th><th>Pronóstico</th><th>Real</th><th class="popup-pts-col">Pts</th>
+</tr></thead><tbody>`;
+    for (const m of matches) {
+      const pred   = m.prediction ?? `${m.goalsLocal ?? '?'}-${m.goalsVisitor ?? '?'}`;
+      const actual = m.result ? `${m.result.goalsTeamA}-${m.result.goalsTeamB}` : '-';
+      const pts    = m.points ?? 0;
+      const cls    = m.type === 'exact-match' ? 'pm-exact' : m.type === 'winner-match' ? 'pm-winner' : '';
+      html += `<tr class="${cls}">
+        <td>${esc(m.teamLocal)} vs ${esc(m.teamVisitor)}</td>
+        <td>${esc(pred)}</td>
+        <td>${esc(actual)}</td>
+        <td class="popup-pts-col">${pts}</td>
+      </tr>`;
+    }
+    html += `</tbody></table>`;
+  }
+
+  html += `<div class="popup-total-row">Total: ${scoreData.total} pts</div>`;
+  showInfoPopup(html);
+}
+
+function showTeamPopup(teamName) {
+  if (!teamName) return;
+
+  const seen = new Set();
+  const matches = [];
+  for (const scoreData of Object.values(appState.scores)) {
+    for (const [key, m] of Object.entries(scoreData.matches || {})) {
+      if ((m.teamLocal === teamName || m.teamVisitor === teamName) && !seen.has(key)) {
+        seen.add(key);
+        matches.push(m);
+      }
+    }
+  }
+
+  matches.sort((a, b) => PHASE_ORDER_LIST.indexOf(getPhaseIdFromStr(a.phase)) - PHASE_ORDER_LIST.indexOf(getPhaseIdFromStr(b.phase)));
+
+  let html = `<div class="popup-title">${getFlag(teamName)} ${esc(teamName)}</div>`;
+
+  if (!matches.length) {
+    html += `<p style="color:#888;font-size:0.85rem">Sin partidos registrados.</p>`;
+    showInfoPopup(html);
+    return;
+  }
+
+  const byPhase = {};
+  for (const m of matches) {
+    const phaseId = getPhaseIdFromStr(m.phase) ?? 'groups';
+    (byPhase[phaseId] = byPhase[phaseId] || []).push(m);
+  }
+
+  for (const phaseId of PHASE_ORDER_LIST) {
+    const phaseMatches = byPhase[phaseId];
+    if (!phaseMatches?.length) continue;
+    html += `<div class="popup-phase-label">${PHASE_LABEL_MAP[phaseId]}</div>
+<table class="popup-matches-table"><thead><tr>
+  <th>Partido</th><th style="text-align:center">Resultado</th>
+</tr></thead><tbody>`;
+    for (const m of phaseMatches) {
+      const actual = m.result ? `${m.result.goalsTeamA}-${m.result.goalsTeamB}` : 'Pendiente';
+      const bold   = m.result ? 'font-weight:700' : '';
+      html += `<tr>
+        <td>${esc(m.teamLocal)} vs ${esc(m.teamVisitor)}</td>
+        <td style="text-align:center;${bold}">${esc(actual)}</td>
+      </tr>`;
+    }
+    html += `</tbody></table>`;
+  }
+
+  showInfoPopup(html);
 }
 
 // ==================== TOOLTIP (FLOATING) ====================

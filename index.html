@@ -38,15 +38,15 @@
                 <thead>
                     <tr>
                         <th>Posición</th>
-                        <th>Participante</th>
                         <th>Equipo</th>
+                        <th>Participante</th>
+                        <th>TOTAL</th>
                         <th>Grupos</th>
                         <th>16vos</th>
                         <th>8vos</th>
                         <th>Cuartos</th>
                         <th>Semifinal</th>
                         <th>Final</th>
-                        <th>TOTAL</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -308,6 +308,14 @@
     </main>
 
     <button id="back-to-top-btn" onclick="scrollToTop()" aria-label="Volver arriba">↑</button>
+
+    <!-- INFO POPUP -->
+    <div id="info-popup-overlay" style="display:none">
+      <div id="info-popup-panel">
+        <button id="info-popup-close" onclick="closeInfoPopup()">✕</button>
+        <div id="info-popup-content"></div>
+      </div>
+    </div>
 
     <!-- Scripts -->
     <script src="config.js"></script>
