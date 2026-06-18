@@ -42,7 +42,7 @@ const TEAM_FLAGS = {
   'Nigeria': 'ng', 'Ghana': 'gh', 'Camerun': 'cm',
   'Sudafrica': 'za', 'Costa de Marfil': 'ci',
   'Argelia': 'dz', 'Tunez': 'tn', 'Cabo Verde': 'cv',
-  'RD Congo': 'cd', 'Kenia': 'ke',
+  'RD del Congo': 'cd', 'Kenia': 'ke',
   'Haiti': 'ht', 'Panama': 'pa', 'Costa Rica': 'cr',
   'Honduras': 'hn', 'Jamaica': 'jm', 'Curacao': 'cw',
 };
