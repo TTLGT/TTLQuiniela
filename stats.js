@@ -432,9 +432,13 @@ function renderGeneralWidgets() {
 
   requestAnimationFrame(() => {
     const { text, grid } = chartColors();
+    const barHeight = 32;
+    const chartH = Math.max(280, gap.length * barHeight);
 
-    const gapCtx = document.getElementById('chart-gap')?.getContext('2d');
-    if (gapCtx) {
+    const gapCanvas = document.getElementById('chart-gap');
+    if (gapCanvas) {
+      gapCanvas.style.height = chartH + 'px';
+      const gapCtx = gapCanvas.getContext('2d');
       if (statsCharts['gap']) statsCharts['gap'].destroy();
       statsCharts['gap'] = new Chart(gapCtx, {
         type: 'bar',
@@ -443,15 +447,19 @@ function renderGeneralWidgets() {
           datasets: [{ data: gap.map(p => p.gap), backgroundColor: gap.map(p => p.gap === 0 ? 'rgba(40,167,69,0.75)' : 'rgba(6,45,161,0.55)'), borderRadius: 4 }]
         },
         options: {
+          responsive: true,
+          maintainAspectRatio: false,
           indexAxis: 'y',
           plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `${gap[c.dataIndex]?.participant}: ${c.raw} pts detrás (${gap[c.dataIndex]?.total} pts totales)` } } },
-          scales: { x: { grid: { color: grid }, ticks: { color: text } }, y: { grid: { display: false }, ticks: { color: text, font: { size: 10 } } } }
+          scales: { x: { grid: { color: grid }, ticks: { color: text } }, y: { grid: { display: false }, ticks: { color: text, font: { size: 12 } } } }
         }
       });
     }
 
-    const maxCtx = document.getElementById('chart-maxpossible')?.getContext('2d');
-    if (maxCtx) {
+    const maxCanvas = document.getElementById('chart-maxpossible');
+    if (maxCanvas) {
+      maxCanvas.style.height = Math.max(280, maxPoss.length * barHeight) + 'px';
+      const maxCtx = maxCanvas.getContext('2d');
       if (statsCharts['maxpossible']) statsCharts['maxpossible'].destroy();
       statsCharts['maxpossible'] = new Chart(maxCtx, {
         type: 'bar',
@@ -463,12 +471,14 @@ function renderGeneralWidgets() {
           ]
         },
         options: {
+          responsive: true,
+          maintainAspectRatio: false,
           indexAxis: 'y',
           plugins: {
-            legend: { position: 'bottom', labels: { color: text, font: { size: 10 }, boxWidth: 10 } },
+            legend: { position: 'bottom', labels: { color: text, font: { size: 11 }, boxWidth: 10 } },
             tooltip: { callbacks: { label: c => c.datasetIndex === 0 ? `Actuales: ${c.raw}` : `Potencial: +${c.raw} → Máx ${maxPoss[c.dataIndex]?.maxTotal}` } }
           },
-          scales: { x: { stacked: true, grid: { color: grid }, ticks: { color: text } }, y: { stacked: true, grid: { display: false }, ticks: { color: text, font: { size: 10 } } } }
+          scales: { x: { stacked: true, grid: { color: grid }, ticks: { color: text } }, y: { stacked: true, grid: { display: false }, ticks: { color: text, font: { size: 12 } } } }
         }
       });
     }
@@ -564,14 +574,20 @@ function renderAccuracyCharts() {
 
   requestAnimationFrame(() => {
     const { text, grid } = chartColors();
+    const barHeight = 32;
+    const chartH = Math.max(280, hitRates.length * barHeight);
     const baseOpts = {
+      responsive: true,
+      maintainAspectRatio: false,
       indexAxis: 'y',
       plugins: { legend: { display: false } },
-      scales: { x: { max: 100, grid: { color: grid }, ticks: { color: text, callback: v => v + '%' } }, y: { grid: { display: false }, ticks: { color: text, font: { size: 10 } } } }
+      scales: { x: { max: 100, grid: { color: grid }, ticks: { color: text, callback: v => v + '%' } }, y: { grid: { display: false }, ticks: { color: text, font: { size: 12 } } } }
     };
 
-    const hCtx = document.getElementById('chart-hitrate')?.getContext('2d');
-    if (hCtx) {
+    const hCanvas = document.getElementById('chart-hitrate');
+    if (hCanvas) {
+      hCanvas.style.height = chartH + 'px';
+      const hCtx = hCanvas.getContext('2d');
       if (statsCharts['hitrate']) statsCharts['hitrate'].destroy();
       statsCharts['hitrate'] = new Chart(hCtx, {
         type: 'bar',
@@ -583,8 +599,10 @@ function renderAccuracyCharts() {
       });
     }
 
-    const sCtx = document.getElementById('chart-sniper')?.getContext('2d');
-    if (sCtx) {
+    const sCanvas = document.getElementById('chart-sniper');
+    if (sCanvas) {
+      sCanvas.style.height = chartH + 'px';
+      const sCtx = sCanvas.getContext('2d');
       if (statsCharts['sniper']) statsCharts['sniper'].destroy();
       statsCharts['sniper'] = new Chart(sCtx, {
         type: 'bar',
@@ -698,9 +716,11 @@ function renderContrarianChart() {
     <div class="chart-wrapper"><canvas id="chart-contrarian"></canvas></div>`;
 
   requestAnimationFrame(() => {
-    const ctx = document.getElementById('chart-contrarian')?.getContext('2d');
-    if (!ctx) return;
+    const canvas = document.getElementById('chart-contrarian');
+    if (!canvas) return;
     const { text, grid } = chartColors();
+    canvas.style.height = Math.max(280, data.length * 32) + 'px';
+    const ctx = canvas.getContext('2d');
     if (statsCharts['contrarian']) statsCharts['contrarian'].destroy();
     statsCharts['contrarian'] = new Chart(ctx, {
       type: 'bar',
@@ -709,9 +729,11 @@ function renderContrarianChart() {
         datasets: [{ data: data.map(p => Math.round(p.contrarianRate * 100)), backgroundColor: data.map(p => p.contrarianRate >= 0.65 ? 'rgba(153,50,204,0.7)' : p.contrarianRate >= 0.5 ? 'rgba(6,45,161,0.55)' : 'rgba(100,100,100,0.4)'), borderRadius: 4 }]
       },
       options: {
+        responsive: true,
+        maintainAspectRatio: false,
         indexAxis: 'y',
         plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `${c.raw}% original · ${data[c.dataIndex]?.contraryCount}/${data[c.dataIndex]?.totalCount} distintas` } } },
-        scales: { x: { max: 100, grid: { color: grid }, ticks: { color: text, callback: v => v + '%' } }, y: { grid: { display: false }, ticks: { color: text, font: { size: 10 } } } }
+        scales: { x: { max: 100, grid: { color: grid }, ticks: { color: text, callback: v => v + '%' } }, y: { grid: { display: false }, ticks: { color: text, font: { size: 12 } } } }
       }
     });
   });
