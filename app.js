@@ -828,6 +828,7 @@ function renderPhasePlaceholder(phaseId, section, table) {
       <h3 class="grps-preview-title">Clasificación Actual por Grupo</h3>
       <div class="grps-grid">${groupsHtml}</div>
       <p class="grps-preview-note">🟢 Clasificado directo &nbsp;·&nbsp; 🔵 Segundo lugar &nbsp;·&nbsp; 🟡 Posible mejor tercero</p>
+      <p class="grps-abbrev-note"><strong>PJ</strong> Partidos Jugados &nbsp;·&nbsp; <strong>G</strong> Ganados &nbsp;·&nbsp; <strong>E</strong> Empates &nbsp;·&nbsp; <strong>P</strong> Perdidos &nbsp;·&nbsp; <strong>GF</strong> Goles a Favor &nbsp;·&nbsp; <strong>GC</strong> Goles en Contra &nbsp;·&nbsp; <strong>DG</strong> Diferencia de Goles &nbsp;·&nbsp; <strong>Pts</strong> Puntos</p>
     </div>`;
   }
 
