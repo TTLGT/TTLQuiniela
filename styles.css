@@ -1879,6 +1879,9 @@ body.dark-mode .st-title { color: #c9d1d9; }
 
 body.dark-mode .st-sub-title { color: #9aaad8; }
 
+.st-subtitle-note { font-size: 0.72rem; color: #888; margin: -0.25rem 0 0.5rem; font-style: italic; }
+body.dark-mode .st-subtitle-note { color: #aaa; }
+
 .st-empty {
   padding: 1.5rem;
   text-align: center;
@@ -1963,6 +1966,9 @@ body.dark-mode .shc-label { color: #666; }
 .smt-bar-potential { position: absolute; top: 0; height: 100%; background: rgba(255,193,7,0.45); border-radius: 0 20px 20px 0; }
 .smt-val   { width: 3rem; text-align: right; font-weight: 700; color: var(--primary-btn); flex-shrink: 0; font-size: 0.8rem; }
 .smt-detail { font-size: 0.7rem; color: #888; flex-shrink: 0; max-width: 12rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.smt-text-wrap { flex: 1; font-size: 0.75rem; color: #666; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.smt-text-wrap strong { color: var(--primary-btn); }
+body.dark-mode .smt-text-wrap { color: #aaa; }
 
 body.dark-mode .smt-bar-wrap { background: rgba(255,255,255,0.08); }
 

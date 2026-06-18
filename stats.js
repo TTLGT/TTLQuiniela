@@ -253,8 +253,11 @@ function computeMostPointsOneMatch() {
   return Object.values(bests).sort((a, b) => b.points - a.points);
 }
 
-// Stat 18: Unluckiest Predictions (high-multiplier pending)
+// Stat 18: Best pending prediction per participant, ranked by positions they'd jump in the table
 function computeUnluckyPredictions() {
+  const currentTotals = {};
+  for (const p of appState.participants) currentTotals[p.participant] = p.total || 0;
+
   const unlucky = [];
   for (const [pName, sd] of Object.entries(appState.scores)) {
     for (const m of getPendingMatches(sd)) {
@@ -264,7 +267,24 @@ function computeUnluckyPredictions() {
       unlucky.push({ participant: pName, matchId: m.id, teamLocal: m.teamLocal, teamVisitor: m.teamVisitor, phase: m.phase, phaseId: pid, multiplier: mult, prediction: m.prediction, potentialPoints: SCORING_RULES.EXACT_MATCH * mult });
     }
   }
-  return unlucky.sort((a, b) => b.potentialPoints - a.potentialPoints);
+
+  // Keep only the highest-value pending bet per participant
+  unlucky.sort((a, b) => b.potentialPoints - a.potentialPoints);
+  const seen = new Set();
+  const best = unlucky.filter(u => { if (seen.has(u.participant)) return false; seen.add(u.participant); return true; });
+
+  // Compute how many positions each would jump if their best bet hits
+  const totals = Object.values(currentTotals);
+  for (const u of best) {
+    const myTotal = currentTotals[u.participant] || 0;
+    const newTotal = myTotal + u.potentialPoints;
+    const currentPos = totals.filter(t => t > myTotal).length + 1;
+    const newPos = totals.filter(t => t >= newTotal).length + 1;
+    u.positionsGained = Math.max(0, currentPos - newPos);
+    u.currentPos = currentPos;
+  }
+
+  return best.sort((a, b) => b.positionsGained - a.positionsGained || b.potentialPoints - a.potentialPoints);
 }
 
 // Stats 12/19: Phase match grid (used in phase tabs)
@@ -899,13 +919,14 @@ function renderExtrasSection() {
         </div>
         ${unlucky.length ? `
         <h4 class="st-sub-title" style="margin-top:1.5rem">Apuestas Activas de Mayor Valor</h4>
+        <p class="st-subtitle-note">Si acierta el marcador exacto de este partido, ¿cuántos puestos subiría en la tabla? Ordenado por el mayor salto posible.</p>
         <div class="smt">
           ${unlucky.slice(0, 8).map(u => `
             <div class="smt-row">
               <span class="smt-rank">${getFlag(getTeamForParticipant(u.participant))}</span>
-              <span class="smt-name">${esc(u.participant.split(' ')[0])}</span>
-              <span class="smt-bar-wrap"><small>${esc(u.teamLocal)} vs ${esc(u.teamVisitor)} · <strong>${esc(u.prediction)}</strong></small></span>
-              <span class="smt-val">${u.potentialPoints}p</span>
+              <span class="smt-name">${esc(u.participant)}</span>
+              <span class="smt-text-wrap">${esc(u.teamLocal)} vs ${esc(u.teamVisitor)} · <strong>${esc(u.prediction)}</strong></span>
+              <span class="smt-val">${u.positionsGained > 0 ? `+${u.positionsGained} 🏆` : `${u.potentialPoints}p`}</span>
             </div>`).join('')}
         </div>` : ''}
       </div>
