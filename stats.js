@@ -265,13 +265,18 @@ function computeUnluckyPredictions() {
   const currentTotals = {};
   for (const p of appState.participants) currentTotals[p.participant] = p.total || 0;
 
+  // Build lookup of all pending predictions per match to detect shared predictions
+  const allPredsByMatch = {};
   const unlucky = [];
   for (const [pName, sd] of Object.entries(appState.scores)) {
     for (const m of getPendingMatches(sd)) {
       if (!m.prediction || m.prediction === 'NaN-NaN' || m.goalsLocal == null) continue;
       const pid = getPhaseIdFromStr(m.phase);
       const mult = PHASES[pid]?.multiplier || 1;
-      unlucky.push({ participant: pName, matchId: m.id, teamLocal: m.teamLocal, teamVisitor: m.teamVisitor, phase: m.phase, phaseId: pid, multiplier: mult, prediction: m.prediction, potentialPoints: SCORING_RULES.EXACT_MATCH * mult });
+      const potentialPoints = SCORING_RULES.EXACT_MATCH * mult;
+      if (!allPredsByMatch[m.id]) allPredsByMatch[m.id] = [];
+      allPredsByMatch[m.id].push({ participant: pName, prediction: m.prediction, potentialPoints });
+      unlucky.push({ participant: pName, matchId: m.id, teamLocal: m.teamLocal, teamVisitor: m.teamVisitor, phase: m.phase, phaseId: pid, multiplier: mult, prediction: m.prediction, potentialPoints });
     }
   }
 
@@ -280,15 +285,22 @@ function computeUnluckyPredictions() {
   const seen = new Set();
   const best = unlucky.filter(u => { if (seen.has(u.participant)) return false; seen.add(u.participant); return true; });
 
-  // Compute how many positions each would jump if their best bet hits
-  const totals = Object.values(currentTotals);
+  // Compute position jump accounting for others who share the same prediction on the same match
   for (const u of best) {
     const myTotal = currentTotals[u.participant] || 0;
-    const newTotal = myTotal + u.potentialPoints;
-    const currentPos = totals.filter(t => t > myTotal).length + 1;
-    const newPos = totals.filter(t => t >= newTotal).length + 1;
-    u.positionsGained = Math.max(0, currentPos - newPos);
-    u.currentPos = currentPos;
+    const myNewTotal = myTotal + u.potentialPoints;
+
+    const simulatedTotals = { ...currentTotals };
+    simulatedTotals[u.participant] = myNewTotal;
+    for (const other of (allPredsByMatch[u.matchId] || [])) {
+      if (other.participant !== u.participant && other.prediction === u.prediction) {
+        simulatedTotals[other.participant] = (currentTotals[other.participant] || 0) + other.potentialPoints;
+      }
+    }
+
+    u.currentPos = Object.values(currentTotals).filter(t => t > myTotal).length + 1;
+    u.newPos = Object.values(simulatedTotals).filter(t => t >= myNewTotal).length + 1;
+    u.positionsGained = Math.max(0, u.currentPos - u.newPos);
   }
 
   return best.sort((a, b) => b.positionsGained - a.positionsGained || b.potentialPoints - a.potentialPoints);
@@ -529,7 +541,7 @@ function renderHighlights() {
     jump ? `<div class="shc shc-green"><div class="shc-icon">📈</div><div class="shc-label">Mayor Subida</div><div class="shc-name">${esc(jump.participant.split(' ')[0])}</div><div class="shc-val">+${jump.jump} puestos</div><div class="shc-sub">#${jump.from} → #${jump.to} · ${jump.date}</div></div>` : '',
     drop ? `<div class="shc shc-red"><div class="shc-icon">📉</div><div class="shc-label">Mayor Caída</div><div class="shc-name">${esc(drop.participant.split(' ')[0])}</div><div class="shc-val">-${drop.drop} puestos</div><div class="shc-sub">#${drop.from} → #${drop.to} · ${drop.date}</div></div>` : '',
     best ? `<div class="shc shc-gold"><div class="shc-icon">⚡</div><div class="shc-label">Mejor Día</div><div class="shc-name">${esc(best.participant.split(' ')[0])}</div><div class="shc-val">${best.points} pts en 1 día</div><div class="shc-sub">${best.date !== '9999-01-01' ? fmtSnapshotDate(best.date) : ''}</div></div>` : '',
-    luck ? `<div class="shc shc-blue"><div class="shc-icon">🔮</div><div class="shc-label">Mayor Apuesta Pendiente</div><div class="shc-name">${esc(luck.participant.split(' ')[0])}</div><div class="shc-val">Hasta ${luck.potentialPoints} pts posibles</div><div class="shc-sub">${esc(luck.teamLocal)} vs ${esc(luck.teamVisitor)} · ×${luck.multiplier}</div></div>` : ''
+    luck ? `<div class="shc shc-blue"><div class="shc-icon">🔮</div><div class="shc-label">Mayor Subida Potencial</div><div class="shc-name">${esc(luck.participant.split(' ')[0])}</div><div class="shc-val">+${luck.positionsGained} puestos posibles</div><div class="shc-sub">#${luck.currentPos} → #${luck.newPos} · ${esc(luck.teamLocal)} vs ${esc(luck.teamVisitor)}</div></div>` : ''
   ].filter(Boolean);
 
   if (!cards.length) return;
