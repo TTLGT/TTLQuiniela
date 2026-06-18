@@ -4,7 +4,7 @@
 
 // Asignación de equipos a participantes
 const EQUIPOS = {
-  "Alemania": ["Joe Ayala", "Mary Gaytan"],
+  "Alemania": ["Joe Ayala", "Kevin Romero", "Mary Gaytan"],
   "Argentina": ["Bryan Guerra", "Charly Molina", "Edvin Paredes", "Gus Mendez",
                 "Isabel Ortiz", "Jose Ruano", "Jose Romero", "Josue Suazo",
                 "Karen Molina", "Nery Molina", "Nery Mendez"],
@@ -13,7 +13,7 @@ const EQUIPOS = {
   "España": ["Alexis Garcia", "Oliver Centeno"],
   "Francia": ["Saul Escobar"],
   "Paises Bajos": ["David Molina"],
-  "Mexico": ["Erwin Solorzano"],
+  "Mexico": ["Erwin Solorzano", "Juan Diaz"],
   "USA": ["James Peña"]
 };
 
