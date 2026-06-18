@@ -240,13 +240,20 @@ function computeJumpDrop() {
   return { jumps: jumps.sort((a, b) => b.jump - a.jump), drops: drops.sort((a, b) => b.drop - a.drop) };
 }
 
-// Stat 17: Most Points in One Match
+// Stat 17: Best Day (sum of all points earned in a single day)
 function computeMostPointsOneMatch() {
   const bests = {};
   for (const [pName, sd] of Object.entries(appState.scores)) {
+    const byDate = {};
     for (const m of getPlayedMatches(sd)) {
-      if (!bests[pName] || m.points > bests[pName].points) {
-        bests[pName] = { participant: pName, matchId: m.id, teamLocal: m.teamLocal, teamVisitor: m.teamVisitor, phase: m.phase, prediction: m.prediction, points: m.points, type: m.type };
+      const dt = findMatchDateTime(m.teamLocal, m.teamVisitor);
+      const date = dt?.date || '9999-01-01';
+      if (!byDate[date]) byDate[date] = 0;
+      byDate[date] += m.points || 0;
+    }
+    for (const [date, total] of Object.entries(byDate)) {
+      if (!bests[pName] || total > bests[pName].points) {
+        bests[pName] = { participant: pName, points: total, date };
       }
     }
   }
@@ -315,11 +322,13 @@ function computePhaseMatchGrid(phaseId) {
   return { matches, participants };
 }
 
-// Stat 20: Avg points per played match
+// Stat 20: Avg points per day with at least one played match
 function computeAvgPerMatch() {
   return appState.participants.map(p => {
     const played = getPlayedMatches(appState.scores[p.participant] || { matches: {} });
-    return { participant: p.participant, team: p.team, played: played.length, totalPoints: p.total, avgPts: played.length ? p.total / played.length : 0 };
+    const days = new Set(played.map(m => findMatchDateTime(m.teamLocal, m.teamVisitor)?.date || '9999-01-01'));
+    const daysPlayed = days.size;
+    return { participant: p.participant, team: p.team, played: daysPlayed, totalPoints: p.total, avgPts: daysPlayed ? p.total / daysPlayed : 0 };
   }).sort((a, b) => b.avgPts - a.avgPts);
 }
 
@@ -519,7 +528,7 @@ function renderHighlights() {
   const cards = [
     jump ? `<div class="shc shc-green"><div class="shc-icon">📈</div><div class="shc-label">Mayor Subida</div><div class="shc-name">${esc(jump.participant.split(' ')[0])}</div><div class="shc-val">+${jump.jump} puestos</div><div class="shc-sub">#${jump.from} → #${jump.to} · ${jump.date}</div></div>` : '',
     drop ? `<div class="shc shc-red"><div class="shc-icon">📉</div><div class="shc-label">Mayor Caída</div><div class="shc-name">${esc(drop.participant.split(' ')[0])}</div><div class="shc-val">-${drop.drop} puestos</div><div class="shc-sub">#${drop.from} → #${drop.to} · ${drop.date}</div></div>` : '',
-    best ? `<div class="shc shc-gold"><div class="shc-icon">⚡</div><div class="shc-label">Mejor Jugada</div><div class="shc-name">${esc(best.participant.split(' ')[0])}</div><div class="shc-val">${best.points} pts en 1 partido</div><div class="shc-sub">${esc(best.teamLocal)} vs ${esc(best.teamVisitor)}</div></div>` : '',
+    best ? `<div class="shc shc-gold"><div class="shc-icon">⚡</div><div class="shc-label">Mejor Día</div><div class="shc-name">${esc(best.participant.split(' ')[0])}</div><div class="shc-val">${best.points} pts en 1 día</div><div class="shc-sub">${best.date !== '9999-01-01' ? fmtSnapshotDate(best.date) : ''}</div></div>` : '',
     luck ? `<div class="shc shc-blue"><div class="shc-icon">🔮</div><div class="shc-label">Mayor Apuesta Pendiente</div><div class="shc-name">${esc(luck.participant.split(' ')[0])}</div><div class="shc-val">Hasta ${luck.potentialPoints} pts posibles</div><div class="shc-sub">${esc(luck.teamLocal)} vs ${esc(luck.teamVisitor)} · ×${luck.multiplier}</div></div>` : ''
   ].filter(Boolean);
 
@@ -893,7 +902,7 @@ function renderExtrasSection() {
   el.innerHTML = `<h3 class="st-title">Más Estadísticas</h3>
     <div class="st-grid-2">
       <div>
-        <h4 class="st-sub-title">Promedio de Puntos por Partido Jugado</h4>
+        <h4 class="st-sub-title">Promedio de Puntos por Día Jugado</h4>
         <div class="smt">
           ${avgPerMatch.map((p, i) => `
             <div class="smt-row">
@@ -901,12 +910,12 @@ function renderExtrasSection() {
               <span class="smt-name">${esc(p.participant.split(' ')[0])}</span>
               <span class="smt-bar-wrap"><span class="smt-bar smt-bar-alt" style="width:${Math.round(p.avgPts / maxAvgPts * 100)}%"></span></span>
               <span class="smt-val">${p.avgPts.toFixed(2)}</span>
-              <span class="smt-detail">(${p.played}j)</span>
+              <span class="smt-detail">(${p.played}d)</span>
             </div>`).join('')}
         </div>
       </div>
       <div>
-        <h4 class="st-sub-title">Mejor Partido Personal</h4>
+        <h4 class="st-sub-title">Mejor Día Personal</h4>
         <div class="smt">
           ${mostPts.map((p, i) => `
             <div class="smt-row">
@@ -914,7 +923,7 @@ function renderExtrasSection() {
               <span class="smt-name">${esc(p.participant.split(' ')[0])}</span>
               <span class="smt-bar-wrap"><span class="smt-bar smt-bar-gold" style="width:${Math.round(p.points / maxBestPts * 100)}%"></span></span>
               <span class="smt-val">${p.points}p</span>
-              <span class="smt-detail">${esc(p.teamLocal || '')} vs ${esc(p.teamVisitor || '')}</span>
+              <span class="smt-detail">${p.date !== '9999-01-01' ? fmtSnapshotDate(p.date) : ''}</span>
             </div>`).join('')}
         </div>
         ${unlucky.length ? `
