@@ -1958,7 +1958,9 @@ body.dark-mode .shc-blue   { background: rgba(6,45,161,0.18);    border-color: r
 .shc-sub   { font-size: 0.72rem; color: #888; }
 
 body.dark-mode .shc-name { color: #c9d1d9; }
-body.dark-mode .shc-label { color: #666; }
+body.dark-mode .shc-label { color: #8b96a7; }
+body.dark-mode .shc-val { color: #7ba7f0; }
+body.dark-mode .shc-sub { color: #8b96a7; }
 
 /* ============================================
    STATS — Mini Table (smt)
