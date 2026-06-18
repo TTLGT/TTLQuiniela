@@ -87,6 +87,11 @@ function setupNavigation() {
       if (phaseFixedCols[tabId]) {
         applyStickyColumns(`${tabId}-table`, phaseFixedCols[tabId]);
       }
+      // Lazy-render stats tab when first visited
+      if (tabId === 'stats' && typeof renderStats === 'function' && appState.participants.length) {
+        const hasContent = section?.querySelector('.stats-content');
+        if (!hasContent) renderStats();
+      }
       updateBackToTopVisibility();
     });
   });
@@ -160,6 +165,7 @@ async function loadAllData() {
     appState.participants = getRanking(appState.scores);
     await renderAllViews();
     initializeCharts();
+    if (typeof renderStats === 'function') renderStats();
     setupTooltips();
     setupInfoPopup();
     appState.lastUpdated = new Date();
@@ -457,6 +463,7 @@ async function renderPhase(phaseId) {
   renderPhaseCards(phaseId, sortedMatches, participants);
   renderCardGrid(phaseId, sortedMatches, participants, selectedParticipant);
   buildStickyPortal(phaseId);
+  if (typeof renderPhaseStats === 'function') renderPhaseStats(phaseId);
 }
 
 // ==================== STICKY COLUMNS ====================
