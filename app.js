@@ -68,6 +68,10 @@ function toggleDarkMode() {
   localStorage.setItem('darkMode', isDark);
   const btn = document.getElementById('dark-mode-btn');
   if (btn) btn.textContent = isDark ? '☀️ Modo Claro' : '🌙 Modo Oscuro';
+  if (appState.participants.length) {
+    if (typeof renderGeneralWidgets === 'function') renderGeneralWidgets();
+    if (typeof renderStats === 'function' && document.querySelector('#stats .stats-content')) renderStats();
+  }
 }
 
 // ==================== NAVEGACIÓN ====================
@@ -215,7 +219,7 @@ async function renderGeneralTable() {
       <td><span class="pos-badge pos-badge--${p.position <= 3 ? ['gold','silver','bronze'][p.position-1] : 'default'}">${p.position === 1 ? '🥇' : p.position === 2 ? '🥈' : p.position === 3 ? '🥉' : `#${p.position}`}</span></td>
       <td><span class="cell-btn" data-team-popup="${esc(p.team)}">${getFlag(p.team)} ${p.team || '-'}</span></td>
       <td><span class="cell-btn" data-participant-popup="${esc(p.participant)}">${esc(p.participant)}</span></td>
-      <td><strong style="color:var(--primary-btn);font-size:1.1rem">${p.total}</strong></td>
+      <td><strong class="rank-total-pts">${p.total}</strong></td>
       <td>${p.groups}</td>
       <td>${p.round16}</td>
       <td>${p.round8}</td>

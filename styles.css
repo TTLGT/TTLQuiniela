@@ -840,6 +840,8 @@ body.dark-mode .progress-indicator {
   color: var(--text-dark);
 }
 
+body.dark-mode .chart-wrapper h3 { color: #c9d1d9; }
+
 body.dark-mode .section-title {
   background-color: #7a0000;
 }
@@ -1746,6 +1748,15 @@ body.dark-mode #general table {
   font-size: 0.78rem;
 }
 
+.rank-total-pts {
+  color: var(--primary-btn);
+  font-size: 1.1rem;
+}
+
+body.dark-mode .rank-total-pts {
+  color: #7ba7f0;
+}
+
 /* ── Top 3 leaderboard highlights ── */
 tbody tr.top-1,
 tbody tr.top-2,
@@ -1977,6 +1988,8 @@ body.dark-mode .shc-label { color: #666; }
 .smt-text-wrap { flex: 1; font-size: 0.75rem; color: #666; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .smt-text-wrap strong { color: var(--primary-btn); }
 body.dark-mode .smt-text-wrap { color: #aaa; }
+body.dark-mode .smt-text-wrap strong { color: #7ba7f0; }
+body.dark-mode .smt-val { color: #7ba7f0; }
 
 body.dark-mode .smt-bar-wrap { background: rgba(255,255,255,0.08); }
 
@@ -2006,6 +2019,8 @@ body.dark-mode .smt-bar-wrap { background: rgba(255,255,255,0.08); }
 }
 
 body.dark-mode .pc-card { background: #161b22; border-color: #30363d; }
+body.dark-mode .pc-name { color: #c9d1d9; }
+body.dark-mode .pc-stat { color: #aaa; }
 
 .pc-card-off  { border-top: 3px solid rgba(220,53,69,0.6); }
 .pc-card-def  { border-top: 3px solid rgba(6,45,161,0.5); }
@@ -2042,6 +2057,8 @@ body.dark-mode .pc-stat { color: #888; }
 }
 
 body.dark-mode .bpr-card { background: rgba(6,45,161,0.18); border-color: rgba(6,45,161,0.3); }
+body.dark-mode .bpr-pct { color: #7ba7f0; }
+body.dark-mode .bpr-phase { color: #9aaad8; }
 
 .bpr-name  { font-weight: 600; }
 .bpr-phase { color: #888; }
@@ -2070,6 +2087,8 @@ body.dark-mode .bpr-card { background: rgba(6,45,161,0.18); border-color: rgba(6
 }
 
 body.dark-mode .tpg-card { background: #161b22; border-color: #30363d; }
+body.dark-mode .tpg-avg { color: #7ba7f0; }
+body.dark-mode .tpg-pos { color: #7ba7f0; }
 
 .tpg-first  { border-top: 3px solid #ffd700; }
 .tpg-second { border-top: 3px solid #c0c0c0; }
@@ -2142,6 +2161,7 @@ body.dark-mode .tpg-member { background: rgba(255,255,255,0.05); }
 }
 
 body.dark-mode .h2h-scoreboard { background: #161b22; border-color: #30363d; }
+body.dark-mode .h2h-sb-pts { color: #7ba7f0; }
 
 .h2h-sb-col {
   text-align: center;
@@ -2222,6 +2242,7 @@ body.dark-mode td.h2h-winner { background: rgba(255,193,7,0.15); color: #ffc107;
 }
 
 body.dark-mode .phase-stats-block { border-top-color: #30363d; }
+body.dark-mode .ps-title { color: #7ba7f0; }
 
 .ps-row { margin-bottom: 1.5rem; }
 
@@ -2275,6 +2296,7 @@ body.dark-mode .mac-card { background: #161b22; border-color: #30363d; border-le
 }
 
 body.dark-mode .hm-match { background: #161b22; border-color: #30363d; }
+body.dark-mode .hm-actual { color: #7ba7f0; }
 
 .hm-header {
   display: flex;
