@@ -846,12 +846,14 @@ function renderH2HTable() {
         <div class="h2h-sb-name">${esc(p1)}</div>
         <div class="h2h-sb-pts">${sd1.total} pts</div>
         <div class="h2h-sb-wins">${p1wins} victorias</div>
+        <div class="h2h-sb-wins-sub">partidos con más puntos que el rival</div>
       </div>
       <div class="h2h-sb-tie"><div class="h2h-sb-tie-n">${ties}</div><div class="h2h-sb-tie-l">empates</div></div>
       <div class="h2h-sb-col ${p2wins > p1wins ? 'h2h-sb-winner' : ''}">
         <div class="h2h-sb-name">${esc(p2)}</div>
         <div class="h2h-sb-pts">${sd2.total} pts</div>
         <div class="h2h-sb-wins">${p2wins} victorias</div>
+        <div class="h2h-sb-wins-sub">partidos con más puntos que el rival</div>
       </div>
     </div>
     ${tablesHtml}`;

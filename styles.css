@@ -2139,6 +2139,7 @@ body.dark-mode .h2h-scoreboard { background: #161b22; border-color: #30363d; }
 .h2h-sb-name  { font-size: 0.9rem; font-weight: 700; }
 .h2h-sb-pts   { font-size: 1.2rem; font-weight: 800; color: var(--primary-btn); }
 .h2h-sb-wins  { font-size: 0.8rem; color: #888; }
+.h2h-sb-wins-sub { font-size: 0.65rem; color: #aaa; margin-top: 2px; }
 
 .h2h-sb-tie {
   text-align: center;
