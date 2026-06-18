@@ -12,7 +12,7 @@ const EQUIPOS = {
   "Croacia": ["Gabe Mendez"],
   "España": ["Alexis Garcia", "Oliver Centeno"],
   "Francia": ["Saul Escobar"],
-  "Holanda": ["David Molina"],
+  "Paises Bajos": ["David Molina"],
   "Mexico": ["Erwin Solorzano"],
   "USA": ["James Peña"]
 };

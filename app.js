@@ -27,7 +27,7 @@ const TEAM_FLAGS = {
   'Peru': 'pe', 'Venezuela': 've', 'Chile': 'cl',
   'Bolivia': 'bo', 'España': 'es', 'Portugal': 'pt',
   'Francia': 'fr', 'Alemania': 'de', 'Paises Bajos': 'nl',
-  'Holanda': 'nl', 'Belgica': 'be', 'Italia': 'it', 'Suiza': 'ch',
+  'Belgica': 'be', 'Italia': 'it', 'Suiza': 'ch',
   'Austria': 'at', 'República Checa': 'cz', 'Polonia': 'pl',
   'Croacia': 'hr', 'Serbia': 'rs', 'Bosnia y Herzegovina': 'ba',
   'Ucrania': 'ua', 'Grecia': 'gr', 'Rumania': 'ro',
