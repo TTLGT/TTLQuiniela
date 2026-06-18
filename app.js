@@ -275,12 +275,21 @@ async function renderPhase(phaseId) {
 
   const allMatches = Object.values(matchesByNumber).sort((a, b) => a.id - b.id);
 
+  const _section = document.getElementById(phaseId);
+
   if (allMatches.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="10" class="loading">Sin partidos en esta fase</td></tr>`;
+    if (_section) renderPhasePlaceholder(phaseId, _section, table);
     const tf = table.querySelector('tfoot');
     if (tf) tf.innerHTML = '';
     renderProgressIndicator(phaseId, []);
     return;
+  }
+
+  // Phase now has data — tear down any placeholder
+  if (_section) {
+    _section.classList.remove('phase-empty');
+    const _ph = _section.querySelector('.phase-placeholder-container');
+    if (_ph) _ph.remove();
   }
 
   const participants = Object.keys(appState.scores).sort();
@@ -706,6 +715,116 @@ function renderCardGrid(phaseId, sortedMatches, participants, selectedParticipan
       <div class="grid-predictions">${predsHtml}</div>
     </div>`;
   }).join('');
+}
+
+// ==================== GROUP STANDINGS & PHASE PLACEHOLDER ====================
+
+function computeGroupStandings() {
+  const groupMap = {};
+  const seenMatches = new Set();
+
+  for (const scoreData of Object.values(appState.scores)) {
+    for (const matchData of Object.values(scoreData.matches || {})) {
+      if (!matchData.phase?.includes('GRUPO')) continue;
+      if (seenMatches.has(matchData.id)) continue;
+      seenMatches.add(matchData.id);
+
+      const grp = (matchData.group || '?').trim();
+      const tL = matchData.teamLocal;
+      const tV = matchData.teamVisitor;
+      const res = matchData.result;
+
+      if (!groupMap[grp]) groupMap[grp] = {};
+      const init = () => ({ pj: 0, pts: 0, g: 0, e: 0, p: 0, gf: 0, gc: 0 });
+      if (!groupMap[grp][tL]) groupMap[grp][tL] = init();
+      if (!groupMap[grp][tV]) groupMap[grp][tV] = init();
+
+      if (res?.goalsTeamA != null) {
+        const gl = res.goalsTeamA, gv = res.goalsTeamB;
+        const sL = groupMap[grp][tL], sV = groupMap[grp][tV];
+        sL.pj++; sV.pj++;
+        sL.gf += gl; sL.gc += gv;
+        sV.gf += gv; sV.gc += gl;
+        if (gl > gv)      { sL.g++; sL.pts += 3; sV.p++; }
+        else if (gl < gv) { sV.g++; sV.pts += 3; sL.p++; }
+        else              { sL.e++; sL.pts++;     sV.e++; sV.pts++; }
+      }
+    }
+  }
+
+  const sorted = {};
+  for (const [grp, teams] of Object.entries(groupMap)) {
+    sorted[grp] = Object.entries(teams)
+      .map(([name, s]) => ({ name, ...s, gd: s.gf - s.gc }))
+      .sort((a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf);
+  }
+  return sorted;
+}
+
+function renderPhasePlaceholder(phaseId, section, table) {
+  section.classList.add('phase-empty');
+
+  let container = section.querySelector('.phase-placeholder-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.className = 'phase-placeholder-container';
+    table.insertAdjacentElement('afterend', container);
+  }
+
+  const standings = computeGroupStandings();
+  const groups = Object.keys(standings).sort();
+
+  const phaseTitles = {
+    round16: 'Dieciseisavos de Final',
+    round8:  'Octavos de Final',
+    quarters: 'Cuartos de Final',
+    semi:    'Semifinal',
+    final:   'Gran Final'
+  };
+
+  let html = `<div class="phase-placeholder-header">
+    <span class="phase-placeholder-icon">⏳</span>
+    <p class="phase-placeholder-title">Próximamente · ${phaseTitles[phaseId] || phaseId}</p>
+    <p class="phase-placeholder-subtitle">Los partidos de esta fase se determinarán al concluir la Fase de Grupos</p>
+  </div>`;
+
+  if (groups.length > 0) {
+    const groupsHtml = groups.map(grp => {
+      const rows = standings[grp].map((t, i) => {
+        const posClass = i === 0 ? 's-pos-1' : i === 1 ? 's-pos-2' : i === 2 ? 's-pos-3' : '';
+        const gdStr = t.gd > 0 ? `+${t.gd}` : `${t.gd}`;
+        const flag = getFlag(t.name);
+        return `<tr class="${posClass}">
+          <td class="grps-pos">${i + 1}</td>
+          <td class="grps-team">${flag}<span>${t.name}</span></td>
+          <td>${t.pj}</td><td>${t.g}</td><td>${t.e}</td><td>${t.p}</td>
+          <td>${t.gf}</td><td>${t.gc}</td><td>${gdStr}</td>
+          <td><strong>${t.pts}</strong></td>
+        </tr>`;
+      }).join('');
+      return `<div class="grps-block">
+        <div class="grps-title">Grupo ${grp}</div>
+        <table class="grps-table">
+          <thead><tr>
+            <th>#</th><th>Equipo</th>
+            <th title="Partidos Jugados">PJ</th>
+            <th title="Ganados">G</th><th title="Empates">E</th><th title="Perdidos">P</th>
+            <th title="Goles a favor">GF</th><th title="Goles en contra">GC</th>
+            <th title="Diferencia de goles">DG</th><th title="Puntos">Pts</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+    }).join('');
+
+    html += `<div class="grps-preview">
+      <h3 class="grps-preview-title">Clasificación Actual por Grupo</h3>
+      <div class="grps-grid">${groupsHtml}</div>
+      <p class="grps-preview-note">🟢 Clasificado directo &nbsp;·&nbsp; 🔵 Segundo lugar &nbsp;·&nbsp; 🟡 Posible mejor tercero</p>
+    </div>`;
+  }
+
+  container.innerHTML = html;
 }
 
 // ==================== INFO POPUP (CLICK-BASED) ====================
