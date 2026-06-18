@@ -902,7 +902,7 @@ function showParticipantPopup(name) {
       const pts    = m.points ?? 0;
       const cls    = m.type === 'exact-match' ? 'pm-exact' : m.type === 'winner-match' ? 'pm-winner' : '';
       html += `<tr class="${cls}">
-        <td>${esc(m.teamLocal)} vs ${esc(m.teamVisitor)}</td>
+        <td>${getFlag(m.teamLocal)}${esc(m.teamLocal)} vs ${getFlag(m.teamVisitor)}${esc(m.teamVisitor)}</td>
         <td>${esc(pred)}</td>
         <td>${esc(actual)}</td>
         <td class="popup-pts-col">${pts}</td>
@@ -950,13 +950,22 @@ function showTeamPopup(teamName) {
     if (!phaseMatches?.length) continue;
     html += `<div class="popup-phase-label">${PHASE_LABEL_MAP[phaseId]}</div>
 <table class="popup-matches-table"><thead><tr>
-  <th>Partido</th><th style="text-align:center">Resultado</th>
+  <th>Partido</th><th style="text-align:center">Fecha</th><th style="text-align:center">Resultado</th>
 </tr></thead><tbody>`;
     for (const m of phaseMatches) {
       const actual = m.result ? `${m.result.goalsTeamA}-${m.result.goalsTeamB}` : 'Pendiente';
       const bold   = m.result ? 'font-weight:700' : '';
+      const dt = findMatchDateTime(m.teamLocal, m.teamVisitor);
+      let dateStr = '—';
+      if (dt && dt.date) {
+        const [, month, day] = dt.date.split('-');
+        const monthNames = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+        const monthName = monthNames[parseInt(month, 10) - 1] || month;
+        dateStr = dt.time ? `${day} ${monthName} ${dt.time}` : `${day} ${monthName}`;
+      }
       html += `<tr>
         <td>${esc(m.teamLocal)} vs ${esc(m.teamVisitor)}</td>
+        <td style="text-align:center;color:#666;font-size:0.82rem;white-space:nowrap">${dateStr}</td>
         <td style="text-align:center;${bold}">${esc(actual)}</td>
       </tr>`;
     }
