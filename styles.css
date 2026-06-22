@@ -91,7 +91,7 @@ header h1 {
 
 main {
   width: 100%;
-  min-width: 0;
+  min-width: max-content;
   margin: 2rem auto;
   padding: 0 1rem;
 }
@@ -2409,82 +2409,4 @@ body.dark-mode .hm-winner-match .hm-s { color: #ffc107; }
 @media (max-width: 480px) {
   .shc-grid { grid-template-columns: 1fr; }
   .team-perf-grid { grid-template-columns: 1fr; }
-}
-
-/* ============================================
-   GROUPS TABLE — FIT TO SCREEN
-   ============================================ */
-
-#groups-table {
-  table-layout: fixed;
-  width: 100%;
-  font-size: 0.63rem;
-}
-
-#groups-table th,
-#groups-table td {
-  padding: 0.18rem 0.04rem;
-  overflow: hidden;
-}
-
-/* Fixed widths for the 3 sticky left columns */
-#groups-table thead th:nth-child(1) { width: 26px; }
-#groups-table thead th:nth-child(2) { width: 52px; }
-#groups-table thead th:nth-child(3) { width: 730px; white-space: normal; overflow: visible; }
-#groups-table tbody td:nth-child(3),
-#groups-table tfoot td:nth-child(3) { overflow: visible; }
-
-/* Participant header cells: allow the two-line name to wrap */
-#groups-table thead th:not(.sticky-col) {
-  white-space: normal;
-  word-break: break-word;
-  font-size: 0.55rem;
-  line-height: 1.2;
-}
-
-/* Score pills — compact natural size */
-#groups-table .score-pill {
-  min-width: 0;
-  display: inline-flex;
-  padding: 0.12rem 0.06rem;
-  font-size: 0.6rem;
-}
-
-#groups-table .score-pill .pill-pts {
-  font-size: 0.52rem;
-}
-
-/* Result cell — compact */
-#groups-table .result-scoreboard {
-  gap: 0.12rem;
-  flex-wrap: nowrap;
-}
-
-#groups-table .rsb-side {
-  font-size: 0.65rem;
-  gap: 0.1rem;
-}
-
-#groups-table .rsb-name {
-  max-width: 7rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-#groups-table .rsb-goals {
-  font-size: 0.8rem;
-}
-
-#groups-table .status-badge {
-  font-size: 0.52rem;
-  padding: 0.08rem 0.28rem;
-}
-
-#groups-table .match-datetime {
-  font-size: 0.55rem;
-}
-
-#groups-table .watch-link {
-  font-size: 0.55rem;
 }
