@@ -643,7 +643,7 @@ function renderHighlights() {
   ].filter(Boolean);
 
   if (!cards.length) return;
-  el.innerHTML = `<h3 class="st-title">Destacados del Torneo</h3><div class="shc-grid">${cards.join('')}</div>`;
+  el.innerHTML = `<h3 class="st-title">Destacados de la Quiniela del Mundial 2026</h3><div class="shc-grid">${cards.join('')}</div>`;
 }
 
 // Stat 1 — Ranking Timeline chart
