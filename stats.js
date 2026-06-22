@@ -538,13 +538,20 @@ function renderHighlights() {
   const mostPts = computeMostPointsOneMatch();
   const unlucky = computeUnluckyPredictions();
 
-  const jump = jumps[0], drop = drops[0], best = mostPts[0], luck = unlucky[0];
+  const jump = jumps[0], drop = drops[0], luck = unlucky[0];
+
+  // All participants tied at the top points, prefer the most recent date among ties
+  const bestPts = mostPts[0]?.points;
+  const tiedForBest = mostPts.filter(x => x.points === bestPts);
+  const bestDate = tiedForBest.reduce((latest, x) => x.date > latest ? x.date : latest, '');
+  const bestGroup = tiedForBest.filter(x => x.date === bestDate);
+  const bestNames = bestGroup.map(x => esc(x.participant.split(' ')[0])).join(', ');
 
   const cards = [
     jump ? `<div class="shc shc-green"><div class="shc-icon">📈</div><div class="shc-label">Mayor Subida</div><div class="shc-name">${esc(jump.participant.split(' ')[0])}</div><div class="shc-val">+${jump.jump} puestos</div><div class="shc-sub">#${jump.from} → #${jump.to} · ${jump.date}</div></div>` : '',
     drop ? `<div class="shc shc-red"><div class="shc-icon">📉</div><div class="shc-label">Mayor Caída</div><div class="shc-name">${esc(drop.participant.split(' ')[0])}</div><div class="shc-val">-${drop.drop} puestos</div><div class="shc-sub">#${drop.from} → #${drop.to} · ${drop.date}</div></div>` : '',
-    best ? `<div class="shc shc-gold"><div class="shc-icon">⚡</div><div class="shc-label">Mejor Día</div><div class="shc-name">${esc(best.participant.split(' ')[0])}</div><div class="shc-val">${best.points} pts en 1 día</div><div class="shc-sub">${best.date !== '9999-01-01' ? fmtSnapshotDate(best.date) : ''}</div></div>` : '',
-    luck ? `<div class="shc shc-blue"><div class="shc-icon">🔮</div><div class="shc-label">Mayor Subida Potencial</div><div class="shc-name">${esc(luck.participant.split(' ')[0])}</div><div class="shc-val">+${luck.positionsGained} puestos posibles</div><div class="shc-sub">#${luck.currentPos} → #${luck.newPos} · ${esc(luck.teamLocal)} vs ${esc(luck.teamVisitor)}</div></div>` : ''
+    bestGroup.length ? `<div class="shc shc-gold"><div class="shc-icon">⚡</div><div class="shc-label">Mejor Día</div><div class="shc-name">${bestNames}</div><div class="shc-val">${bestPts} pts en 1 día</div><div class="shc-sub">${bestDate !== '9999-01-01' ? fmtSnapshotDate(bestDate) : ''}</div></div>` : '',
+    luck ? `<div class="shc shc-blue"><div class="shc-icon">🔮</div><div class="shc-label">Mayor Subida Potencial</div><div class="shc-name">${esc(luck.participant.split(' ')[0])}</div><div class="shc-val">+${luck.positionsGained} puestos posibles</div><div class="shc-sub">#${luck.currentPos} → #${luck.newPos} · ${esc(luck.teamLocal)} vs ${esc(luck.teamVisitor)}</div><div class="shc-sub">Necesita: <strong>${esc(luck.prediction)}</strong></div></div>` : ''
   ].filter(Boolean);
 
   if (!cards.length) return;
