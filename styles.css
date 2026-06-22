@@ -2423,7 +2423,7 @@ body.dark-mode .hm-winner-match .hm-s { color: #ffc107; }
 
 #groups-table th,
 #groups-table td {
-  padding: 0.18rem 0.15rem;
+  padding: 0.18rem 0.04rem;
   overflow: hidden;
 }
 
@@ -2444,8 +2444,8 @@ body.dark-mode .hm-winner-match .hm-s { color: #ffc107; }
 
 /* Score pills — compact */
 #groups-table .score-pill {
-  min-width: 34px;
-  padding: 0.12rem 0.12rem;
+  min-width: 28px;
+  padding: 0.12rem 0.06rem;
   font-size: 0.6rem;
 }
 
