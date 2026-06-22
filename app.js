@@ -545,7 +545,29 @@ function renderPhaseCards(phaseId, sortedMatches, participants) {
 
   if (!sortedMatches.length) { container.innerHTML = ''; return; }
 
-  cardState[phaseId] = { matches: sortedMatches, index: 0 };
+  let initialIndex = 0;
+  const _now = Date.now();
+  let _foundLive = false;
+  for (let _i = 0; _i < sortedMatches.length; _i++) {
+    const _m = sortedMatches[_i];
+    const _hasRes = _m.result != null && _m.result.goalsTeamA !== null && _m.result.goalsTeamA !== undefined;
+    if (!_hasRes) {
+      const _dt = findMatchDateTime(_m.teamLocal, _m.teamVisitor);
+      if (_dt && _dt.date && _dt.time) {
+        const _kickoff = new Date(`${_dt.date}T${_dt.time}:00`);
+        const _mins = (_now - _kickoff.getTime()) / 60000;
+        if (_mins >= 0 && _mins <= 105) { initialIndex = _i; _foundLive = true; break; }
+      }
+    }
+  }
+  if (!_foundLive) {
+    for (let _i = 0; _i < sortedMatches.length; _i++) {
+      const _m = sortedMatches[_i];
+      const _hasRes = _m.result != null && _m.result.goalsTeamA !== null && _m.result.goalsTeamA !== undefined;
+      if (!_hasRes) { initialIndex = _i; break; }
+    }
+  }
+  cardState[phaseId] = { matches: sortedMatches, index: initialIndex };
   showCard(phaseId);
 }
 

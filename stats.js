@@ -473,8 +473,10 @@ function renderGeneralWidgets() {
 
   requestAnimationFrame(() => {
     const { text, grid } = chartColors();
-    const barHeight = 32;
-    const chartH = Math.max(280, gap.length * barHeight);
+    const isMobile = window.innerWidth <= 768;
+    const barHeight = isMobile ? 40 : 32;
+    const labelFont = isMobile ? 13 : 12;
+    const chartH = Math.max(isMobile ? 400 : 280, gap.length * barHeight);
 
     const gapCanvas = document.getElementById('chart-gap');
     if (gapCanvas) {
@@ -492,14 +494,15 @@ function renderGeneralWidgets() {
           maintainAspectRatio: false,
           indexAxis: 'y',
           plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `${gap[c.dataIndex]?.participant}: ${c.raw} pts detrás (${gap[c.dataIndex]?.total} pts totales)` } } },
-          scales: { x: { grid: { color: grid }, ticks: { color: text } }, y: { grid: { display: false }, ticks: { color: text, font: { size: 12 } } } }
+          scales: { x: { grid: { color: grid }, ticks: { color: text } }, y: { grid: { display: false }, ticks: { color: text, font: { size: labelFont } } } }
         }
       });
     }
 
+    const maxChartH = Math.max(isMobile ? 400 : 280, maxPoss.length * barHeight);
     const maxCanvas = document.getElementById('chart-maxpossible');
     if (maxCanvas) {
-      maxCanvas.style.height = Math.max(280, maxPoss.length * barHeight) + 'px';
+      maxCanvas.style.height = maxChartH + 'px';
       const maxCtx = maxCanvas.getContext('2d');
       if (statsCharts['maxpossible']) statsCharts['maxpossible'].destroy();
       statsCharts['maxpossible'] = new Chart(maxCtx, {
@@ -519,7 +522,7 @@ function renderGeneralWidgets() {
             legend: { position: 'bottom', labels: { color: text, font: { size: 11 }, boxWidth: 10 } },
             tooltip: { callbacks: { label: c => c.datasetIndex === 0 ? `Actuales: ${c.raw}` : `Potencial: +${c.raw} → Máx ${maxPoss[c.dataIndex]?.maxTotal}` } }
           },
-          scales: { x: { stacked: true, grid: { color: grid }, ticks: { color: text } }, y: { stacked: true, grid: { display: false }, ticks: { color: text, font: { size: 12 } } } }
+          scales: { x: { stacked: true, grid: { color: grid }, ticks: { color: text } }, y: { stacked: true, grid: { display: false }, ticks: { color: text, font: { size: labelFont } } } }
         }
       });
     }

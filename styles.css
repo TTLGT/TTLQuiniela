@@ -750,6 +750,11 @@ body.dark-mode .grps-abbrev-note { color: #555; }
   canvas {
     max-height: 250px;
   }
+
+  #chart-gap,
+  #chart-maxpossible {
+    max-height: none;
+  }
 }
 
 @media (max-width: 480px) {
