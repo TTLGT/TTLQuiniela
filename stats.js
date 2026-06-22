@@ -529,6 +529,78 @@ function renderGeneralWidgets() {
   });
 }
 
+// Stat: Hot & Cold Streaks
+function computeStreaks() {
+  const result = [];
+  for (const [pName, sd] of Object.entries(appState.scores)) {
+    const played = getPlayedMatches(sd);
+    if (!played.length) { result.push({ participant: pName, hotStreak: 0, coldStreak: 0 }); continue; }
+    const sorted = [...played].sort((a, b) => {
+      const da = findMatchDateTime(a.teamLocal, a.teamVisitor)?.date || '9999-01-01';
+      const db = findMatchDateTime(b.teamLocal, b.teamVisitor)?.date || '9999-01-01';
+      return da !== db ? da.localeCompare(db) : (a.id || 0) - (b.id || 0);
+    });
+    let hotStreak = 0;
+    for (let i = sorted.length - 1; i >= 0; i--) {
+      if (sorted[i].type !== 'no-match') hotStreak++;
+      else break;
+    }
+    let coldStreak = 0;
+    for (let i = sorted.length - 1; i >= 0; i--) {
+      if (sorted[i].type === 'no-match') coldStreak++;
+      else break;
+    }
+    result.push({ participant: pName, hotStreak, coldStreak });
+  }
+  return result;
+}
+
+// Stat: Next Match Favorite
+function computeNextMatchFavorite() {
+  const pendingById = new Map();
+  for (const [, sd] of Object.entries(appState.scores)) {
+    for (const m of getPendingMatches(sd)) {
+      if (!pendingById.has(m.id)) pendingById.set(m.id, m);
+    }
+  }
+  let nextMatch = null, nextDT = null, earliestStr = null;
+  for (const [, m] of pendingById) {
+    const dt = findMatchDateTime(m.teamLocal, m.teamVisitor);
+    if (!dt?.date) continue;
+    const dtStr = `${dt.date} ${dt.time || '00:00'}`;
+    if (!earliestStr || dtStr < earliestStr) { earliestStr = dtStr; nextMatch = m; nextDT = dt; }
+  }
+  if (!nextMatch) return null;
+  const winnerCounts = {};
+  let totalPreds = 0;
+  for (const [, sd] of Object.entries(appState.scores)) {
+    const m = Object.values(sd.matches || {}).find(x => x.id === nextMatch.id);
+    if (!m || m.goalsLocal == null || m.goalsVisitor == null) continue;
+    const gl = Number(m.goalsLocal), gv = Number(m.goalsVisitor);
+    if (isNaN(gl) || isNaN(gv)) continue;
+    const winner = gl > gv ? m.teamLocal : gv > gl ? m.teamVisitor : 'Empate';
+    winnerCounts[winner] = (winnerCounts[winner] || 0) + 1;
+    totalPreds++;
+  }
+  if (!totalPreds) return null;
+  const maxCount = Math.max(...Object.values(winnerCounts));
+  const favorites = Object.entries(winnerCounts).filter(([, c]) => c === maxCount).map(([n]) => n);
+  return { teamLocal: nextMatch.teamLocal, teamVisitor: nextMatch.teamVisitor, dt: nextDT, favorites, favoriteCount: maxCount, totalPreds };
+}
+
+// Stat: Exact Hits Leader
+function computeExactHitsLeader() {
+  const counts = Object.keys(appState.scores).map(pName => ({
+    participant: pName,
+    exactHits: getPlayedMatches(appState.scores[pName]).filter(m => m.type === 'exact-match').length
+  })).sort((a, b) => b.exactHits - a.exactHits);
+  if (!counts.length || counts[0].exactHits === 0) return null;
+  const maxHits = counts[0].exactHits;
+  const leaders = counts.filter(x => x.exactHits === maxHits);
+  const next = counts.find(x => x.exactHits < maxHits) || null;
+  return { leaders, maxHits, next };
+}
+
 // Stats 15, 16, 17, 18 — Highlights row
 function renderHighlights() {
   const el = document.getElementById('st-highlights');
@@ -547,11 +619,27 @@ function renderHighlights() {
   const bestGroup = tiedForBest.filter(x => x.date === bestDate);
   const bestNames = bestGroup.map(x => esc(x.participant.split(' ')[0])).join(', ');
 
+  // New stat cards
+  const streaks = computeStreaks();
+  const hotVal = Math.max(...streaks.map(s => s.hotStreak), 0);
+  const coldVal = Math.max(...streaks.map(s => s.coldStreak), 0);
+  const hotLeaders = streaks.filter(s => s.hotStreak === hotVal && hotVal >= 1);
+  const coldLeaders = streaks.filter(s => s.coldStreak === coldVal && coldVal >= 1);
+  const hotNames = hotLeaders.map(s => esc(s.participant.split(' ')[0])).join(', ');
+  const coldNames = coldLeaders.map(s => esc(s.participant.split(' ')[0])).join(', ');
+
+  const nextFav = computeNextMatchFavorite();
+  const exactLeader = computeExactHitsLeader();
+
   const cards = [
     jump ? `<div class="shc shc-green"><div class="shc-icon">📈</div><div class="shc-label">Mayor Subida</div><div class="shc-name">${esc(jump.participant.split(' ')[0])}</div><div class="shc-val">+${jump.jump} puestos</div><div class="shc-sub">#${jump.from} → #${jump.to} · ${jump.date}</div></div>` : '',
     drop ? `<div class="shc shc-red"><div class="shc-icon">📉</div><div class="shc-label">Mayor Caída</div><div class="shc-name">${esc(drop.participant.split(' ')[0])}</div><div class="shc-val">-${drop.drop} puestos</div><div class="shc-sub">#${drop.from} → #${drop.to} · ${drop.date}</div></div>` : '',
     bestGroup.length ? `<div class="shc shc-gold"><div class="shc-icon">⚡</div><div class="shc-label">Mejor Día</div><div class="shc-name">${bestNames}</div><div class="shc-val">${bestPts} pts en 1 día</div><div class="shc-sub">${bestDate !== '9999-01-01' ? fmtSnapshotDate(bestDate) : ''}</div></div>` : '',
-    luck ? `<div class="shc shc-blue"><div class="shc-icon">🔮</div><div class="shc-label">Mayor Subida Potencial</div><div class="shc-name">${esc(luck.participant.split(' ')[0])}</div><div class="shc-val">+${luck.positionsGained} puestos posibles</div><div class="shc-sub">#${luck.currentPos} → #${luck.newPos} · ${esc(luck.teamLocal)} vs ${esc(luck.teamVisitor)}</div><div class="shc-sub">Necesita: <strong>${esc(luck.prediction)}</strong></div></div>` : ''
+    luck ? `<div class="shc shc-blue"><div class="shc-icon">🔮</div><div class="shc-label">Mayor Subida Potencial</div><div class="shc-name">${esc(luck.participant.split(' ')[0])}</div><div class="shc-val">+${luck.positionsGained} puestos posibles</div><div class="shc-sub">#${luck.currentPos} → #${luck.newPos} · ${esc(luck.teamLocal)} vs ${esc(luck.teamVisitor)}</div><div class="shc-sub">Necesita: <strong>${esc(luck.prediction)}</strong></div></div>` : '',
+    hotVal >= 1 ? `<div class="shc shc-orange"><div class="shc-icon">🔥</div><div class="shc-label">Racha Caliente</div><div class="shc-name">${hotNames}</div><div class="shc-val">${hotVal} seguidos</div><div class="shc-sub">${hotVal} juego${hotVal !== 1 ? 's' : ''} consecutivo${hotVal !== 1 ? 's' : ''} con puntos</div></div>` : '',
+    coldVal >= 1 ? `<div class="shc shc-gray"><div class="shc-icon">🧊</div><div class="shc-label">Racha Fría</div><div class="shc-name">${coldNames}</div><div class="shc-val">${coldVal} sin puntuar</div><div class="shc-sub">${coldVal} juego${coldVal !== 1 ? 's' : ''} consecutivo${coldVal !== 1 ? 's' : ''} sin puntos</div></div>` : '',
+    nextFav ? `<div class="shc shc-purple"><div class="shc-icon">🏆</div><div class="shc-label">Favorito · Próximo Partido</div><div class="shc-name">${nextFav.favorites.map(f => esc(f)).join(', ')}</div><div class="shc-val">${nextFav.favoriteCount} de ${nextFav.totalPreds} lo eligen</div><div class="shc-sub">${esc(nextFav.teamLocal)} vs ${esc(nextFav.teamVisitor)}</div></div>` : '',
+    exactLeader ? `<div class="shc shc-teal"><div class="shc-icon">🎯</div><div class="shc-label">Rey del Marcador Exacto</div><div class="shc-name">${exactLeader.leaders.map(l => esc(l.participant.split(' ')[0])).join(', ')}</div><div class="shc-val">${exactLeader.maxHits} exacto${exactLeader.maxHits !== 1 ? 's' : ''}</div>${exactLeader.next ? `<div class="shc-sub">Siguiente: ${esc(exactLeader.next.participant.split(' ')[0])} con ${exactLeader.next.exactHits}</div>` : ''}</div>` : ''
   ].filter(Boolean);
 
   if (!cards.length) return;
