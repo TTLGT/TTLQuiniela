@@ -260,6 +260,8 @@ async function renderPhase(phaseId) {
 
   const tbody = table.querySelector('tbody');
   const selectedParticipant = document.querySelector(`#participant-${phaseId}`)?.value || '';
+  const _hint = document.getElementById(`participant-hint-${phaseId}`);
+  if (_hint) _hint.classList.toggle('hidden', !!selectedParticipant);
   const phaseName = PHASE_NAMES[phaseId];
 
   // Collect matches
