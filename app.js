@@ -17,6 +17,7 @@ let appState = {
 // UI state
 let cardState      = {};  // { phaseId: { matches, index } }
 let viewMode       = {};  // { phaseId: 'table' | 'grid' }
+let tableVisible   = {};  // { phaseId: boolean } — false = collapsed
 
 // ==================== TEAM FLAGS ====================
 
@@ -150,6 +151,18 @@ function setupDOM() {
       const legEl = document.createElement('div');
       legEl.innerHTML = legend;
       wrapper.parentNode.insertBefore(legEl.firstElementChild, wrapper);
+    }
+
+    // Table collapse toggle — starts collapsed
+    if (!document.getElementById(`tabla-toggle-${phaseId}`)) {
+      tableVisible[phaseId] = false;
+      wrapper.style.display = 'none';
+      const toggleBtn = document.createElement('button');
+      toggleBtn.id = `tabla-toggle-${phaseId}`;
+      toggleBtn.className = 'tabla-toggle-btn';
+      toggleBtn.textContent = '▼ Ver Tabla';
+      toggleBtn.onclick = () => toggleTableVisibility(phaseId);
+      wrapper.parentNode.insertBefore(toggleBtn, wrapper);
     }
   });
 }
@@ -669,6 +682,15 @@ function toggleView(phaseId) {
   updateBackToTopVisibility();
 }
 
+function toggleTableVisibility(phaseId) {
+  tableVisible[phaseId] = !tableVisible[phaseId];
+  const wrapper = document.querySelector(`#${phaseId} .table-wrapper`);
+  const btn = document.getElementById(`tabla-toggle-${phaseId}`);
+  const isGrid = viewMode[phaseId] === 'grid';
+  if (wrapper && !isGrid) wrapper.style.display = tableVisible[phaseId] ? '' : 'none';
+  if (btn) btn.textContent = tableVisible[phaseId] ? '▲ Ocultar Tabla' : '▼ Ver Tabla';
+}
+
 function updateBackToTopVisibility() {
   const topBtn = document.getElementById('back-to-top-btn');
   if (!topBtn) return;
@@ -690,7 +712,7 @@ function renderCardGrid(phaseId, sortedMatches, participants, selectedParticipan
   const tableWrapper  = document.querySelector(`#${phaseId} .table-wrapper`);
   const isGrid = viewMode[phaseId] === 'grid';
 
-  if (tableWrapper) tableWrapper.style.display = isGrid ? 'none' : '';
+  if (tableWrapper) tableWrapper.style.display = (isGrid || !tableVisible[phaseId]) ? 'none' : '';
   if (!gridContainer) return;
   gridContainer.style.display = isGrid ? 'grid' : 'none';
   if (!isGrid) return;

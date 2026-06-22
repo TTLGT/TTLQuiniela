@@ -2410,3 +2410,43 @@ body.dark-mode .hm-winner-match .hm-s { color: #ffc107; }
   .shc-grid { grid-template-columns: 1fr; }
   .team-perf-grid { grid-template-columns: 1fr; }
 }
+
+/* ============================================
+   TABLE COLLAPSE TOGGLE
+   ============================================ */
+
+.tabla-toggle-btn {
+  display: block;
+  width: 100%;
+  padding: 0.45rem 1rem;
+  margin-bottom: 0;
+  background: var(--primary-dark);
+  color: #c8d0f0;
+  border: none;
+  border-radius: 4px 4px 0 0;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+  letter-spacing: 0.03em;
+  transition: background 0.2s, color 0.2s;
+  transform: none;
+  box-shadow: none;
+}
+
+.tabla-toggle-btn:hover {
+  background: var(--primary-btn);
+  color: white;
+  transform: none;
+  box-shadow: none;
+}
+
+body.dark-mode .tabla-toggle-btn {
+  background: #1a2050;
+  color: #8b96c8;
+}
+
+body.dark-mode .tabla-toggle-btn:hover {
+  background: var(--primary-btn);
+  color: white;
+}
