@@ -2430,7 +2430,7 @@ body.dark-mode .hm-winner-match .hm-s { color: #ffc107; }
 /* Fixed widths for the 3 sticky left columns */
 #groups-table thead th:nth-child(1) { width: 26px; }
 #groups-table thead th:nth-child(2) { width: 52px; }
-#groups-table thead th:nth-child(3) { width: 205px; white-space: normal; overflow: visible; }
+#groups-table thead th:nth-child(3) { width: 730px; white-space: normal; overflow: visible; }
 #groups-table tbody td:nth-child(3),
 #groups-table tfoot td:nth-child(3) { overflow: visible; }
 
@@ -2442,11 +2442,10 @@ body.dark-mode .hm-winner-match .hm-s { color: #ffc107; }
   line-height: 1.2;
 }
 
-/* Score pills — fill participant column, no surrounding whitespace */
+/* Score pills — compact natural size */
 #groups-table .score-pill {
   min-width: 0;
-  width: 100%;
-  display: flex;
+  display: inline-flex;
   padding: 0.12rem 0.06rem;
   font-size: 0.6rem;
 }
@@ -2462,19 +2461,19 @@ body.dark-mode .hm-winner-match .hm-s { color: #ffc107; }
 }
 
 #groups-table .rsb-side {
-  font-size: 0.58rem;
-  gap: 0.08rem;
+  font-size: 0.65rem;
+  gap: 0.1rem;
 }
 
 #groups-table .rsb-name {
-  max-width: 4rem;
+  max-width: 7rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 #groups-table .rsb-goals {
-  font-size: 0.72rem;
+  font-size: 0.8rem;
 }
 
 #groups-table .status-badge {
