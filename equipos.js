@@ -5,16 +5,15 @@
 // Asignación de equipos a participantes
 const EQUIPOS = {
   "Alemania": ["Joe Ayala", "Kevin Romero", "Mary Gaytan"],
-  "Argentina": ["Bryan Guerra", "Charly Molina", "Edvin Paredes", "Gus Mendez",
-                "Isabel Ortiz", "Jose Ruano", "Jose Romero", "Josue Suazo",
-                "Karen Molina", "Nery Molina", "Nery Mendez"],
-  "Brasil": ["Edduar Gudiel", "Marvin Linares", "Paul Bats"],
+  "Argentina": ["Bryan Guerra", "Charly Molina", "Gus Mendez",
+                "Isabel Ortiz", "Jonathan Suazo", "Jose Ruano", "Jose Romero",
+                "Karen Molina", "Nery Molina"],
+  "Brasil": ["Marvin Linares", "Paul Bats"],
   "Croacia": ["Gabe Mendez"],
   "España": ["Alexis Garcia", "Oliver Centeno"],
   "Francia": ["Saul Escobar"],
   "Paises Bajos": ["David Molina"],
-  "Mexico": ["Erwin Solorzano", "Juan Diaz"],
-  "USA": ["James Peña"]
+  "Mexico": ["Erwin Solorzano", "Juan Diaz"]
 };
 
 // Función auxiliar para obtener el equipo de un participante
