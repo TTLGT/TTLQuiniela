@@ -2450,3 +2450,148 @@ body.dark-mode .tabla-toggle-btn:hover {
   background: var(--primary-btn);
   color: white;
 }
+
+/* ============================================
+   WHAT IF MODE
+   ============================================ */
+
+.whatif-btn {
+  background: linear-gradient(135deg, #6a0dad, #9b30ff);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.02em;
+}
+
+.whatif-btn:hover {
+  background: linear-gradient(135deg, #7d0fc8, #b044ff);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(106, 13, 173, 0.45);
+}
+
+.whatif-btn.whatif-active {
+  background: linear-gradient(135deg, #8b0000, #cc0000);
+  box-shadow: 0 2px 10px rgba(180, 0, 0, 0.4);
+}
+
+.whatif-btn.whatif-active:hover {
+  background: linear-gradient(135deg, #a00000, #e00000);
+}
+
+.whatif-banner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: linear-gradient(135deg, #3d006e, #6a0dad);
+  color: white;
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 0.75rem;
+}
+
+.whatif-exit-btn {
+  background: rgba(255,255,255,0.2);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.4);
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  margin-left: auto;
+  transition: background 0.15s;
+}
+
+.whatif-exit-btn:hover {
+  background: rgba(255,255,255,0.35);
+}
+
+/* What IF score inputs inside pending match rows */
+.result-whatif .rsb-goals {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.whatif-score-input {
+  width: 38px;
+  padding: 0.2rem 0.3rem;
+  border: 2px solid #9b30ff;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-family: inherit;
+  background: #f5eeff;
+  color: #3d006e;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  -moz-appearance: textfield;
+}
+
+.whatif-score-input::-webkit-outer-spin-button,
+.whatif-score-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.whatif-score-input:focus {
+  border-color: #6a0dad;
+  box-shadow: 0 0 0 3px rgba(155, 48, 255, 0.25);
+  background: white;
+}
+
+/* Position delta indicators */
+.wi-delta {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  margin-left: 4px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  vertical-align: middle;
+}
+
+.wi-up   { background: #d4edda; color: #155724; }
+.wi-down { background: #f8d7da; color: #721c24; }
+.wi-same { background: #e2e3e5; color: #6c757d; }
+
+/* Highlight groups column cell when changed by What IF */
+.wi-changed-cell {
+  background: #f0e6ff !important;
+  color: #6a0dad;
+  font-weight: 700;
+}
+
+body.dark-mode .whatif-banner {
+  background: linear-gradient(135deg, #2a004d, #4a0099);
+}
+
+body.dark-mode .whatif-score-input {
+  background: #1e0a33;
+  color: #d0aaff;
+  border-color: #7a20cc;
+}
+
+body.dark-mode .whatif-score-input:focus {
+  background: #2d1055;
+  border-color: #9b30ff;
+}
+
+body.dark-mode .wi-up   { background: #1a3a26; color: #5fd68a; }
+body.dark-mode .wi-down { background: #3a1a1a; color: #f08080; }
+body.dark-mode .wi-same { background: #2a2a2a; color: #999; }
+
+body.dark-mode .wi-changed-cell {
+  background: #2a1050 !important;
+  color: #c090ff;
+}

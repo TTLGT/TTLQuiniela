@@ -32,6 +32,11 @@
                 <button id="refresh-btn" onclick="refreshResults()">🔄 Actualizar Resultados</button>
             </div>
 
+            <div id="whatif-banner" class="whatif-banner" style="display:none">
+                🔮 <strong>Modo What IF</strong> — Puntos hipotéticos basados en Fase de Grupos
+                <button onclick="toggleWhatIf()" class="whatif-exit-btn">✕ Salir</button>
+            </div>
+
             <div id="general-error" class="error" style="display: none;"></div>
             <div id="general-success" class="success" style="display: none;"></div>
 
@@ -72,6 +77,7 @@
                 <input type="text" id="search-groups" class="team-search-input" placeholder="🔍 Buscar equipo..." list="datalist-team-groups" oninput="renderPhase('groups')" autocomplete="off">
                 <datalist id="datalist-team-groups"></datalist>
                 <button class="view-toggle-btn" id="view-toggle-groups" onclick="toggleView('groups')">⊞ Cuadrícula</button>
+                <button class="whatif-btn" id="whatif-btn" onclick="toggleWhatIf()">🔮 What IF</button>
                 <p class="participant-hint" id="participant-hint-groups">👤 Selecciona tu nombre para verte en el tope de las listas y fijar tu columna</p>
             </div>
 

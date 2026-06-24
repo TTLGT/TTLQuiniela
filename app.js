@@ -19,6 +19,11 @@ let cardState      = {};  // { phaseId: { matches, index } }
 let viewMode       = {};  // { phaseId: 'table' | 'grid' }
 let tableVisible   = {};  // { phaseId: boolean } — false = collapsed
 
+// What IF mode
+let whatIfMode    = false;
+let whatIfScores  = {};   // "TeamA vs TeamB" → { goalsTeamA, goalsTeamB }
+let whatIfRanking = null;
+
 // ==================== TEAM FLAGS ====================
 
 const TEAM_FLAGS = {
@@ -222,25 +227,40 @@ async function renderAllViews() {
 
 async function renderGeneralTable() {
   const tbody = document.querySelector('#general-table tbody');
+  const banner = document.getElementById('whatif-banner');
+  if (banner) banner.style.display = whatIfMode ? '' : 'none';
+
   if (!appState.participants || appState.participants.length === 0) {
     tbody.innerHTML = '<tr><td colspan="10" class="loading">Sin datos disponibles</td></tr>';
     return;
   }
 
-  tbody.innerHTML = appState.participants.map(p => `
+  const participants = (whatIfMode && whatIfRanking) ? whatIfRanking : appState.participants;
+
+  tbody.innerHTML = participants.map(p => {
+    const delta = (whatIfMode && p.realPosition != null) ? p.realPosition - p.position : 0;
+    const deltaHtml = whatIfMode
+      ? (delta > 0 ? `<span class="wi-delta wi-up">▲${delta}</span>`
+        : delta < 0 ? `<span class="wi-delta wi-down">▼${Math.abs(delta)}</span>`
+        : `<span class="wi-delta wi-same">—</span>`)
+      : '';
+    const posBadge = p.position === 1 ? '🥇' : p.position === 2 ? '🥈' : p.position === 3 ? '🥉' : `#${p.position}`;
+    const realGroups = appState.scores[p.participant]?.groups ?? p.groups;
+    const groupsChanged = whatIfMode && p.groups !== realGroups;
+    return `
     <tr class="${p.position <= 3 ? `top-${p.position}` : ''}">
-      <td><span class="pos-badge pos-badge--${p.position <= 3 ? ['gold','silver','bronze'][p.position-1] : 'default'}">${p.position === 1 ? '🥇' : p.position === 2 ? '🥈' : p.position === 3 ? '🥉' : `#${p.position}`}</span></td>
+      <td><span class="pos-badge pos-badge--${p.position <= 3 ? ['gold','silver','bronze'][p.position-1] : 'default'}">${posBadge}</span>${deltaHtml}</td>
       <td><span class="cell-btn" data-team-popup="${esc(p.team)}">${getFlag(p.team)} ${p.team || '-'}</span></td>
       <td><span class="cell-btn" data-participant-popup="${esc(p.participant)}">${esc(p.participant)}</span></td>
       <td><strong class="rank-total-pts">${p.total}</strong></td>
-      <td>${p.groups}</td>
+      <td class="${groupsChanged ? 'wi-changed-cell' : ''}">${p.groups}</td>
       <td>${p.round16}</td>
       <td>${p.round8}</td>
       <td>${p.quarters}</td>
       <td>${p.semi}</td>
       <td>${p.final}</td>
-    </tr>
-  `).join('');
+    </tr>`;
+  }).join('');
 
   // Populate participant datalists
   const names = appState.participants.map(p => p.participant).sort();
@@ -408,17 +428,37 @@ async function renderPhase(phaseId) {
       }
     }
 
+    let pendingDisplay;
+    if (whatIfMode && phaseId === 'groups') {
+      const wiKey = `${match.teamLocal} vs ${match.teamVisitor}`;
+      const wi = whatIfScores[wiKey];
+      const wiA = wi?.goalsTeamA ?? '';
+      const wiB = wi?.goalsTeamB ?? '';
+      pendingDisplay = `<div class="result-scoreboard result-whatif">
+          <span class="rsb-side rsb-local">${flagL}<span class="rsb-name">${match.teamLocal}</span></span>
+          <span class="rsb-goals">
+            <input class="whatif-score-input" type="number" min="0" max="20" value="${wiA}" placeholder="?"
+              oninput="updateWhatIfScore('${match.teamLocal}', '${match.teamVisitor}', 'A', this.value)">
+            <span class="rsb-sep">–</span>
+            <input class="whatif-score-input" type="number" min="0" max="20" value="${wiB}" placeholder="?"
+              oninput="updateWhatIfScore('${match.teamLocal}', '${match.teamVisitor}', 'B', this.value)">
+          </span>
+          <span class="rsb-side rsb-visitor"><span class="rsb-name">${match.teamVisitor}</span>${flagV}</span>
+        </div>`;
+    } else {
+      pendingDisplay = `<div class="result-scoreboard result-pending">
+          <span class="rsb-side rsb-local">${flagL}<span class="rsb-name">${match.teamLocal}</span></span>
+          <span class="rsb-goals" style="color:#aaa">vs</span>
+          <span class="rsb-side rsb-visitor"><span class="rsb-name">${match.teamVisitor}</span>${flagV}</span>
+        </div>`;
+    }
     const resultText = hasResult
       ? `<div class="result-scoreboard">
           <span class="rsb-side rsb-local">${flagL}<span class="rsb-name">${match.teamLocal}</span></span>
           <span class="rsb-goals"><strong>${match.result.goalsTeamA}</strong><span class="rsb-sep">–</span><strong>${match.result.goalsTeamB}</strong></span>
           <span class="rsb-side rsb-visitor"><span class="rsb-name">${match.teamVisitor}</span>${flagV}</span>
         </div>`
-      : `<div class="result-scoreboard result-pending">
-          <span class="rsb-side rsb-local">${flagL}<span class="rsb-name">${match.teamLocal}</span></span>
-          <span class="rsb-goals" style="color:#aaa">vs</span>
-          <span class="rsb-side rsb-visitor"><span class="rsb-name">${match.teamVisitor}</span>${flagV}</span>
-        </div>`;
+      : pendingDisplay;
     const statusBadge = hasResult
       ? '<span class="status-badge finished">Finalizado</span>'
       : isLive
@@ -689,6 +729,64 @@ function toggleTableVisibility(phaseId) {
   const isGrid = viewMode[phaseId] === 'grid';
   if (wrapper && !isGrid) wrapper.style.display = tableVisible[phaseId] ? '' : 'none';
   if (btn) btn.textContent = tableVisible[phaseId] ? '▲ Ocultar Tabla' : '▼ Ver Tabla';
+}
+
+// ==================== WHAT IF MODE ====================
+
+function toggleWhatIf() {
+  whatIfMode = !whatIfMode;
+  if (!whatIfMode) {
+    whatIfScores  = {};
+    whatIfRanking = null;
+  }
+  const btn = document.getElementById('whatif-btn');
+  if (btn) {
+    btn.textContent = whatIfMode ? '✕ Salir de What IF' : '🔮 What IF';
+    btn.classList.toggle('whatif-active', whatIfMode);
+  }
+  renderPhase('groups');
+  renderGeneralTable();
+}
+
+function updateWhatIfScore(teamLocal, teamVisitor, side, rawValue) {
+  const val = parseInt(rawValue, 10);
+  const key = `${teamLocal} vs ${teamVisitor}`;
+  if (!whatIfScores[key]) whatIfScores[key] = { goalsTeamA: null, goalsTeamB: null };
+  if (side === 'A') whatIfScores[key].goalsTeamA = (rawValue === '' || isNaN(val)) ? null : val;
+  else              whatIfScores[key].goalsTeamB = (rawValue === '' || isNaN(val)) ? null : val;
+  recalcWhatIf();
+}
+
+function recalcWhatIf() {
+  if (!whatIfMode) return;
+
+  const realPos = {};
+  appState.participants.forEach(p => { realPos[p.participant] = p.position; });
+
+  const hypo = [];
+  for (const [, scoreData] of Object.entries(appState.scores)) {
+    let extraGroups = 0;
+    for (const [, m] of Object.entries(scoreData.matches || {})) {
+      if (!m.phase?.includes('GRUPO') || m.result !== null) continue;
+      const key1 = `${m.teamLocal} vs ${m.teamVisitor}`;
+      const key2 = `${m.teamVisitor} vs ${m.teamLocal}`;
+      let wi = whatIfScores[key1];
+      let flipped = false;
+      if (!wi) { wi = whatIfScores[key2]; flipped = true; }
+      if (!wi || wi.goalsTeamA === null || wi.goalsTeamB === null) continue;
+      const fakeResult = flipped
+        ? { goalsTeamA: wi.goalsTeamB, goalsTeamB: wi.goalsTeamA }
+        : wi;
+      extraGroups += calculateScore({ goalsLocal: m.goalsLocal, goalsVisitor: m.goalsVisitor }, fakeResult, 'groups').points;
+    }
+    hypo.push({ ...scoreData, groups: scoreData.groups + extraGroups, total: scoreData.total + extraGroups });
+  }
+
+  whatIfRanking = hypo
+    .sort((a, b) => b.total - a.total)
+    .map((item, i) => ({ ...item, position: i + 1, realPosition: realPos[item.participant] ?? i + 1 }));
+
+  renderGeneralTable();
 }
 
 function updateBackToTopVisibility() {
