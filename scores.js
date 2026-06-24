@@ -26,6 +26,9 @@ let scheduleCache = null;
 // Caché de horarios ESPN en UTC
 let espnTimeCache = null;
 
+// Caché de resultados ESPN (partidos finalizados)
+let espnResultsCache = null;
+
 function utcToGuatemala(utcStr) {
   // Guatemala = UTC-6, no DST
   const d = new Date(utcStr);
@@ -39,16 +42,17 @@ function utcToGuatemala(utcStr) {
 async function fetchESPNTimes() {
   if (espnTimeCache) return espnTimeCache;
 
-  const cache = {};
+  const timeCache = {};
+  const resultsCache = {};
   const today = new Date();
   const dates = [];
-  for (let i = -1; i <= 21; i++) {
+  for (let i = -5; i <= 21; i++) {
     const d = new Date(today);
     d.setDate(d.getDate() + i);
     dates.push(d.toISOString().slice(0, 10).replace(/-/g, ''));
   }
 
-  const results = await Promise.all(
+  const responses = await Promise.all(
     dates.map(date =>
       fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${date}&lang=es&region=gt`)
         .then(r => r.json())
@@ -56,25 +60,40 @@ async function fetchESPNTimes() {
     )
   );
 
-  for (const data of results) {
+  for (const data of responses) {
     if (!data?.events) continue;
     for (const event of data.events) {
       const utcStr = event.date;
       const competitors = event.competitions?.[0]?.competitors || [];
-      const rawHome = competitors.find(c => c.homeAway === 'home')?.team?.name;
-      const rawAway = competitors.find(c => c.homeAway === 'away')?.team?.name;
-      const team1 = normalizeTeamName(rawHome);
-      const team2 = normalizeTeamName(rawAway);
-      if (team1 && team2 && utcStr) {
-        cache[`${team1} vs ${team2}`] = utcStr;
-        cache[`${team2} vs ${team1}`] = utcStr;
+      const homeComp = competitors.find(c => c.homeAway === 'home');
+      const awayComp = competitors.find(c => c.homeAway === 'away');
+      const team1 = normalizeTeamName(homeComp?.team?.name);
+      const team2 = normalizeTeamName(awayComp?.team?.name);
+      if (!team1 || !team2) continue;
+
+      if (utcStr) {
+        timeCache[`${team1} vs ${team2}`] = utcStr;
+        timeCache[`${team2} vs ${team1}`] = utcStr;
+      }
+
+      const completed = event.status?.type?.completed === true;
+      if (completed && homeComp?.score != null && awayComp?.score != null) {
+        const goalsHome = Number(homeComp.score);
+        const goalsAway = Number(awayComp.score);
+        if (!isNaN(goalsHome) && !isNaN(goalsAway)) {
+          const key = `${team1} vs ${team2}`;
+          resultsCache[key] = { goalsTeamA: goalsHome, goalsTeamB: goalsAway, team1, team2 };
+          console.log(`  ⚽ ESPN: ${team1} ${goalsHome}-${goalsAway} ${team2}`);
+        }
       }
     }
   }
 
-  espnTimeCache = cache;
-  console.log(`✅ ESPN: ${Object.keys(cache).length / 2} partidos con horario GT cargados`);
-  return cache;
+  espnTimeCache = timeCache;
+  espnResultsCache = resultsCache;
+  console.log(`✅ ESPN: ${Object.keys(timeCache).length / 2} partidos con horario GT cargados`);
+  console.log(`✅ ESPN: ${Object.keys(resultsCache).length} resultados finalizados cargados`);
+  return timeCache;
 }
 
 async function fetchWorldCupResults() {
@@ -250,26 +269,33 @@ function findMatchDateTime(teamLocal, teamVisitor) {
 }
 
 function getMatchResult(teamLocal, teamVisitor, dateStr) {
-  // Buscar en resultados manuales primero (tienen prioridad)
   const key1 = `${teamLocal} vs ${teamVisitor}`;
   const key2 = `${teamVisitor} vs ${teamLocal}`;
 
-  // Buscar en MANUAL_RESULTS
+  // 1. Resultados manuales (mayor prioridad)
   if (MANUAL_RESULTS[key1]) {
     console.log(`📋 Resultado manual encontrado: ${key1}`);
     return MANUAL_RESULTS[key1];
   }
-
   if (MANUAL_RESULTS[key2]) {
     console.log(`📋 Resultado manual encontrado (inverso): ${key2}`);
     const result = MANUAL_RESULTS[key2];
-    return {
-      goalsTeamA: result.goalsTeamB,
-      goalsTeamB: result.goalsTeamA
-    };
+    return { goalsTeamA: result.goalsTeamB, goalsTeamB: result.goalsTeamA };
   }
 
-  // Si no hay resultado manual, retornar null
+  // 2. Resultados de ESPN (tiempo real)
+  if (espnResultsCache) {
+    if (espnResultsCache[key1]) {
+      console.log(`📺 Resultado ESPN encontrado: ${key1}`);
+      return espnResultsCache[key1];
+    }
+    if (espnResultsCache[key2]) {
+      console.log(`📺 Resultado ESPN encontrado (inverso): ${key2}`);
+      const r = espnResultsCache[key2];
+      return { goalsTeamA: r.goalsTeamB, goalsTeamB: r.goalsTeamA };
+    }
+  }
+
   return null;
 }
 
