@@ -468,13 +468,25 @@ async function renderPhase(phaseId) {
     const groupCell = isGroups ? `<td class="sticky-col">${match.group || '-'}</td>` : '';
 
     const predsHtml = participants.map((p, i) => {
-      const pred   = match.predictions[p];
+      let pred   = match.predictions[p];
       const colIdx = numFixed + i;
       const isHL     = selectedParticipant && p === selectedParticipant ? ' col-highlighted' : '';
-            if (!pred || !pred.prediction || pred.prediction === 'NaN-NaN') {
+      
+      if (!pred || !pred.prediction || pred.prediction === 'NaN-NaN') {
         return `<td class="no-match${isHL}" data-colidx="${colIdx}">
           <span class="score-pill"><span class="pill-score">-</span><span class="pill-pts">0pts</span></span>
         </td>`;
+      }
+
+      // Recalculate points in WHAT IF mode for pending group matches
+      if (whatIfMode && !hasResult && match.id && phaseId === 'groups') {
+        const wiKey = `${match.teamLocal} vs ${match.teamVisitor}`;
+        const wi = whatIfScores[wiKey];
+        if (wi && wi.goalsTeamA !== null && wi.goalsTeamB !== null) {
+          const wiResult = { goalsTeamA: wi.goalsTeamA, goalsTeamB: wi.goalsTeamB };
+          const recalc = calculateScore(pred, wiResult, 'groups');
+          pred = { ...pred, points: recalc.points, type: recalc.type };
+        }
       }
 
       const actual  = hasResult ? `${match.result.goalsTeamA}-${match.result.goalsTeamB}` : 'Sin resultado';
@@ -643,13 +655,26 @@ function showCard(phaseId) {
     match.result.goalsTeamA !== null && match.result.goalsTeamA !== undefined;
 
   const predsHtml = participants.map(p => {
-    const pred = match.predictions[p];
+    let pred = match.predictions[p];
+    
     if (!pred || !pred.prediction || pred.prediction === 'NaN-NaN') {
       return `<div class="card-pred-row no-match">
         <span class="card-pred-name">${p}</span>
         <span class="score-pill"><span class="pill-score">-</span><span class="pill-pts">0pts</span></span>
       </div>`;
     }
+
+    // Recalculate points in WHAT IF mode for pending group matches
+    if (whatIfMode && !hasResult && match.id && phaseId === 'groups') {
+      const wiKey = `${match.teamLocal} vs ${match.teamVisitor}`;
+      const wi = whatIfScores[wiKey];
+      if (wi && wi.goalsTeamA !== null && wi.goalsTeamB !== null) {
+        const wiResult = { goalsTeamA: wi.goalsTeamA, goalsTeamB: wi.goalsTeamB };
+        const recalc = calculateScore(pred, wiResult, 'groups');
+        pred = { ...pred, points: recalc.points, type: recalc.type };
+      }
+    }
+
     return `<div class="card-pred-row ${pred.type}">
       <span class="card-pred-name">${p}</span>
       <span class="score-pill"><span class="pill-score">${pred.prediction}</span><span class="pill-pts">${pred.points}pts</span></span>
@@ -760,6 +785,9 @@ function updateWhatIfScore(teamLocal, teamVisitor, side, rawValue) {
 function recalcWhatIf() {
   if (!whatIfMode) return;
 
+  // Save current scroll position
+  const scrollY = window.scrollY;
+
   const realPos = {};
   appState.participants.forEach(p => { realPos[p.participant] = p.position; });
 
@@ -787,6 +815,18 @@ function recalcWhatIf() {
     .map((item, i) => ({ ...item, position: i + 1, realPosition: realPos[item.participant] ?? i + 1 }));
 
   renderGeneralTable();
+  
+  // Re-render the current phase to update grid/table views with new predictions
+  const activeSection = document.querySelector('section.active');
+  const phaseId = activeSection ? activeSection.id : null;
+  if (phaseId) {
+    renderPhase(phaseId);
+  }
+
+  // Restore scroll position after DOM updates complete
+  setTimeout(() => {
+    window.scrollTo(0, scrollY);
+  }, 0);
 }
 
 function updateBackToTopVisibility() {
@@ -820,9 +860,30 @@ function renderCardGrid(phaseId, sortedMatches, participants, selectedParticipan
       match.result.goalsTeamA !== null && match.result.goalsTeamA !== undefined;
     const flagL = getFlag(match.teamLocal);
     const flagV = getFlag(match.teamVisitor);
-    const score = hasResult
-      ? `<strong>${match.result.goalsTeamA}-${match.result.goalsTeamB}</strong>`
-      : '<span class="grid-vs-pending">vs</span>';
+    let score;
+    
+    if (hasResult) {
+      score = `<strong>${match.result.goalsTeamA}-${match.result.goalsTeamB}</strong>`;
+    } else if (whatIfMode && phaseId === 'groups') {
+      // Show WHAT IF input fields for pending matches in grid view
+      const wiKey = `${match.teamLocal} vs ${match.teamVisitor}`;
+      const wi = whatIfScores[wiKey];
+      const wiA = wi?.goalsTeamA ?? '';
+      const wiB = wi?.goalsTeamB ?? '';
+      const teamLocalEsc = match.teamLocal.replace(/'/g, "\\'");
+      const teamVisitorEsc = match.teamVisitor.replace(/'/g, "\\'");
+      score = `<div style="display:flex; align-items:center; gap:0.3rem; justify-content:center;">
+        <input class="whatif-score-input" type="number" min="0" max="20" value="${wiA}" placeholder="?" 
+          oninput="updateWhatIfScore('${teamLocalEsc}', '${teamVisitorEsc}', 'A', this.value)" 
+          style="width:50px;">
+        <span style="font-weight:700;">–</span>
+        <input class="whatif-score-input" type="number" min="0" max="20" value="${wiB}" placeholder="?" 
+          oninput="updateWhatIfScore('${teamLocalEsc}', '${teamVisitorEsc}', 'B', this.value)" 
+          style="width:50px;">
+      </div>`;
+    } else {
+      score = '<span class="grid-vs-pending">vs</span>';
+    }
     const gridMatchDT = findMatchDateTime(match.teamLocal, match.teamVisitor);
     let gridIsLive = false;
     if (!hasResult && gridMatchDT && gridMatchDT.date && gridMatchDT.time) {
@@ -842,14 +903,27 @@ function renderCardGrid(phaseId, sortedMatches, participants, selectedParticipan
         : '<span class="status-badge pending">Pendiente</span>';
 
     const predsHtml = participants.map(p => {
-      const pred  = match.predictions[p];
+      let pred  = match.predictions[p];
       const isHL  = selectedParticipant && p === selectedParticipant ? ' grid-hl' : '';
+      
       if (!pred || !pred.prediction || pred.prediction === 'NaN-NaN') {
         return `<div class="grid-pred-row no-match${isHL}">
           <span class="grid-pred-name">${p}</span>
           <span class="score-pill"><span class="pill-score">-</span><span class="pill-pts">0pts</span></span>
         </div>`;
       }
+
+      // Recalculate points in WHAT IF mode for pending group matches
+      if (whatIfMode && !hasResult && match.id && phaseId === 'groups') {
+        const wiKey = `${match.teamLocal} vs ${match.teamVisitor}`;
+        const wi = whatIfScores[wiKey];
+        if (wi && wi.goalsTeamA !== null && wi.goalsTeamB !== null) {
+          const wiResult = { goalsTeamA: wi.goalsTeamA, goalsTeamB: wi.goalsTeamB };
+          const recalc = calculateScore(pred, wiResult, 'groups');
+          pred = { ...pred, points: recalc.points, type: recalc.type };
+        }
+      }
+
       return `<div class="grid-pred-row ${pred.type}${isHL}">
         <span class="grid-pred-name">${p}</span>
         <span class="score-pill"><span class="pill-score">${pred.prediction}</span><span class="pill-pts">${pred.points}pts</span></span>
