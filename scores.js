@@ -29,6 +29,9 @@ let espnTimeCache = null;
 // Caché de resultados ESPN (partidos finalizados)
 let espnResultsCache = null;
 
+// Caché de marcadores ESPN en vivo (partidos en curso)
+let espnLiveCache = null;
+
 function utcToGuatemala(utcStr) {
   // Guatemala = UTC-6, no DST
   const d = new Date(utcStr);
@@ -44,6 +47,7 @@ async function fetchESPNTimes() {
 
   const timeCache = {};
   const resultsCache = {};
+  const liveCache = {};
   const today = new Date();
   const dates = [];
   for (let i = -5; i <= 21; i++) {
@@ -77,13 +81,20 @@ async function fetchESPNTimes() {
       }
 
       const completed = event.status?.type?.completed === true;
-      if (completed && homeComp?.score != null && awayComp?.score != null) {
+      const inProgress = event.status?.type?.state === 'in';
+      if ((completed || inProgress) && homeComp?.score != null && awayComp?.score != null) {
         const goalsHome = Number(homeComp.score);
         const goalsAway = Number(awayComp.score);
         if (!isNaN(goalsHome) && !isNaN(goalsAway)) {
           const key = `${team1} vs ${team2}`;
-          resultsCache[key] = { goalsTeamA: goalsHome, goalsTeamB: goalsAway, team1, team2 };
-          console.log(`  ⚽ ESPN: ${team1} ${goalsHome}-${goalsAway} ${team2}`);
+          if (completed) {
+            resultsCache[key] = { goalsTeamA: goalsHome, goalsTeamB: goalsAway, team1, team2 };
+            console.log(`  ⚽ ESPN: ${team1} ${goalsHome}-${goalsAway} ${team2}`);
+          } else {
+            const clock = event.status?.displayClock || '?';
+            liveCache[key] = { goalsTeamA: goalsHome, goalsTeamB: goalsAway, team1, team2, clock };
+            console.log(`  🔴 EN VIVO: ${team1} ${goalsHome}-${goalsAway} ${team2} (${clock})`);
+          }
         }
       }
     }
@@ -91,9 +102,32 @@ async function fetchESPNTimes() {
 
   espnTimeCache = timeCache;
   espnResultsCache = resultsCache;
+  espnLiveCache = liveCache;
   console.log(`✅ ESPN: ${Object.keys(timeCache).length / 2} partidos con horario GT cargados`);
-  console.log(`✅ ESPN: ${Object.keys(resultsCache).length} resultados finalizados cargados`);
+  console.log(`✅ ESPN: ${Object.keys(resultsCache).length} resultados finalizados, ${Object.keys(liveCache).length} en vivo`);
   return timeCache;
+}
+
+function clearESPNCache() {
+  espnTimeCache = null;
+  espnResultsCache = null;
+  espnLiveCache = null;
+}
+
+function getLiveScore(team1, team2) {
+  if (!espnLiveCache) return null;
+  const key1 = `${team1} vs ${team2}`;
+  const key2 = `${team2} vs ${team1}`;
+  if (espnLiveCache[key1]) return espnLiveCache[key1];
+  if (espnLiveCache[key2]) {
+    const r = espnLiveCache[key2];
+    return { goalsTeamA: r.goalsTeamB, goalsTeamB: r.goalsTeamA, clock: r.clock };
+  }
+  return null;
+}
+
+function getESPNLiveGames() {
+  return espnLiveCache ? Object.values(espnLiveCache) : [];
 }
 
 async function fetchWorldCupResults() {

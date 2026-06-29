@@ -10,6 +10,7 @@ let appState = {
   predictions: {},
   results: {},
   scores: {},
+  worldcupData: {},
   selectedParticipant: localStorage.getItem('selectedParticipant') || '',
   lastUpdated: null
 };
@@ -186,6 +187,7 @@ async function loadAllData() {
     ]);
     await fetchESPNTimes();
     appState.predictions = predictions;
+    appState.worldcupData = worldcupData;
     appState.scores = calculateParticipantScores(appState.predictions, worldcupData);
     appState.participants = getRanking(appState.scores);
     await renderAllViews();
@@ -194,6 +196,8 @@ async function loadAllData() {
     setupTooltips();
     setupInfoPopup();
     appState.lastUpdated = new Date();
+    updateLastUpdated();
+    updateLiveIndicator();
     console.log('✅ Datos cargados exitosamente');
   } catch (error) {
     console.error('❌ Error cargando datos:', error);
@@ -208,6 +212,7 @@ async function refreshResults() {
   btn.disabled = true;
   btn.textContent = '⏳ Actualizando...';
   try {
+    clearESPNCache();
     await loadAllData();
     showSuccess('✅ Resultados actualizados correctamente');
   } catch (error) {
@@ -217,6 +222,55 @@ async function refreshResults() {
     btn.disabled = false;
     btn.textContent = '🔄 Actualizar Resultados';
   }
+}
+
+// Lightweight auto-refresh: only re-fetches ESPN (not Sheets/worldcup)
+async function autoRefreshScores() {
+  if (!appState.predictions || Object.keys(appState.predictions).length === 0) return;
+  try {
+    clearESPNCache();
+    await fetchESPNTimes();
+    appState.scores = calculateParticipantScores(appState.predictions, appState.worldcupData || {});
+    appState.participants = getRanking(appState.scores);
+    await renderAllViews();
+    appState.lastUpdated = new Date();
+    updateLastUpdated();
+    updateLiveIndicator();
+    console.log('🔄 Auto-refresh ESPN completado');
+  } catch (e) {
+    console.warn('⚠️ Auto-refresh falló:', e);
+  }
+}
+
+function ensureStatusBar() {
+  if (document.getElementById('auto-refresh-status')) return;
+  const bar = document.createElement('div');
+  bar.id = 'auto-refresh-status';
+  bar.className = 'auto-refresh-status';
+  bar.innerHTML = `<span id="live-indicator" class="live-indicator" style="display:none"></span><span id="last-updated" class="last-updated-text"></span>`;
+  const btn = document.getElementById('refresh-btn');
+  btn.after(bar);
+}
+
+function updateLiveIndicator() {
+  ensureStatusBar();
+  const liveGames = getESPNLiveGames();
+  const el = document.getElementById('live-indicator');
+  if (!el) return;
+  if (liveGames.length > 0) {
+    el.style.display = '';
+    el.textContent = `🔴 ${liveGames.length} partido${liveGames.length > 1 ? 's' : ''} en vivo`;
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+function updateLastUpdated() {
+  ensureStatusBar();
+  const el = document.getElementById('last-updated');
+  if (!el || !appState.lastUpdated) return;
+  const t = appState.lastUpdated;
+  el.textContent = `Actualizado: ${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}`;
 }
 
 // ==================== RENDERIZADO GENERAL ====================
@@ -513,11 +567,20 @@ async function renderPhase(phaseId) {
           <span class="rsb-side rsb-visitor"><span class="rsb-name">${match.teamVisitor}</span>${flagV}</span>
         </div>`;
     } else {
-      pendingDisplay = `<div class="result-scoreboard result-pending">
-          <span class="rsb-side rsb-local">${flagL}<span class="rsb-name">${match.teamLocal}</span></span>
-          <span class="rsb-goals" style="color:#aaa">vs</span>
-          <span class="rsb-side rsb-visitor"><span class="rsb-name">${match.teamVisitor}</span>${flagV}</span>
-        </div>`;
+      const _liveScore = isLive ? getLiveScore(match.teamLocal, match.teamVisitor) : null;
+      if (_liveScore) {
+        pendingDisplay = `<div class="result-scoreboard result-live">
+            <span class="rsb-side rsb-local">${flagL}<span class="rsb-name">${match.teamLocal}</span></span>
+            <span class="rsb-goals">🔴 <strong>${_liveScore.goalsTeamA}</strong><span class="rsb-sep">–</span><strong>${_liveScore.goalsTeamB}</strong>${_liveScore.clock ? `<span class="live-clock">${_liveScore.clock}</span>` : ''}</span>
+            <span class="rsb-side rsb-visitor"><span class="rsb-name">${match.teamVisitor}</span>${flagV}</span>
+          </div>`;
+      } else {
+        pendingDisplay = `<div class="result-scoreboard result-pending">
+            <span class="rsb-side rsb-local">${flagL}<span class="rsb-name">${match.teamLocal}</span></span>
+            <span class="rsb-goals" style="color:#aaa">vs</span>
+            <span class="rsb-side rsb-visitor"><span class="rsb-name">${match.teamVisitor}</span>${flagV}</span>
+          </div>`;
+      }
     }
     const resultText = hasResult
       ? `<div class="result-scoreboard">
@@ -762,11 +825,18 @@ function showCard(phaseId) {
   const cardWatchLink = cardMatchDT && cardMatchDT.date === cardTodayStr
     ? '<a href="https://futbol-libres.su/" target="_blank" class="watch-link watch-link-card">📺 Ver partidos en vivo</a>'
     : '';
+  const cardLiveScore = (!hasResult && cardIsLive) ? getLiveScore(match.teamLocal, match.teamVisitor) : null;
   const statusBadge = hasResult
     ? '<span class="status-badge finished" style="display:block;text-align:center;margin:0.3rem 0">Finalizado</span>'
     : cardIsLive
       ? '<span class="status-badge live" style="display:block;text-align:center;margin:0.3rem 0">🔴 En Curso</span>'
       : '<span class="status-badge pending" style="display:block;text-align:center;margin:0.3rem 0">Pendiente</span>';
+  const cardScoreDisplay = hasResult
+    ? `${match.result.goalsTeamA} - ${match.result.goalsTeamB}`
+    : cardLiveScore
+      ? `🔴 ${cardLiveScore.goalsTeamA} - ${cardLiveScore.goalsTeamB}${cardLiveScore.clock ? ` (${cardLiveScore.clock})` : ''}`
+      : '? - ?';
+  const cardScoreClass = cardLiveScore ? 'score score-live' : 'score';
 
   container.innerHTML = `
     <div class="match-card">
@@ -778,7 +848,7 @@ function showCard(phaseId) {
         <div style="font-weight:700;color:#999;font-size:1.2rem">vs</div>
         <div class="team">${flagV} ${match.teamVisitor}</div>
       </div>
-      <div class="score">${hasResult ? `${match.result.goalsTeamA} - ${match.result.goalsTeamB}` : '? - ?'}</div>
+      <div class="${cardScoreClass}">${cardScoreDisplay}</div>
       ${statusBadge}
       ${cardWatchLink}
       <div class="card-predictions">${predsHtml}</div>
@@ -1424,6 +1494,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   updateHeaderHeight();
   window.addEventListener('resize', updateHeaderHeight);
   await loadAllData();
+  // Auto-refresh ESPN scores every 60 seconds
+  setInterval(autoRefreshScores, 60000);
 });
 
 console.log('✅ app.js cargado');
