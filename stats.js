@@ -152,8 +152,7 @@ function computePhaseAccuracy() {
     const allM = Object.values(appState.scores[p.participant]?.matches || {});
     const byPhase = {};
     for (const pid of phaseList) {
-      const key = PHASE_NAMES[pid].split(' ')[0];
-      const pm = allM.filter(m => m.phase?.includes(key) && m.result?.goalsTeamA != null);
+      const pm = allM.filter(m => getPhaseIdFromStr(m.phase) === pid && m.result?.goalsTeamA != null);
       const hits = pm.filter(m => m.type === 'exact-match' || m.type === 'winner-match');
       byPhase[pid] = { played: pm.length, hits: hits.length, hitRate: pm.length ? hits.length / pm.length : null };
     }
@@ -308,12 +307,11 @@ function computeUnluckyPredictions() {
 
 // Stats 12/19: Phase match grid (used in phase tabs)
 function computePhaseMatchGrid(phaseId) {
-  const phaseName = PHASE_NAMES[phaseId];
   const participants = Object.keys(appState.scores).sort();
   const matchMap = {};
   for (const [pName, sd] of Object.entries(appState.scores)) {
     for (const m of Object.values(sd.matches || {})) {
-      if (!m.phase?.includes(phaseName.split(' ')[0])) continue;
+      if (getPhaseIdFromStr(m.phase) !== phaseId) continue;
       if (!matchMap[m.id]) matchMap[m.id] = { id: m.id, teamLocal: m.teamLocal, teamVisitor: m.teamVisitor, result: m.result, predictions: {} };
       if (m.prediction && m.prediction !== 'NaN-NaN') {
         matchMap[m.id].predictions[pName] = { pred: m.prediction, type: m.type || 'no-match', points: m.points || 0 };
@@ -949,8 +947,7 @@ function renderH2HTable() {
   let tablesHtml = '';
 
   for (const phaseId of phaseList) {
-    const phaseName = PHASE_NAMES[phaseId];
-    const filter = sd => Object.fromEntries(Object.entries(sd.matches || {}).filter(([, m]) => m.phase?.includes(phaseName.split(' ')[0])));
+    const filter = sd => Object.fromEntries(Object.entries(sd.matches || {}).filter(([, m]) => getPhaseIdFromStr(m.phase) === phaseId));
     const m1map = filter(sd1), m2map = filter(sd2);
     const allKeys = [...new Set([...Object.keys(m1map), ...Object.keys(m2map)])].sort();
     if (!allKeys.length) continue;
