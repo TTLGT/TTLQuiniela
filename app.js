@@ -295,13 +295,12 @@ async function renderPhase(phaseId) {
   const selectedParticipant = document.querySelector(`#participant-${phaseId}`)?.value || '';
   const _hint = document.getElementById(`participant-hint-${phaseId}`);
   if (_hint) _hint.classList.toggle('hidden', !!selectedParticipant);
-  const phaseName = PHASE_NAMES[phaseId];
 
   // Collect matches
   const matchesByNumber = {};
   for (const [participantName, scoreData] of Object.entries(appState.scores)) {
     for (const [, matchData] of Object.entries(scoreData.matches || {})) {
-      if (matchData.phase && matchData.phase.includes(phaseName.split(' ')[0])) {
+      if (matchData.phase && getPhaseIdFromStr(matchData.phase) === phaseId) {
         const matchNum = matchData.id;
         if (!matchesByNumber[matchNum]) {
           matchesByNumber[matchNum] = {
