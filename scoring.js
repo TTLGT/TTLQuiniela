@@ -104,8 +104,13 @@ function calculateParticipantScores(predictions, results) {
         prediction.teamVisitor
       );
 
-      if (finalResult) {
-        const scoreData = calculateScore(prediction, finalResult, phaseId);
+      // For in-progress matches, use the live score as a provisional result
+      const liveResult = !finalResult ? getLiveScore(prediction.teamLocal, prediction.teamVisitor) : null;
+      const effectiveResult = finalResult || liveResult;
+      const isLive = !finalResult && !!liveResult;
+
+      if (effectiveResult) {
+        const scoreData = calculateScore(prediction, effectiveResult, phaseId);
         scoreByPhase[phaseId] += scoreData.points;
         scoreByPhase.total += scoreData.points;
         totalPoints += scoreData.points;
@@ -113,7 +118,9 @@ function calculateParticipantScores(predictions, results) {
         scoreByPhase.matches[matchKey] = {
           ...prediction,
           ...scoreData,
-          result: finalResult
+          result: finalResult,
+          liveResult,
+          isLive
         };
       } else {
         // Pending match — include it so it shows in the table
@@ -122,7 +129,8 @@ function calculateParticipantScores(predictions, results) {
           points: 0,
           type: 'no-match',
           prediction: `${prediction.goalsLocal}-${prediction.goalsVisitor}`,
-          result: null
+          result: null,
+          isLive: false
         };
       }
     }

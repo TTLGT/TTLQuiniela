@@ -1120,6 +1120,7 @@ tbody tr:hover .sticky-col {
 
 .score-pill .pill-score { font-weight: 600; }
 .score-pill .pill-pts  { font-size: 0.7rem; font-weight: 700; }
+.pts-live { color: #dc3545; animation: live-pulse 1.5s ease-in-out infinite; }
 
 td.exact-match  { background-color: transparent; text-align: center; }
 td.winner-match { background-color: transparent; text-align: center; }

@@ -619,13 +619,15 @@ async function renderPhase(phaseId) {
         }
       }
 
-      const actual  = hasResult ? `${match.result.goalsTeamA}-${match.result.goalsTeamB}` : 'Sin resultado';
-      const tip     = `Pronóstico: ${pred.prediction} | Real: ${actual} | +${pred.points}pts`;
+      const isMatchLive = !hasResult && pred.isLive;
+      const liveScoreStr = isMatchLive && pred.liveResult ? `${pred.liveResult.goalsTeamA}-${pred.liveResult.goalsTeamB}` : null;
+      const actual  = hasResult ? `${match.result.goalsTeamA}-${match.result.goalsTeamB}` : (liveScoreStr ? `🔴 ${liveScoreStr}` : 'Sin resultado');
+      const tip     = `Pronóstico: ${pred.prediction} | ${isMatchLive ? `En vivo: ${liveScoreStr}` : `Real: ${actual}`} | +${pred.points}pts${isMatchLive ? ' (provisional)' : ''}`;
 
       return `<td class="${pred.type}${isHL}" data-colidx="${colIdx}" data-tooltip="${tip}">
         <span class="score-pill">
           <span class="pill-score">${pred.prediction}</span>
-          <span class="pill-pts">${pred.points}pts</span>
+          <span class="pill-pts${isMatchLive && pred.points > 0 ? ' pts-live' : ''}">${pred.points}pts</span>
         </span>
       </td>`;
     }).join('');
@@ -805,9 +807,11 @@ function showCard(phaseId) {
       }
     }
 
+    const isCardLive = !hasResult && pred.isLive;
+
     return `<div class="card-pred-row ${pred.type}">
       <span class="card-pred-name">${p}</span>
-      <span class="score-pill"><span class="pill-score">${pred.prediction}</span><span class="pill-pts">${pred.points}pts</span></span>
+      <span class="score-pill"><span class="pill-score">${pred.prediction}</span><span class="pill-pts${isCardLive && pred.points > 0 ? ' pts-live' : ''}">${pred.points}pts</span></span>
     </div>`;
   }).join('');
 
@@ -1072,9 +1076,11 @@ function renderCardGrid(phaseId, sortedMatches, participants, selectedParticipan
         }
       }
 
+      const isGridLive = !hasResult && pred.isLive;
+
       return `<div class="grid-pred-row ${pred.type}${isHL}">
         <span class="grid-pred-name">${p}</span>
-        <span class="score-pill"><span class="pill-score">${pred.prediction}</span><span class="pill-pts">${pred.points}pts</span></span>
+        <span class="score-pill"><span class="pill-score">${pred.prediction}</span><span class="pill-pts${isGridLive && pred.points > 0 ? ' pts-live' : ''}">${pred.points}pts</span></span>
       </div>`;
     }).join('');
 
@@ -1276,14 +1282,16 @@ function showParticipantPopup(name) {
 </tr></thead><tbody>`;
     for (const m of matches) {
       const pred   = m.prediction ?? `${m.goalsLocal ?? '?'}-${m.goalsVisitor ?? '?'}`;
-      const actual = m.result ? `${m.result.goalsTeamA}-${m.result.goalsTeamB}` : '-';
+      const liveStr = m.isLive && m.liveResult ? `🔴 ${m.liveResult.goalsTeamA}-${m.liveResult.goalsTeamB}` : null;
+      const actual = m.result ? `${m.result.goalsTeamA}-${m.result.goalsTeamB}` : (liveStr || '-');
       const pts    = m.points ?? 0;
       const cls    = m.type === 'exact-match' ? 'pm-exact' : m.type === 'winner-match' ? 'pm-winner' : '';
+      const ptsDisplay = m.isLive && pts > 0 ? `<span class="pts-live" style="display:inline">${pts}</span>` : pts;
       html += `<tr class="${cls}">
         <td>${getFlag(m.teamLocal)}${esc(m.teamLocal)} vs ${getFlag(m.teamVisitor)}${esc(m.teamVisitor)}</td>
         <td>${esc(pred)}</td>
         <td>${esc(actual)}</td>
-        <td class="popup-pts-col">${pts}</td>
+        <td class="popup-pts-col">${ptsDisplay}</td>
       </tr>`;
     }
     html += `</tbody></table>`;
