@@ -27,7 +27,7 @@ async function getAllSheetNames() {
   }
 }
 
-async function readSheetData(sheetName, range = 'A1:F500') {
+async function readSheetData(sheetName, range = 'A1:N500') {
   console.log(`📖 Leyendo ${sheetName}...`);
 
   const url = `${API_ENDPOINTS.SHEETS_API}/${SHEETS_CONFIG.PREDICCIONES_SHEET}/values/'${sheetName}'!${range}?key=${GOOGLE_SHEETS_API_KEY}`;
@@ -49,8 +49,8 @@ async function readSheetData(sheetName, range = 'A1:F500') {
 
 function parseMatchesFromSheet(sheetData, participantName) {
   const matches = {};
-  let currentPhase = null;
-  let currentGroup = null;
+  let currentPhaseLeft = null;   // cols A-F (group stage)
+  let currentPhaseRight = null;  // cols H-N (knockout rounds)
   let matchNumber = 0;
 
   for (let i = 0; i < sheetData.length; i++) {
@@ -60,50 +60,95 @@ function parseMatchesFromSheet(sheetData, participantName) {
     const col0 = (row[0] || '').trim();
     const col1 = (row[1] || '').trim();
 
-    // Detectar encabezado de fase (ej: "FASE DE GRUPOS")
+    // === LEFT SECTION: cols A-F (indices 0-5) — group stage ===
+
     if (col0.includes('FASE')) {
-      currentPhase = col0;
-      console.log(`  📍 Fase encontrada: ${currentPhase}`);
-      continue;
+      currentPhaseLeft = col0;
+      console.log(`  📍 Fase grupos encontrada: ${currentPhaseLeft}`);
+    } else if (col0 !== 'PARTIDO' &&
+               !/^\d{2}\/\d{2}$/.test(col0) &&
+               !(col0 === '' && /^\d{2}\/\d{2}$/.test(col1))) {
+      if (col0 && !isNaN(col0) && currentPhaseLeft) {
+        const matchId = parseInt(col0);
+        const group = col1;
+        const teamLocal = (row[2] || '').trim();
+        const goalsLocal = (row[3] || '').trim();
+        const goalsVisitor = (row[4] || '').trim();
+        const teamVisitor = (row[5] || '').trim();
+
+        if (teamLocal && teamVisitor && /^\d+$/.test(goalsLocal) && /^\d+$/.test(goalsVisitor)) {
+          const key = `${currentPhaseLeft}_${matchId}`;
+          matches[key] = {
+            id: matchId,
+            phase: currentPhaseLeft,
+            group,
+            teamLocal: normalizeTeamName(teamLocal),
+            goalsLocal: parseInt(goalsLocal),
+            goalsVisitor: parseInt(goalsVisitor),
+            teamVisitor: normalizeTeamName(teamVisitor),
+            participant: participantName
+          };
+          matchNumber++;
+        }
+      }
     }
 
-    // Detectar encabezados de columna (PARTIDO, Grupo, etc)
-    if (col0 === 'PARTIDO' && col1 === 'Grupo') {
-      continue;
-    }
+    // === RIGHT SECTION: cols H-N (indices 7-13) — knockout rounds ===
 
-    // Detectar fecha (ej: "11/06" o "12/06")
-    if (/^\d{2}\/\d{2}$/.test(col0)) {
-      currentGroup = col0;
-      continue;
-    }
+    const col7 = (row[7] || '').trim();
+    if (!col7 || col7 === 'PARTIDO') {
+      // empty or column-header row — skip right section
+    } else if (/^\d{2}\/\d{2}$/.test(col7)) {
+      // date row in right section — skip
+    } else if (isNaN(col7)) {
+      // Phase header (e.g. "Dieciseisavos", "Octavos", "Cuartos"...)
+      const col7Upper = col7.toUpperCase();
+      if (col7Upper.includes('DIECISEIS') || col7Upper.includes('16') ||
+          col7Upper.includes('OCTAVOS') || col7Upper.includes('CUARTOS') ||
+          col7Upper.includes('SEMIFINAL') ||
+          (col7Upper.includes('FINAL') && !col7Upper.includes('SEMI'))) {
+        currentPhaseRight = col7;
+        console.log(`  📍 Fase knockout encontrada: ${currentPhaseRight}`);
+      }
+    } else if (currentPhaseRight) {
+      // Parse knockout match
+      const matchId = parseInt(col7);
+      const col8  = (row[8]  || '').trim();
+      const col9  = (row[9]  || '').trim();
+      const col10 = (row[10] || '').trim();
+      const col11 = (row[11] || '').trim();
+      const col12 = (row[12] || '').trim();
+      const col13 = (row[13] || '').trim();
 
-    // Detectar fila de fecha en col1 (ej: ['', '12/06'])
-    if (col0 === '' && /^\d{2}\/\d{2}$/.test(col1)) {
-      currentGroup = col1;
-      continue;
-    }
+      // Auto-detect layout:
+      // If col8 is a multi-char non-numeric string → teamLocal is at col8 (no Grupo column)
+      // Otherwise → col8=group(empty), col9=teamLocal (mirrors group-stage layout)
+      let teamLocal, goalsLocal, goalsVisitor, teamVisitor, penaltyWinner;
+      if (col8 && isNaN(col8) && col8.length > 1) {
+        teamLocal     = col8;
+        goalsLocal    = col9;
+        goalsVisitor  = col10;
+        teamVisitor   = col11;
+        penaltyWinner = col13;
+      } else {
+        teamLocal     = col9;
+        goalsLocal    = col10;
+        goalsVisitor  = col11;
+        teamVisitor   = col12;
+        penaltyWinner = col13;
+      }
 
-    // Parsear un partido
-    if (col0 && !isNaN(col0) && currentPhase) {
-      const matchId = parseInt(col0);
-      const group = col1;
-      const teamLocal = (row[2] || '').trim();
-      const goalsLocal = (row[3] || '').trim();
-      const goalsVisitor = (row[4] || '').trim();
-      const teamVisitor = (row[5] || '').trim();
-
-      // Validar que sea un partido válido con goles numéricos
       if (teamLocal && teamVisitor && /^\d+$/.test(goalsLocal) && /^\d+$/.test(goalsVisitor)) {
-        const key = `${currentPhase}_${matchId}`;
+        const key = `${currentPhaseRight}_${matchId}`;
         matches[key] = {
           id: matchId,
-          phase: currentPhase,
-          group: group,
+          phase: currentPhaseRight,
+          group: '',
           teamLocal: normalizeTeamName(teamLocal),
           goalsLocal: parseInt(goalsLocal),
           goalsVisitor: parseInt(goalsVisitor),
           teamVisitor: normalizeTeamName(teamVisitor),
+          penaltyWinner: penaltyWinner ? normalizeTeamName(penaltyWinner) : null,
           participant: participantName
         };
         matchNumber++;

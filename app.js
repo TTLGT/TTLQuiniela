@@ -1069,12 +1069,12 @@ const PHASE_LABEL_MAP  = { groups:'Fase de Grupos', round16:'16vos', round8:'8vo
 function getPhaseIdFromStr(phase) {
   if (!phase) return null;
   const p = phase.toUpperCase();
-  if (p.includes('GRUPOS'))    return 'groups';
-  if (p.includes('16'))        return 'round16';
-  if (p.includes('8'))         return 'round8';
-  if (p.includes('CUARTOS'))   return 'quarters';
-  if (p.includes('SEMIFINAL')) return 'semi';
-  if (p.includes('FINAL'))     return 'final';
+  if (p.includes('GRUPOS'))                            return 'groups';
+  if (p.includes('DIECISEIS') || p.includes('16'))     return 'round16';
+  if (p.includes('OCTAVOS')   || p.includes('8'))      return 'round8';
+  if (p.includes('CUARTOS'))                           return 'quarters';
+  if (p.includes('SEMIFINAL'))                         return 'semi';
+  if (p.includes('FINAL'))                             return 'final';
   return null;
 }
 

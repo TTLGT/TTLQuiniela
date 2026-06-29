@@ -71,17 +71,18 @@ function calculateParticipantScores(predictions, results) {
       // Extraer fase del matchKey (ej: "FASE DE GRUPOS_1")
       let phaseId = null;
 
-      if (prediction.phase.includes('GRUPOS')) {
+      const phaseUpper = prediction.phase.toUpperCase();
+      if (phaseUpper.includes('GRUPOS')) {
         phaseId = 'groups';
-      } else if (prediction.phase.includes('16')) {
+      } else if (phaseUpper.includes('DIECISEIS') || phaseUpper.includes('16')) {
         phaseId = 'round16';
-      } else if (prediction.phase.includes('8')) {
+      } else if (phaseUpper.includes('OCTAVOS') || phaseUpper.includes('8')) {
         phaseId = 'round8';
-      } else if (prediction.phase.includes('CUARTOS')) {
+      } else if (phaseUpper.includes('CUARTOS')) {
         phaseId = 'quarters';
-      } else if (prediction.phase.includes('SEMIFINAL')) {
+      } else if (phaseUpper.includes('SEMIFINAL')) {
         phaseId = 'semi';
-      } else if (prediction.phase.includes('FINAL')) {
+      } else if (phaseUpper.includes('FINAL')) {
         phaseId = 'final';
       }
 
