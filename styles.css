@@ -1854,6 +1854,101 @@ body.dark-mode .grid-vs-pending            { color: #666; }
   margin-bottom: 0.5rem;
 }
 
+/* ── General phase tabs ── */
+.general-phase-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.gpt-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #555;
+  margin-right: 0.25rem;
+  white-space: nowrap;
+}
+
+body.dark-mode .gpt-label {
+  color: #aab;
+}
+
+.gpt-btn {
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  border: 1.5px solid #c8d0e8;
+  background: #f4f6fc;
+  color: #2c3e7a;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.gpt-btn:hover {
+  background: #e0e6f8;
+  border-color: #5a78d8;
+}
+
+.gpt-btn.active {
+  background: var(--primary-btn, #0d47a1);
+  border-color: var(--primary-btn, #0d47a1);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(13,71,161,0.3);
+}
+
+body.dark-mode .gpt-btn {
+  background: #1e2540;
+  border-color: #3a4570;
+  color: #9aaad8;
+}
+
+body.dark-mode .gpt-btn:hover {
+  background: #2a3560;
+  border-color: #5a78d8;
+}
+
+body.dark-mode .gpt-btn.active {
+  background: #3a5fba;
+  border-color: #3a5fba;
+  color: #fff;
+}
+
+/* Highlight active column */
+#general-table thead th.gpt-active-col {
+  background: rgba(255,210,0,0.25);
+  color: #fff;
+  font-weight: 700;
+  border-bottom: 3px solid #ffd200;
+}
+
+body.dark-mode #general-table thead th.gpt-active-col {
+  background: rgba(255,210,0,0.18);
+  color: #ffe566;
+  border-bottom: 3px solid #ffd200;
+}
+
+#general-table td.gpt-active-col {
+  background: rgba(255,210,0,0.08);
+  font-weight: 700;
+  color: #0d47a1;
+}
+
+body.dark-mode #general-table td.gpt-active-col {
+  background: rgba(255,210,0,0.07);
+  color: #ffe566;
+}
+
+@media (max-width: 600px) {
+  .gpt-btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.72rem;
+  }
+}
+
 #general .section-title {
   padding: 0.55rem 1rem;
   font-size: 1.1rem;

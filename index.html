@@ -40,19 +40,23 @@
             <div id="general-error" class="error" style="display: none;"></div>
             <div id="general-success" class="success" style="display: none;"></div>
 
+            <div class="general-phase-tabs" id="general-phase-tabs">
+                <span class="gpt-label">Premio por fase:</span>
+                <button class="gpt-btn active" data-phase="total" onclick="setGeneralPhaseTab('total')">🏆 Total</button>
+                <button class="gpt-btn" data-phase="groups" onclick="setGeneralPhaseTab('groups')">Grupos</button>
+                <button class="gpt-btn" data-phase="round16" onclick="setGeneralPhaseTab('round16')">16vos</button>
+                <button class="gpt-btn" data-phase="round8" onclick="setGeneralPhaseTab('round8')">8vos</button>
+                <button class="gpt-btn" data-phase="quarters" onclick="setGeneralPhaseTab('quarters')">Cuartos</button>
+                <button class="gpt-btn" data-phase="semi" onclick="setGeneralPhaseTab('semi')">Semifinal</button>
+                <button class="gpt-btn" data-phase="final" onclick="setGeneralPhaseTab('final')">Final</button>
+            </div>
+
             <table id="general-table">
                 <thead>
                     <tr>
                         <th>Posición</th>
                         <th>Equipo</th>
                         <th>Participante</th>
-                        <th>TOTAL</th>
-                        <th>Grupos</th>
-                        <th>16vos</th>
-                        <th>8vos</th>
-                        <th>Cuartos</th>
-                        <th>Semifinal</th>
-                        <th>Final</th>
                     </tr>
                 </thead>
                 <tbody>

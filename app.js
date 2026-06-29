@@ -24,6 +24,9 @@ let whatIfMode    = false;
 let whatIfScores  = {};   // "TeamA vs TeamB" → { goalsTeamA, goalsTeamB }
 let whatIfRanking = null;
 
+// General table phase tab
+let generalPhaseTab = 'total';
+
 // ==================== TEAM FLAGS ====================
 
 const TEAM_FLAGS = {
@@ -218,7 +221,24 @@ async function refreshResults() {
 
 // ==================== RENDERIZADO GENERAL ====================
 
+function detectCurrentPhase() {
+  const phases = ['groups','round16','round8','quarters','semi','final'];
+  let current = 'total';
+  for (const phase of phases) {
+    const hasData = appState.participants.some(p => (p[phase] ?? 0) > 0);
+    if (hasData) current = phase;
+  }
+  return current;
+}
+
 async function renderAllViews() {
+  const autoPhase = detectCurrentPhase();
+  if (generalPhaseTab === 'total' || generalPhaseTab === autoPhase) {
+    generalPhaseTab = autoPhase;
+    document.querySelectorAll('#general-phase-tabs .gpt-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.phase === autoPhase);
+    });
+  }
   await renderGeneralTable();
   for (const phase of ['groups','round16','round8','quarters','semi','final']) {
     await renderPhase(phase);
@@ -235,32 +255,70 @@ async function renderGeneralTable() {
     return;
   }
 
-  const participants = (whatIfMode && whatIfRanking) ? whatIfRanking : appState.participants;
+  // Phase-column map: tab key → participant property
+  const PHASE_FIELD = { total: 'total', groups: 'groups', round16: 'round16', round8: 'round8', quarters: 'quarters', semi: 'semi', final: 'final' };
+  const PHASE_LABEL = { groups: 'Grupos', round16: '16vos', round8: '8vos', quarters: 'Cuartos', semi: 'Semifinal', final: 'Final' };
+  const sortField = PHASE_FIELD[generalPhaseTab] ?? 'total';
+  const byPhase   = generalPhaseTab !== 'total';
 
-  tbody.innerHTML = participants.map(p => {
-    const delta = (whatIfMode && p.realPosition != null) ? p.realPosition - p.position : 0;
-    const deltaHtml = whatIfMode
+  // Build sorted list for the selected phase
+  const baseList = (whatIfMode && whatIfRanking) ? whatIfRanking : appState.participants;
+  const sorted = byPhase
+    ? [...baseList].sort((a, b) => (b[sortField] ?? 0) - (a[sortField] ?? 0))
+    : baseList;
+
+  // Build dynamic column order: active phase first (if a phase is selected), then the rest, then TOTAL last
+  const ALL_PHASES = ['groups','round16','round8','quarters','semi','final'];
+  const phaseCols = byPhase
+    ? [sortField, ...ALL_PHASES.filter(p => p !== sortField)]
+    : ALL_PHASES;
+
+  // Rebuild thead dynamically
+  const thead = document.querySelector('#general-table thead tr');
+  const phaseHeaders = phaseCols.map(col =>
+    `<th class="${col === sortField ? 'gpt-active-col' : ''}">${PHASE_LABEL[col]}</th>`
+  ).join('');
+  thead.innerHTML = `
+    <th>Posición</th>
+    <th>Equipo</th>
+    <th>Participante</th>
+    ${phaseHeaders}
+    <th class="${sortField === 'total' ? 'gpt-active-col' : ''}">TOTAL</th>`;
+
+  tbody.innerHTML = sorted.map((p, idx) => {
+    const phasePos = idx + 1;
+    const displayPos = byPhase ? phasePos : p.position;
+
+    // Delta shown in what-if mode (vs real position in total ranking)
+    const delta = (whatIfMode && !byPhase && p.realPosition != null) ? p.realPosition - p.position : 0;
+    const deltaHtml = (whatIfMode && !byPhase)
       ? (delta > 0 ? `<span class="wi-delta wi-up">▲${delta}</span>`
         : delta < 0 ? `<span class="wi-delta wi-down">▼${Math.abs(delta)}</span>`
         : `<span class="wi-delta wi-same">—</span>`)
       : '';
-    const posBadge = p.position === 1 ? '🥇' : p.position === 2 ? '🥈' : p.position === 3 ? '🥉' : `#${p.position}`;
+
+    const posBadge = displayPos === 1 ? '🥇' : displayPos === 2 ? '🥈' : displayPos === 3 ? '🥉' : `#${displayPos}`;
+    const topClass = displayPos <= 3 ? `top-${displayPos}` : '';
+    const badgeVariant = displayPos <= 3 ? ['gold','silver','bronze'][displayPos-1] : 'default';
+
     const realGroups = appState.scores[p.participant]?.groups ?? p.groups;
     const realRound16 = appState.scores[p.participant]?.round16 ?? p.round16;
-    const groupsChanged = whatIfMode && p.groups !== realGroups;
-    const round16Changed = whatIfMode && p.round16 !== realRound16;
+
+    const phaseCells = phaseCols.map(col => {
+      const isActive = col === sortField;
+      const wiClass = (col === 'groups' && whatIfMode && p.groups !== realGroups)
+        ? 'wi-changed-cell' : (col === 'round16' && whatIfMode && p.round16 !== realRound16)
+        ? 'wi-changed-cell' : '';
+      return `<td class="${wiClass}${isActive ? ' gpt-active-col' : ''}">${p[col]}</td>`;
+    }).join('');
+
     return `
-    <tr class="${p.position <= 3 ? `top-${p.position}` : ''}">
-      <td><span class="pos-badge pos-badge--${p.position <= 3 ? ['gold','silver','bronze'][p.position-1] : 'default'}">${posBadge}</span>${deltaHtml}</td>
+    <tr class="${topClass}">
+      <td><span class="pos-badge pos-badge--${badgeVariant}">${posBadge}</span>${deltaHtml}</td>
       <td><span class="cell-btn" data-team-popup="${esc(p.team)}">${getFlag(p.team)} ${p.team || '-'}</span></td>
       <td><span class="cell-btn" data-participant-popup="${esc(p.participant)}">${esc(p.participant)}</span></td>
-      <td><strong class="rank-total-pts">${p.total}</strong></td>
-      <td class="${groupsChanged ? 'wi-changed-cell' : ''}">${p.groups}</td>
-      <td class="${round16Changed ? 'wi-changed-cell' : ''}">${p.round16}</td>
-      <td>${p.round8}</td>
-      <td>${p.quarters}</td>
-      <td>${p.semi}</td>
-      <td>${p.final}</td>
+      ${phaseCells}
+      <td class="${sortField === 'total' ? 'gpt-active-col' : ''}"><strong class="rank-total-pts">${p.total}</strong></td>
     </tr>`;
   }).join('');
 
@@ -271,6 +329,14 @@ async function renderGeneralTable() {
     if (!dl) continue;
     dl.innerHTML = names.map(n => `<option value="${n}">`).join('');
   }
+}
+
+function setGeneralPhaseTab(phase) {
+  generalPhaseTab = phase;
+  document.querySelectorAll('#general-phase-tabs .gpt-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.phase === phase);
+  });
+  renderGeneralTable();
 }
 
 function getTeamStatus(teamName) {
