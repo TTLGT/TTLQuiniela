@@ -246,7 +246,9 @@ async function renderGeneralTable() {
       : '';
     const posBadge = p.position === 1 ? '🥇' : p.position === 2 ? '🥈' : p.position === 3 ? '🥉' : `#${p.position}`;
     const realGroups = appState.scores[p.participant]?.groups ?? p.groups;
+    const realRound16 = appState.scores[p.participant]?.round16 ?? p.round16;
     const groupsChanged = whatIfMode && p.groups !== realGroups;
+    const round16Changed = whatIfMode && p.round16 !== realRound16;
     return `
     <tr class="${p.position <= 3 ? `top-${p.position}` : ''}">
       <td><span class="pos-badge pos-badge--${p.position <= 3 ? ['gold','silver','bronze'][p.position-1] : 'default'}">${posBadge}</span>${deltaHtml}</td>
@@ -254,7 +256,7 @@ async function renderGeneralTable() {
       <td><span class="cell-btn" data-participant-popup="${esc(p.participant)}">${esc(p.participant)}</span></td>
       <td><strong class="rank-total-pts">${p.total}</strong></td>
       <td class="${groupsChanged ? 'wi-changed-cell' : ''}">${p.groups}</td>
-      <td>${p.round16}</td>
+      <td class="${round16Changed ? 'wi-changed-cell' : ''}">${p.round16}</td>
       <td>${p.round8}</td>
       <td>${p.quarters}</td>
       <td>${p.semi}</td>
@@ -428,7 +430,7 @@ async function renderPhase(phaseId) {
     }
 
     let pendingDisplay;
-    if (whatIfMode && phaseId === 'groups') {
+    if (whatIfMode && (phaseId === 'groups' || phaseId === 'round16')) {
       const wiKey = `${match.teamLocal} vs ${match.teamVisitor}`;
       const wi = whatIfScores[wiKey];
       const wiA = wi?.goalsTeamA ?? '';
@@ -477,13 +479,13 @@ async function renderPhase(phaseId) {
         </td>`;
       }
 
-      // Recalculate points in WHAT IF mode for pending group matches
-      if (whatIfMode && !hasResult && match.id && phaseId === 'groups') {
+      // Recalculate points in WHAT IF mode for pending group/round16 matches
+      if (whatIfMode && !hasResult && match.id && (phaseId === 'groups' || phaseId === 'round16')) {
         const wiKey = `${match.teamLocal} vs ${match.teamVisitor}`;
         const wi = whatIfScores[wiKey];
         if (wi && wi.goalsTeamA !== null && wi.goalsTeamB !== null) {
           const wiResult = { goalsTeamA: wi.goalsTeamA, goalsTeamB: wi.goalsTeamB };
-          const recalc = calculateScore(pred, wiResult, 'groups');
+          const recalc = calculateScore(pred, wiResult, phaseId);
           pred = { ...pred, points: recalc.points, type: recalc.type };
         }
       }
@@ -663,13 +665,13 @@ function showCard(phaseId) {
       </div>`;
     }
 
-    // Recalculate points in WHAT IF mode for pending group matches
-    if (whatIfMode && !hasResult && match.id && phaseId === 'groups') {
+    // Recalculate points in WHAT IF mode for pending group/round16 matches
+    if (whatIfMode && !hasResult && match.id && (phaseId === 'groups' || phaseId === 'round16')) {
       const wiKey = `${match.teamLocal} vs ${match.teamVisitor}`;
       const wi = whatIfScores[wiKey];
       if (wi && wi.goalsTeamA !== null && wi.goalsTeamB !== null) {
         const wiResult = { goalsTeamA: wi.goalsTeamA, goalsTeamB: wi.goalsTeamB };
-        const recalc = calculateScore(pred, wiResult, 'groups');
+        const recalc = calculateScore(pred, wiResult, phaseId);
         pred = { ...pred, points: recalc.points, type: recalc.type };
       }
     }
@@ -763,12 +765,16 @@ function toggleWhatIf() {
     whatIfScores  = {};
     whatIfRanking = null;
   }
-  const btn = document.getElementById('whatif-btn');
-  if (btn) {
-    btn.textContent = whatIfMode ? '✕ Salir de What IF' : '🔮 What IF';
-    btn.classList.toggle('whatif-active', whatIfMode);
-  }
-  renderPhase('groups');
+  ['whatif-btn', 'whatif-btn-round16'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) {
+      btn.textContent = whatIfMode ? '✕ Salir de What IF' : '🔮 What IF';
+      btn.classList.toggle('whatif-active', whatIfMode);
+    }
+  });
+  const activeSection = document.querySelector('section.active');
+  const activePhase = activeSection ? activeSection.id : 'groups';
+  renderPhase(activePhase);
   renderGeneralTable();
 }
 
@@ -793,8 +799,13 @@ function recalcWhatIf() {
   const hypo = [];
   for (const [, scoreData] of Object.entries(appState.scores)) {
     let extraGroups = 0;
+    let extraRound16 = 0;
     for (const [, m] of Object.entries(scoreData.matches || {})) {
-      if (!m.phase?.includes('GRUPO') || m.result !== null) continue;
+      const phaseUpper = m.phase?.toUpperCase() || '';
+      let mPhaseId = null;
+      if (phaseUpper.includes('GRUPO')) mPhaseId = 'groups';
+      else if (phaseUpper.includes('DIECISEIS') || phaseUpper.includes('16')) mPhaseId = 'round16';
+      if (!mPhaseId || m.result !== null) continue;
       const key1 = `${m.teamLocal} vs ${m.teamVisitor}`;
       const key2 = `${m.teamVisitor} vs ${m.teamLocal}`;
       let wi = whatIfScores[key1];
@@ -804,9 +815,11 @@ function recalcWhatIf() {
       const fakeResult = flipped
         ? { goalsTeamA: wi.goalsTeamB, goalsTeamB: wi.goalsTeamA }
         : wi;
-      extraGroups += calculateScore({ goalsLocal: m.goalsLocal, goalsVisitor: m.goalsVisitor }, fakeResult, 'groups').points;
+      const pts = calculateScore({ goalsLocal: m.goalsLocal, goalsVisitor: m.goalsVisitor }, fakeResult, mPhaseId).points;
+      if (mPhaseId === 'groups') extraGroups += pts;
+      else extraRound16 += pts;
     }
-    hypo.push({ ...scoreData, groups: scoreData.groups + extraGroups, total: scoreData.total + extraGroups });
+    hypo.push({ ...scoreData, groups: scoreData.groups + extraGroups, round16: scoreData.round16 + extraRound16, total: scoreData.total + extraGroups + extraRound16 });
   }
 
   whatIfRanking = hypo
@@ -863,7 +876,7 @@ function renderCardGrid(phaseId, sortedMatches, participants, selectedParticipan
     
     if (hasResult) {
       score = `<strong>${match.result.goalsTeamA}-${match.result.goalsTeamB}</strong>`;
-    } else if (whatIfMode && phaseId === 'groups') {
+    } else if (whatIfMode && (phaseId === 'groups' || phaseId === 'round16')) {
       // Show WHAT IF input fields for pending matches in grid view
       const wiKey = `${match.teamLocal} vs ${match.teamVisitor}`;
       const wi = whatIfScores[wiKey];
@@ -872,12 +885,12 @@ function renderCardGrid(phaseId, sortedMatches, participants, selectedParticipan
       const teamLocalEsc = match.teamLocal.replace(/'/g, "\\'");
       const teamVisitorEsc = match.teamVisitor.replace(/'/g, "\\'");
       score = `<div style="display:flex; align-items:center; gap:0.3rem; justify-content:center;">
-        <input class="whatif-score-input" type="number" min="0" max="20" value="${wiA}" placeholder="?" 
-          oninput="updateWhatIfScore('${teamLocalEsc}', '${teamVisitorEsc}', 'A', this.value)" 
+        <input class="whatif-score-input" type="number" min="0" max="20" value="${wiA}" placeholder="?"
+          oninput="updateWhatIfScore('${teamLocalEsc}', '${teamVisitorEsc}', 'A', this.value)"
           style="width:50px;">
         <span style="font-weight:700;">–</span>
-        <input class="whatif-score-input" type="number" min="0" max="20" value="${wiB}" placeholder="?" 
-          oninput="updateWhatIfScore('${teamLocalEsc}', '${teamVisitorEsc}', 'B', this.value)" 
+        <input class="whatif-score-input" type="number" min="0" max="20" value="${wiB}" placeholder="?"
+          oninput="updateWhatIfScore('${teamLocalEsc}', '${teamVisitorEsc}', 'B', this.value)"
           style="width:50px;">
       </div>`;
     } else {
@@ -912,13 +925,13 @@ function renderCardGrid(phaseId, sortedMatches, participants, selectedParticipan
         </div>`;
       }
 
-      // Recalculate points in WHAT IF mode for pending group matches
-      if (whatIfMode && !hasResult && match.id && phaseId === 'groups') {
+      // Recalculate points in WHAT IF mode for pending group/round16 matches
+      if (whatIfMode && !hasResult && match.id && (phaseId === 'groups' || phaseId === 'round16')) {
         const wiKey = `${match.teamLocal} vs ${match.teamVisitor}`;
         const wi = whatIfScores[wiKey];
         if (wi && wi.goalsTeamA !== null && wi.goalsTeamB !== null) {
           const wiResult = { goalsTeamA: wi.goalsTeamA, goalsTeamB: wi.goalsTeamB };
-          const recalc = calculateScore(pred, wiResult, 'groups');
+          const recalc = calculateScore(pred, wiResult, phaseId);
           pred = { ...pred, points: recalc.points, type: recalc.type };
         }
       }
