@@ -7,6 +7,7 @@
 const TEAM_NAME_MAP = {
   // América del Norte
   "Mexico": "Mexico",
+  "México": "Mexico",
   "United States": "USA",
   "USA": "USA",
   "Canada": "Canada",
@@ -35,6 +36,7 @@ const TEAM_NAME_MAP = {
   "Alemania": "Alemania",
   "Netherlands": "Paises Bajos",
   "Paises Bajos": "Paises Bajos",
+  "Países Bajos": "Paises Bajos",
   "Belgium": "Belgica",
   "Belgica": "Belgica",
   "Italy": "Italia",
@@ -126,6 +128,9 @@ const TEAM_NAME_MAP = {
   "Congo, DR": "RD del Congo",
   "Rep. Dem. del Congo": "RD del Congo",
   "Congo DR ": "RD del Congo",
+  "Congo": "RD del Congo",
+  "Democratic Republic of Congo": "RD del Congo",
+  "D.R. Congo": "RD del Congo",
   "Haiti": "Haiti",
   "Panama": "Panama",
   "Costa Rica": "Costa Rica",

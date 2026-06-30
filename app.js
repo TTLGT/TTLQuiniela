@@ -31,12 +31,12 @@ let generalPhaseTab = 'total';
 // ==================== TEAM FLAGS ====================
 
 const TEAM_FLAGS = {
-  'Mexico': 'mx', 'USA': 'us', 'Canada': 'ca',
+  'Mexico': 'mx', 'México': 'mx', 'USA': 'us', 'Canada': 'ca',
   'Argentina': 'ar', 'Brasil': 'br', 'Uruguay': 'uy',
   'Paraguay': 'py', 'Colombia': 'co', 'Ecuador': 'ec',
   'Peru': 'pe', 'Venezuela': 've', 'Chile': 'cl',
   'Bolivia': 'bo', 'España': 'es', 'Portugal': 'pt',
-  'Francia': 'fr', 'Alemania': 'de', 'Paises Bajos': 'nl',
+  'Francia': 'fr', 'Alemania': 'de', 'Paises Bajos': 'nl', 'Países Bajos': 'nl',
   'Belgica': 'be', 'Italia': 'it', 'Suiza': 'ch',
   'Austria': 'at', 'República Checa': 'cz', 'Polonia': 'pl',
   'Croacia': 'hr', 'Serbia': 'rs', 'Bosnia y Herzegovina': 'ba',
@@ -55,7 +55,7 @@ const TEAM_FLAGS = {
   'Nigeria': 'ng', 'Ghana': 'gh', 'Camerun': 'cm',
   'Sudafrica': 'za', 'Costa de Marfil': 'ci',
   'Argelia': 'dz', 'Tunez': 'tn', 'Cabo Verde': 'cv',
-  'RD del Congo': 'cd', 'Kenia': 'ke',
+  'RD del Congo': 'cd', 'Congo': 'cd', 'Kenia': 'ke',
   'Haiti': 'ht', 'Panama': 'pa', 'Costa Rica': 'cr',
   'Honduras': 'hn', 'Jamaica': 'jm', 'Curacao': 'cw', 'Curazao': 'cw',
 };
