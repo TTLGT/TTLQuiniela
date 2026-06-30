@@ -428,22 +428,58 @@ function renderPhaseStats(phaseId) {
   const hmMonthNames = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
   hmEl.innerHTML = matches.map(match => {
     const hasResult = match.result?.goalsTeamA != null;
-    const actual = hasResult ? `${match.result.goalsTeamA}–${match.result.goalsTeamB}` : null;
     const matchDT = findMatchDateTime(match.teamLocal, match.teamVisitor);
+
+    // Date/time line
     let hmDateHtml = '';
     if (matchDT?.date) {
       const [, mm, dd] = matchDT.date.split('-');
       const mName = hmMonthNames[parseInt(mm, 10) - 1] || mm;
-      hmDateHtml = `<span class="hm-date">${dd} ${mName}${matchDT.time ? ` ${matchDT.time}` : ''}</span>`;
+      hmDateHtml = `<div class="hm-date">${dd} ${mName}${matchDT.time ? ` ${matchDT.time}` : ''}</div>`;
     }
+
+    // Live detection
+    let isLive = false;
+    if (!hasResult && matchDT?.date && matchDT?.time) {
+      const kickoff = matchDT.utcStr ? new Date(matchDT.utcStr) : new Date(`${matchDT.date}T${matchDT.time}:00`);
+      const mins = (Date.now() - kickoff.getTime()) / 60000;
+      isLive = mins >= 0 && mins <= 135;
+    }
+    const liveScore = isLive ? getLiveScore(match.teamLocal, match.teamVisitor) : null;
+
+    // Score row: Flag TeamA [score] – [score] Flag TeamB
+    let scoreHtml;
+    if (hasResult) {
+      scoreHtml = `
+        <div class="hm-score-row">
+          <span class="hm-sb-team">${getFlag(match.teamLocal)} ${esc(match.teamLocal)}</span>
+          <span class="hm-sb-score">${match.result.goalsTeamA} <span class="hm-sb-sep">–</span> ${match.result.goalsTeamB}</span>
+          <span class="hm-sb-team">${getFlag(match.teamVisitor)} ${esc(match.teamVisitor)}</span>
+        </div>
+        <div class="hm-status-row"><span class="status-badge finished">Finalizado</span></div>`;
+    } else if (liveScore) {
+      scoreHtml = `
+        <div class="hm-score-row">
+          <span class="hm-sb-team">${getFlag(match.teamLocal)} ${esc(match.teamLocal)}</span>
+          <span class="hm-sb-score hm-sb-live">🔴 ${liveScore.goalsTeamA} <span class="hm-sb-sep">–</span> ${liveScore.goalsTeamB}${liveScore.clock ? `<span class="live-clock">${liveScore.clock}</span>` : ''}</span>
+          <span class="hm-sb-team">${getFlag(match.teamVisitor)} ${esc(match.teamVisitor)}</span>
+        </div>
+        <div class="hm-status-row"><span class="status-badge live">🔴 En Curso</span></div>`;
+    } else {
+      scoreHtml = `
+        <div class="hm-score-row">
+          <span class="hm-sb-team">${getFlag(match.teamLocal)} ${esc(match.teamLocal)}</span>
+          <span class="hm-sb-score hm-sb-pending">– – –</span>
+          <span class="hm-sb-team">${getFlag(match.teamVisitor)} ${esc(match.teamVisitor)}</span>
+        </div>
+        <div class="hm-status-row"><span class="status-badge pending">Pendiente</span></div>`;
+    }
+
     return `
       <div class="hm-match">
         <div class="hm-header">
           ${hmDateHtml}
-          <div class="hm-header-row">
-            <span class="hm-teams">${getFlag(match.teamLocal)}${esc(match.teamLocal)} vs ${esc(match.teamVisitor)}${getFlag(match.teamVisitor)}</span>
-            ${hasResult ? `<span class="hm-actual"><span class="hm-final-label">Final</span> ${actual}</span>` : '<span class="hm-pend">Pendiente</span>'}
-          </div>
+          ${scoreHtml}
         </div>
         <div class="hm-cells">
           ${participants.map(p => {

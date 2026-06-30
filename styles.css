@@ -2577,7 +2577,7 @@ body.dark-mode .hm-actual { color: #7ba7f0; }
 .hm-header {
   display: flex;
   flex-direction: column;
-  padding: 0.3rem 0.65rem;
+  padding: 0.45rem 0.75rem 0.35rem;
   background: rgba(4,21,97,0.05);
   border-bottom: 1px solid var(--border-gray);
   font-size: 0.8rem;
@@ -2586,13 +2586,18 @@ body.dark-mode .hm-actual { color: #7ba7f0; }
 
 body.dark-mode .hm-header { background: rgba(255,255,255,0.04); border-bottom-color: #30363d; }
 
-.hm-teams      { display: flex; align-items: center; gap: 0.25rem; }
-.hm-header-row { display: flex; align-items: center; justify-content: space-between; }
-.hm-date       { font-size: 0.68rem; font-weight: 500; color: #999; margin-bottom: 0.15rem; }
-.hm-actual     { font-weight: 800; color: var(--primary-btn); font-size: 0.88rem; display: flex; align-items: center; gap: 0.3rem; }
-.hm-final-label{ font-size: 0.62rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #888; }
-.hm-pend       { font-size: 0.72rem; color: #aaa; }
+.hm-date        { font-size: 0.68rem; font-weight: 500; color: #999; text-align: center; margin-bottom: 0.25rem; }
 body.dark-mode .hm-date { color: #6e7681; }
+
+.hm-score-row   { display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 0.2rem; }
+.hm-sb-team     { display: flex; align-items: center; gap: 0.25rem; font-size: 0.8rem; font-weight: 600; }
+.hm-sb-score    { font-size: 1rem; font-weight: 800; color: var(--primary-btn); display: flex; align-items: center; gap: 0.25rem; }
+.hm-sb-sep      { font-weight: 400; color: #aaa; }
+.hm-sb-live     { color: #c0392b; }
+.hm-sb-pending  { font-size: 0.85rem; font-weight: 400; color: #bbb; letter-spacing: 0.1em; }
+.hm-status-row  { text-align: center; }
+
+body.dark-mode .hm-sb-sep { color: #555; }
 
 .hm-cells {
   display: flex;
