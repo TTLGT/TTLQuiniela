@@ -1666,6 +1666,7 @@ body.dark-mode .card-pred-row.winner-match { background-color: rgba(255,193,7,0.
   #general .table-wrapper { display: block; overflow-x: auto; }
   .card-container { display: block !important; }
   .card-container .card-nav { display: flex; }
+  .view-toggle-btn { display: none; }
 }
 
 @media (min-width: 769px) {
