@@ -438,8 +438,12 @@ function renderPhaseStats(phaseId) {
           ${participants.map(p => {
             const pred = match.predictions[p];
             const cls = pred ? `hm-${pred.type}` : 'hm-no-pred';
+            const nameParts = p.split(' ');
+            const firstName = nameParts[0];
+            const lastName = nameParts.slice(1).join(' ');
             return `<div class="hm-cell ${cls}" title="${esc(p)}: ${pred?.pred || '–'}${pred?.points ? ` · ${pred.points}pts` : ''}">
-              <span class="hm-p">${esc(p.split(' ')[0])}</span>
+              <span class="hm-p">${esc(firstName)}</span>
+              ${lastName ? `<span class="hm-ln">${esc(lastName)}</span>` : ''}
               <span class="hm-s">${pred?.pred || '–'}</span>
             </div>`;
           }).join('')}
