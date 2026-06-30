@@ -2903,3 +2903,62 @@ body.dark-mode .wi-changed-cell {
     padding: 0.8rem;
   }
 }
+
+/* Mapa de Predicciones — Mobile */
+@media (max-width: 768px) {
+  .heatmap-grid {
+    min-width: 0;
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .hm-match {
+    width: 100%;
+  }
+
+  .hm-cell {
+    min-width: 42px;
+  }
+
+  .hm-sb-team {
+    font-size: 0.7rem;
+  }
+
+  .hm-sb-score {
+    font-size: 0.9rem;
+  }
+
+  .hm-score-row {
+    gap: 0.35rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .ps-title-bar {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .hm-cell {
+    min-width: 36px;
+    padding: 0.15rem 0.25rem;
+  }
+
+  .hm-p { font-size: 0.55rem; }
+  .hm-ln { font-size: 0.5rem; }
+  .hm-s { font-size: 0.7rem; }
+
+  .hm-sb-team {
+    font-size: 0.62rem;
+    gap: 0.15rem;
+  }
+
+  .hm-sb-score {
+    font-size: 0.82rem;
+  }
+
+  .hm-score-row {
+    gap: 0.25rem;
+  }
+}
