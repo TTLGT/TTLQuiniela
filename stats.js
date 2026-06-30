@@ -34,16 +34,19 @@ function chartColors() {
 
 // ==================== TIMELINE BACKBONE (Stats 1, 15, 16) ====================
 
-function buildDailyRankSnapshots() {
-  if (_dailySnapshots) return _dailySnapshots;
+function buildDailyRankSnapshots(phaseId = null) {
+  if (!phaseId) {
+    if (_dailySnapshots) return _dailySnapshots;
+  }
 
   const participants = Object.keys(appState.scores);
-  if (!participants.length) { _dailySnapshots = []; return []; }
+  if (!participants.length) { if (!phaseId) _dailySnapshots = []; return []; }
 
   // Build match lookup: matchKey -> { matchMeta, pts: { pName: points } }
   const matchLookup = {};
   for (const [pName, sd] of Object.entries(appState.scores)) {
     for (const m of Object.values(sd.matches || {})) {
+      if (phaseId && getPhaseIdFromStr(m.phase) !== phaseId) continue;
       const key = `${m.id}|${m.phase}`;
       if (!matchLookup[key]) matchLookup[key] = { meta: m, pts: {} };
       matchLookup[key].pts[pName] = m.points || 0;
@@ -59,7 +62,7 @@ function buildDailyRankSnapshots() {
     played.push({ key, date: dt?.date || '9999-01-01', id: m.id, pts: data.pts });
   }
 
-  if (!played.length) { _dailySnapshots = []; return []; }
+  if (!played.length) { if (!phaseId) _dailySnapshots = []; return []; }
 
   // Group by date
   const byDate = {};
@@ -83,7 +86,7 @@ function buildDailyRankSnapshots() {
     snapshots.push({ date, positions, totals: { ...running } });
   }
 
-  _dailySnapshots = snapshots;
+  if (!phaseId) _dailySnapshots = snapshots;
   return snapshots;
 }
 
@@ -220,8 +223,8 @@ function computeTeamPerformance() {
 }
 
 // Stats 15/16: Biggest Jump / Drop
-function computeJumpDrop() {
-  const snapshots = buildDailyRankSnapshots();
+function computeJumpDrop(phaseId = null) {
+  const snapshots = buildDailyRankSnapshots(phaseId);
   if (snapshots.length < 2) return { jumps: [], drops: [] };
   const participants = Object.keys(appState.scores);
   const jumps = [], drops = [];
@@ -240,11 +243,12 @@ function computeJumpDrop() {
 }
 
 // Stat 17: Best Day (sum of all points earned in a single day)
-function computeMostPointsOneMatch() {
+function computeMostPointsOneMatch(phaseId = null) {
   const bests = {};
   for (const [pName, sd] of Object.entries(appState.scores)) {
     const byDate = {};
-    for (const m of getPlayedMatches(sd)) {
+    const allPlayed = getPlayedMatches(sd);
+    for (const m of phaseId ? allPlayed.filter(m => getPhaseIdFromStr(m.phase) === phaseId) : allPlayed) {
       const dt = findMatchDateTime(m.teamLocal, m.teamVisitor);
       const date = dt?.date || '9999-01-01';
       if (!byDate[date]) byDate[date] = 0;
@@ -260,15 +264,16 @@ function computeMostPointsOneMatch() {
 }
 
 // Stat 18: Best pending prediction per participant, ranked by positions they'd jump in the table
-function computeUnluckyPredictions() {
+function computeUnluckyPredictions(phaseId = null) {
   const currentTotals = {};
-  for (const p of appState.participants) currentTotals[p.participant] = p.total || 0;
+  for (const p of appState.participants) currentTotals[p.participant] = phaseId ? (p[phaseId] || 0) : (p.total || 0);
 
   // Build lookup of all pending predictions per match to detect shared predictions
   const allPredsByMatch = {};
   const unlucky = [];
   for (const [pName, sd] of Object.entries(appState.scores)) {
-    for (const m of getPendingMatches(sd)) {
+    const allPending = getPendingMatches(sd);
+    for (const m of phaseId ? allPending.filter(m => getPhaseIdFromStr(m.phase) === phaseId) : allPending) {
       if (!m.prediction || m.prediction === 'NaN-NaN' || m.goalsLocal == null) continue;
       const pid = getPhaseIdFromStr(m.phase);
       const mult = PHASES[pid]?.multiplier || 1;
@@ -621,10 +626,11 @@ function computeStreaks() {
 }
 
 // Stat: Next Match Favorite
-function computeNextMatchFavorite() {
+function computeNextMatchFavorite(phaseId = null) {
   const pendingById = new Map();
   for (const [, sd] of Object.entries(appState.scores)) {
-    for (const m of getPendingMatches(sd)) {
+    const allPending = getPendingMatches(sd);
+    for (const m of phaseId ? allPending.filter(m => getPhaseIdFromStr(m.phase) === phaseId) : allPending) {
       if (!pendingById.has(m.id)) pendingById.set(m.id, m);
     }
   }
@@ -654,11 +660,12 @@ function computeNextMatchFavorite() {
 }
 
 // Stat: Exact Hits Leader
-function computeExactHitsLeader() {
-  const counts = Object.keys(appState.scores).map(pName => ({
-    participant: pName,
-    exactHits: getPlayedMatches(appState.scores[pName]).filter(m => m.type === 'exact-match').length
-  })).sort((a, b) => b.exactHits - a.exactHits);
+function computeExactHitsLeader(phaseId = null) {
+  const counts = Object.keys(appState.scores).map(pName => {
+    const played = getPlayedMatches(appState.scores[pName]);
+    const filtered = phaseId ? played.filter(m => getPhaseIdFromStr(m.phase) === phaseId) : played;
+    return { participant: pName, exactHits: filtered.filter(m => m.type === 'exact-match').length };
+  }).sort((a, b) => b.exactHits - a.exactHits);
   if (!counts.length || counts[0].exactHits === 0) return null;
   const maxHits = counts[0].exactHits;
   const leaders = counts.filter(x => x.exactHits === maxHits);
@@ -671,9 +678,11 @@ function renderHighlights() {
   const el = document.getElementById('st-highlights');
   if (!el) return;
 
-  const { jumps, drops } = computeJumpDrop();
-  const mostPts = computeMostPointsOneMatch();
-  const unlucky = computeUnluckyPredictions();
+  const phaseId = (typeof generalPhaseTab !== 'undefined' && generalPhaseTab !== 'total') ? generalPhaseTab : null;
+
+  const { jumps, drops } = computeJumpDrop(phaseId);
+  const mostPts = computeMostPointsOneMatch(phaseId);
+  const unlucky = computeUnluckyPredictions(phaseId);
 
   const jump = jumps[0], drop = drops[0], luck = unlucky[0];
 
@@ -693,8 +702,8 @@ function renderHighlights() {
   const hotNames = hotLeaders.map(s => esc(s.participant.split(' ')[0])).join(', ');
   const coldNames = coldLeaders.map(s => esc(s.participant.split(' ')[0])).join(', ');
 
-  const nextFav = computeNextMatchFavorite();
-  const exactLeader = computeExactHitsLeader();
+  const nextFav = computeNextMatchFavorite(phaseId);
+  const exactLeader = computeExactHitsLeader(phaseId);
 
   const cards = [
     jump ? `<div class="shc shc-green"><div class="shc-icon">📈</div><div class="shc-label">Mayor Subida</div><div class="shc-name">${esc(jump.participant.split(' ')[0])}</div><div class="shc-val">+${jump.jump} puestos</div><div class="shc-sub">#${jump.from} → #${jump.to} · ${jump.date}</div></div>` : '',
@@ -710,7 +719,8 @@ function renderHighlights() {
   ].filter(Boolean);
 
   if (!cards.length) return;
-  el.innerHTML = `<h3 class="st-title">Destacados de la Quiniela del Mundial 2026</h3><div class="shc-grid">${cards.join('')}</div>`;
+  const phaseLabel = phaseId ? ` · ${(typeof PHASE_LABEL_MAP !== 'undefined' && PHASE_LABEL_MAP[phaseId]) || phaseId}` : '';
+  el.innerHTML = `<h3 class="st-title">Destacados de la Quiniela del Mundial 2026${phaseLabel}</h3><div class="shc-grid">${cards.join('')}</div>`;
 }
 
 // Stat 1 — Ranking Timeline chart

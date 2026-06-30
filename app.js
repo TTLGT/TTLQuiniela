@@ -394,6 +394,9 @@ function setGeneralPhaseTab(phase) {
     btn.classList.toggle('active', btn.dataset.phase === phase);
   });
   renderGeneralTable();
+  if (typeof renderHighlights === 'function' && document.getElementById('st-highlights')) {
+    renderHighlights();
+  }
 }
 
 function getTeamStatus(teamName) {
