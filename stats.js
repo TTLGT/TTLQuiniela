@@ -450,6 +450,13 @@ function renderPhaseStats(phaseId) {
     }
     const liveScore = isLive ? getLiveScore(match.teamLocal, match.teamVisitor) : null;
 
+    // Watch link for today's matches
+    const _hmToday = new Date();
+    const hmTodayStr = `${_hmToday.getFullYear()}-${String(_hmToday.getMonth()+1).padStart(2,'0')}-${String(_hmToday.getDate()).padStart(2,'0')}`;
+    const hmWatchLink = matchDT?.date === hmTodayStr
+      ? '<div class="hm-status-row"><a href="https://futbol-libres.su/" target="_blank" class="watch-link watch-link-card">📺 Ver en vivo</a></div>'
+      : '';
+
     // Score row: Flag TeamA [score] – [score] Flag TeamB
     let scoreHtml;
     if (hasResult) {
@@ -488,6 +495,7 @@ function renderPhaseStats(phaseId) {
           ${groupBadge}
           ${hmDateHtml}
           ${scoreHtml}
+          ${hmWatchLink}
         </div>
         <div class="hm-cells">
           ${participants.map(p => {
