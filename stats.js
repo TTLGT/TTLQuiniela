@@ -556,7 +556,7 @@ function renderGeneralWidgets() {
       statsCharts['gap'] = new Chart(gapCtx, {
         type: 'bar',
         data: {
-          labels: gap.map(p => p.participant.split(' ')[0]),
+          labels: gap.map(p => p.participant),
           datasets: [{ data: gap.map(p => p.gap), backgroundColor: gap.map(p => p.gap === 0 ? 'rgba(40,167,69,0.75)' : 'rgba(6,45,161,0.55)'), borderRadius: 4 }]
         },
         options: {
@@ -578,7 +578,7 @@ function renderGeneralWidgets() {
       statsCharts['maxpossible'] = new Chart(maxCtx, {
         type: 'bar',
         data: {
-          labels: maxPoss.map(p => p.participant.split(' ')[0]),
+          labels: maxPoss.map(p => p.participant),
           datasets: [
             { label: 'Actuales', data: maxPoss.map(p => p.current), backgroundColor: 'rgba(6,45,161,0.65)', borderRadius: 4 },
             { label: 'Potencial', data: maxPoss.map(p => p.maxAdd), backgroundColor: 'rgba(255,193,7,0.55)', borderRadius: 4 }
@@ -691,7 +691,7 @@ function renderHighlights() {
   const tiedForBest = mostPts.filter(x => x.points === bestPts);
   const bestDate = tiedForBest.reduce((latest, x) => x.date > latest ? x.date : latest, '');
   const bestGroup = tiedForBest.filter(x => x.date === bestDate);
-  const bestNames = bestGroup.map(x => esc(x.participant.split(' ')[0])).join(', ');
+  const bestNames = bestGroup.map(x => esc(x.participant)).join(', ');
 
   // New stat cards
   const streaks = computeStreaks();
@@ -699,17 +699,17 @@ function renderHighlights() {
   const coldVal = Math.max(...streaks.map(s => s.coldStreak), 0);
   const hotLeaders = streaks.filter(s => s.hotStreak === hotVal && hotVal >= 1);
   const coldLeaders = streaks.filter(s => s.coldStreak === coldVal && coldVal >= 1);
-  const hotNames = hotLeaders.map(s => esc(s.participant.split(' ')[0])).join(', ');
-  const coldNames = coldLeaders.map(s => esc(s.participant.split(' ')[0])).join(', ');
+  const hotNames = hotLeaders.map(s => esc(s.participant)).join(', ');
+  const coldNames = coldLeaders.map(s => esc(s.participant)).join(', ');
 
   const nextFav = computeNextMatchFavorite(phaseId);
   const exactLeader = computeExactHitsLeader(phaseId);
 
   const cards = [
-    jump ? `<div class="shc shc-green"><div class="shc-icon">📈</div><div class="shc-label">Mayor Subida</div><div class="shc-name">${esc(jump.participant.split(' ')[0])}</div><div class="shc-val">+${jump.jump} puestos</div><div class="shc-sub">#${jump.from} → #${jump.to} · ${jump.date}</div></div>` : '',
-    drop ? `<div class="shc shc-red"><div class="shc-icon">📉</div><div class="shc-label">Mayor Caída</div><div class="shc-name">${esc(drop.participant.split(' ')[0])}</div><div class="shc-val">-${drop.drop} puestos</div><div class="shc-sub">#${drop.from} → #${drop.to} · ${drop.date}</div></div>` : '',
+    jump ? `<div class="shc shc-green"><div class="shc-icon">📈</div><div class="shc-label">Mayor Subida</div><div class="shc-name">${esc(jump.participant)}</div><div class="shc-val">+${jump.jump} puestos</div><div class="shc-sub">#${jump.from} → #${jump.to} · ${jump.date}</div></div>` : '',
+    drop ? `<div class="shc shc-red"><div class="shc-icon">📉</div><div class="shc-label">Mayor Caída</div><div class="shc-name">${esc(drop.participant)}</div><div class="shc-val">-${drop.drop} puestos</div><div class="shc-sub">#${drop.from} → #${drop.to} · ${drop.date}</div></div>` : '',
     bestGroup.length ? `<div class="shc shc-gold"><div class="shc-icon">⚡</div><div class="shc-label">Mejor Día</div><div class="shc-name">${bestNames}</div><div class="shc-val">${bestPts} pts en 1 día</div><div class="shc-sub">${bestDate !== '9999-01-01' ? fmtSnapshotDate(bestDate) : ''}</div></div>` : '',
-    luck ? `<div class="shc shc-blue"><div class="shc-icon">🔮</div><div class="shc-label">Mayor Subida Potencial</div><div class="shc-name">${esc(luck.participant.split(' ')[0])}</div><div class="shc-val">+${luck.positionsGained} puestos posibles</div><div class="shc-sub">#${luck.currentPos} → #${luck.newPos} · ${esc(luck.teamLocal)} vs ${esc(luck.teamVisitor)}</div><div class="shc-sub">Necesita: <strong>${esc(luck.prediction)}</strong></div></div>` : '',
+    luck ? `<div class="shc shc-blue"><div class="shc-icon">🔮</div><div class="shc-label">Mayor Subida Potencial</div><div class="shc-name">${esc(luck.participant)}</div><div class="shc-val">+${luck.positionsGained} puestos posibles</div><div class="shc-sub">#${luck.currentPos} → #${luck.newPos} · ${esc(luck.teamLocal)} vs ${esc(luck.teamVisitor)}</div><div class="shc-sub">Necesita: <strong>${esc(luck.prediction)}</strong></div></div>` : '',
     hotVal >= 1 ? `<div class="shc shc-orange"><div class="shc-icon">🔥</div><div class="shc-label">Racha Caliente</div><div class="shc-name">${hotNames}</div><div class="shc-val">${hotVal} seguidos</div><div class="shc-sub">${hotVal} juego${hotVal !== 1 ? 's' : ''} consecutivo${hotVal !== 1 ? 's' : ''} con puntos</div></div>` : '',
     coldVal >= 1
       ? `<div class="shc shc-gray"><div class="shc-icon">🧊</div><div class="shc-label">Racha Fría</div><div class="shc-name">${coldNames}</div><div class="shc-val">${coldVal} sin puntuar</div><div class="shc-sub">${coldVal} juego${coldVal !== 1 ? 's' : ''} consecutivo${coldVal !== 1 ? 's' : ''} sin puntos</div></div>`
@@ -719,7 +719,7 @@ function renderHighlights() {
       const REINAS = new Set(['Isabel','Mary','Karen']);
       const allFemale = exactLeader.leaders.every(l => REINAS.has(l.participant.split(' ')[0]));
       const title = allFemale ? 'Reina del Marcador Exacto' : 'Rey del Marcador Exacto';
-      return `<div class="shc shc-teal"><div class="shc-icon">🎯</div><div class="shc-label">${title}</div><div class="shc-name">${exactLeader.leaders.map(l => esc(l.participant.split(' ')[0])).join(', ')}</div><div class="shc-val">${exactLeader.maxHits} exacto${exactLeader.maxHits !== 1 ? 's' : ''}</div>${exactLeader.next ? `<div class="shc-sub">Siguiente: ${esc(exactLeader.next.participant.split(' ')[0])} con ${exactLeader.next.exactHits}</div>` : ''}</div>`;
+      return `<div class="shc shc-teal"><div class="shc-icon">🎯</div><div class="shc-label">${title}</div><div class="shc-name">${exactLeader.leaders.map(l => esc(l.participant)).join(', ')}</div><div class="shc-val">${exactLeader.maxHits} exacto${exactLeader.maxHits !== 1 ? 's' : ''}</div>${exactLeader.next ? `<div class="shc-sub">Siguiente: ${esc(exactLeader.next.participant)} con ${exactLeader.next.exactHits}</div>` : ''}</div>`;
     })() : ''
   ].filter(Boolean);
 
@@ -753,7 +753,7 @@ function renderTimelineChart() {
       data: {
         labels: data.dates,
         datasets: data.series.map((s, i) => ({
-          label: s.participant.split(' ')[0],
+          label: s.participant,
           data: s.positions,
           borderColor: palette[i % palette.length],
           backgroundColor: palette[i % palette.length] + '18',
@@ -813,7 +813,7 @@ function renderAccuracyCharts() {
       statsCharts['hitrate'] = new Chart(hCtx, {
         type: 'bar',
         data: {
-          labels: hitRates.map(p => p.participant.split(' ')[0]),
+          labels: hitRates.map(p => p.participant),
           datasets: [{ data: hitRates.map(p => Math.round(p.hitRate * 100)), backgroundColor: hitRates.map(p => p.hitRate >= 0.6 ? 'rgba(40,167,69,0.7)' : p.hitRate >= 0.4 ? 'rgba(255,193,7,0.7)' : 'rgba(220,53,69,0.6)'), borderRadius: 4 }]
         },
         options: { ...baseOpts, plugins: { ...baseOpts.plugins, tooltip: { callbacks: { label: c => `${c.raw}% · ${hitRates[c.dataIndex]?.hits}/${hitRates[c.dataIndex]?.played} correctos` } } } }
@@ -828,7 +828,7 @@ function renderAccuracyCharts() {
       statsCharts['sniper'] = new Chart(sCtx, {
         type: 'bar',
         data: {
-          labels: sniperRates.map(p => p.participant.split(' ')[0]),
+          labels: sniperRates.map(p => p.participant),
           datasets: [{ data: sniperRates.map(p => Math.round(p.sniperRate * 100)), backgroundColor: 'rgba(6,45,161,0.6)', borderRadius: 4 }]
         },
         options: { ...baseOpts, plugins: { ...baseOpts.plugins, tooltip: { callbacks: { label: c => `${c.raw}% · ${sniperRates[c.dataIndex]?.exactHits}/${sniperRates[c.dataIndex]?.played} exactos` } } } }
@@ -854,7 +854,7 @@ function renderPhaseAccuracyChart() {
     <div class="best-phase-row">
       ${accuracy.filter(p => p.bestPhase).map(p => `
         <div class="bpr-card">
-          <span class="bpr-name">${esc(p.participant.split(' ')[0])}</span>
+          <span class="bpr-name">${esc(p.participant)}</span>
           <span class="bpr-phase">↑ ${phaseLabels[p.bestPhase]}</span>
           <span class="bpr-pct">${Math.round(p.bestRate * 100)}%</span>
         </div>`).join('')}
@@ -872,7 +872,7 @@ function renderPhaseAccuracyChart() {
     statsCharts['phaseacc'] = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: accuracy.map(p => p.participant.split(' ')[0]),
+        labels: accuracy.map(p => p.participant),
         datasets: phaseList.map(pid => ({
           label: phaseLabels[pid],
           data: accuracy.map(p => p.byPhase[pid]?.played >= 2 ? Math.round((p.byPhase[pid].hitRate || 0) * 100) : null),
@@ -946,7 +946,7 @@ function renderContrarianChart() {
     statsCharts['contrarian'] = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: data.map(p => p.participant.split(' ')[0]),
+        labels: data.map(p => p.participant),
         datasets: [{ data: data.map(p => Math.round(p.contrarianRate * 100)), backgroundColor: data.map(p => p.contrarianRate >= 0.65 ? 'rgba(153,50,204,0.7)' : p.contrarianRate >= 0.5 ? 'rgba(6,45,161,0.55)' : 'rgba(100,100,100,0.4)'), borderRadius: 4 }]
       },
       options: {
@@ -981,7 +981,7 @@ function renderTeamSection() {
             <span class="tpg-avg">${t.avgPoints.toFixed(1)} pts avg</span>
           </div>
           <div class="tpg-members">
-            ${t.members.map((m, j) => `<span class="tpg-member">${esc(m.split(' ')[0])}&nbsp;<strong>${t.scores[j]}</strong></span>`).join('')}
+            ${t.members.map((m, j) => `<span class="tpg-member">${esc(m)}&nbsp;<strong>${t.scores[j]}</strong></span>`).join('')}
           </div>
         </div>`).join('')}
     </div>`;
@@ -1036,10 +1036,10 @@ function renderH2HTable() {
 
     tablesHtml += `<div class="h2h-phase-hdr">${PHASE_LABEL_MAP[phaseId]}</div>
     <div class="h2h-table-wrap"><table class="h2h-table"><thead><tr>
-      <th class="h2h-name-col">${esc(p1.split(' ')[0])}</th>
+      <th class="h2h-name-col">${esc(p1)}</th>
       <th class="h2h-match-col">Partido</th>
       <th class="h2h-res-col">Real</th>
-      <th class="h2h-name-col">${esc(p2.split(' ')[0])}</th>
+      <th class="h2h-name-col">${esc(p2)}</th>
     </tr></thead><tbody>`;
 
     for (const key of allKeys) {
@@ -1100,7 +1100,7 @@ function renderExtrasSection() {
           ${avgPerMatch.map((p, i) => `
             <div class="smt-row">
               <span class="smt-rank">#${i+1}</span>
-              <span class="smt-name">${esc(p.participant.split(' ')[0])}</span>
+              <span class="smt-name">${esc(p.participant)}</span>
               <span class="smt-bar-wrap"><span class="smt-bar smt-bar-alt" style="width:${Math.round(p.avgPts / maxAvgPts * 100)}%"></span></span>
               <span class="smt-val">${p.avgPts.toFixed(2)}</span>
               <span class="smt-detail">(${p.played}d)</span>
@@ -1113,7 +1113,7 @@ function renderExtrasSection() {
           ${mostPts.map((p, i) => `
             <div class="smt-row">
               <span class="smt-rank">#${i+1}</span>
-              <span class="smt-name">${esc(p.participant.split(' ')[0])}</span>
+              <span class="smt-name">${esc(p.participant)}</span>
               <span class="smt-bar-wrap"><span class="smt-bar smt-bar-gold" style="width:${Math.round(p.points / maxBestPts * 100)}%"></span></span>
               <span class="smt-val">${p.points}p</span>
               <span class="smt-detail">${p.date !== '9999-01-01' ? fmtSnapshotDate(p.date) : ''}</span>
