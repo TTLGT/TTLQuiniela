@@ -439,8 +439,11 @@ function renderPhaseStats(phaseId) {
     return `
       <div class="hm-match">
         <div class="hm-header">
-          <span class="hm-teams">${getFlag(match.teamLocal)}${esc(match.teamLocal)} vs ${esc(match.teamVisitor)}${getFlag(match.teamVisitor)}</span>
-          <span class="hm-header-right">${hmDateHtml}${hasResult ? `<span class="hm-actual">${actual}</span>` : '<span class="hm-pend">Pendiente</span>'}</span>
+          ${hmDateHtml}
+          <div class="hm-header-row">
+            <span class="hm-teams">${getFlag(match.teamLocal)}${esc(match.teamLocal)} vs ${esc(match.teamVisitor)}${getFlag(match.teamVisitor)}</span>
+            ${hasResult ? `<span class="hm-actual">${actual}</span>` : '<span class="hm-pend">Pendiente</span>'}
+          </div>
         </div>
         <div class="hm-cells">
           ${participants.map(p => {
