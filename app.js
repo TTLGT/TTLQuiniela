@@ -397,6 +397,9 @@ function setGeneralPhaseTab(phase) {
   if (typeof renderHighlights === 'function' && document.getElementById('st-highlights')) {
     renderHighlights();
   }
+  if (typeof renderExtrasSection === 'function' && document.getElementById('st-extras')) {
+    renderExtrasSection();
+  }
 }
 
 function getTeamStatus(teamName) {

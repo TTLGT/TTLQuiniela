@@ -1086,9 +1086,11 @@ function renderExtrasSection() {
   const el = document.getElementById('st-extras');
   if (!el) return;
 
+  const phaseId = (typeof generalPhaseTab !== 'undefined' && generalPhaseTab !== 'total') ? generalPhaseTab : null;
+
   const avgPerMatch = computeAvgPerMatch();
   const mostPts = computeMostPointsOneMatch();
-  const unlucky = computeUnluckyPredictions();
+  const unlucky = computeUnluckyPredictions(phaseId);
   const maxAvgPts = Math.max(...avgPerMatch.map(p => p.avgPts), 1);
   const maxBestPts = mostPts[0]?.points || 1;
 
