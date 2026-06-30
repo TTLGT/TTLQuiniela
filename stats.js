@@ -475,9 +475,14 @@ function renderPhaseStats(phaseId) {
         <div class="hm-status-row"><span class="status-badge pending">Pendiente</span></div>`;
     }
 
+    const groupBadge = (phaseId === 'groups' && match.group)
+      ? `<div class="hm-group-badge">Grupo ${esc(match.group)}</div>`
+      : '';
+
     return `
       <div class="hm-match">
         <div class="hm-header">
+          ${groupBadge}
           ${hmDateHtml}
           ${scoreHtml}
         </div>

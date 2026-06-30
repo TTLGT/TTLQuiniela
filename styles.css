@@ -2586,6 +2586,8 @@ body.dark-mode .hm-actual { color: #7ba7f0; }
 
 body.dark-mode .hm-header { background: rgba(255,255,255,0.04); border-bottom-color: #30363d; }
 
+.hm-group-badge { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--primary-btn); margin-bottom: 0.1rem; }
+body.dark-mode .hm-group-badge { color: #7ba7f0; }
 .hm-date        { font-size: 0.68rem; font-weight: 500; color: #999; text-align: center; margin-bottom: 0.25rem; }
 body.dark-mode .hm-date { color: #6e7681; }
 
