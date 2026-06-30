@@ -1158,7 +1158,10 @@ function renderPhasePlaceholder(phaseId, section, table) {
   if (!container) {
     container = document.createElement('div');
     container.className = 'phase-placeholder-container';
-    table.insertAdjacentElement('afterend', container);
+    // Insert after the collapsible table-wrapper (not the table itself) so the
+    // placeholder stays visible even while the table is collapsed via "Ver Tabla".
+    const wrapper = table.closest('.table-wrapper') || table;
+    wrapper.insertAdjacentElement('afterend', container);
   }
 
   const standings = computeGroupStandings();
@@ -1172,11 +1175,47 @@ function renderPhasePlaceholder(phaseId, section, table) {
     final:   'Gran Final'
   };
 
+  const octavosForSubtitle = phaseId === 'round8' && typeof getESPNOctavos === 'function' ? getESPNOctavos() : null;
+  const subtitle = octavosForSubtitle && octavosForSubtitle.length > 0
+    ? 'El cuadro se está formando a medida que avanzan los Dieciseisavos. Equipos confirmados por ESPN:'
+    : 'Los partidos de esta fase se determinarán al concluir la Fase de Grupos';
+
   let html = `<div class="phase-placeholder-header">
     <span class="phase-placeholder-icon">⏳</span>
     <p class="phase-placeholder-title">Próximamente · ${phaseTitles[phaseId] || phaseId}</p>
-    <p class="phase-placeholder-subtitle">Los partidos de esta fase se determinarán al concluir la Fase de Grupos</p>
+    <p class="phase-placeholder-subtitle">${subtitle}</p>
   </div>`;
+
+  if (octavosForSubtitle && octavosForSubtitle.length > 0) {
+    const octavos = octavosForSubtitle;
+    const monthNames = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    const matchesHtml = octavos.map(m => {
+      const [, month, day] = m.date.split('-');
+      const monthName = monthNames[parseInt(month, 10) - 1] || month;
+      const dateStr = m.time ? `${day} ${monthName} · ${m.time}` : `${day} ${monthName}`;
+
+      const homeHtml = m.team1
+        ? `${getFlag(m.team1)}<span class="bk-name">${esc(m.team1)}</span>`
+        : `<span class="bk-tbd">Por definir</span>`;
+      const awayHtml = m.team2
+        ? `<span class="bk-name">${esc(m.team2)}</span>${getFlag(m.team2)}`
+        : `<span class="bk-tbd">Por definir</span>`;
+
+      return `<div class="bk-match">
+        <div class="bk-date">${dateStr} GT</div>
+        <div class="bk-teams">
+          <span class="bk-side bk-home">${homeHtml}</span>
+          <span class="bk-vs">vs</span>
+          <span class="bk-side bk-away">${awayHtml}</span>
+        </div>
+      </div>`;
+    }).join('');
+
+    html += `<div class="bk-preview">
+      <h3 class="bk-preview-title">🗓️ Cuadro de Octavos · Según ESPN</h3>
+      <div class="bk-grid">${matchesHtml}</div>
+    </div>`;
+  }
 
   if (groups.length > 0) {
     const groupsHtml = groups.map(grp => {

@@ -682,6 +682,80 @@ body.dark-mode .grps-table .s-pos-3 { background-color: rgba(255, 193, 7, 0.12);
 body.dark-mode .grps-preview-note { color: #555; }
 body.dark-mode .grps-abbrev-note { color: #555; }
 
+/* ============================================
+   CUADRO DE OCTAVOS (BRACKET ESPN)
+   ============================================ */
+
+.bk-preview {
+  padding: 1.25rem 1rem 0.5rem;
+}
+
+.bk-preview-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.bk-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+
+.bk-match {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+  background: #fff;
+}
+
+.bk-date {
+  font-size: 0.7rem;
+  color: #888;
+  text-align: center;
+  margin-bottom: 0.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.bk-teams {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.bk-side {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.bk-home { justify-content: flex-start; }
+.bk-away { justify-content: flex-end; flex-direction: row-reverse; }
+
+.bk-vs {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #aaa;
+  flex-shrink: 0;
+}
+
+.bk-tbd {
+  font-size: 0.78rem;
+  font-style: italic;
+  color: #aaa;
+}
+
+body.dark-mode .bk-preview-title { color: #ccc; }
+body.dark-mode .bk-match { background: #1e1e1e; border-color: #444; }
+body.dark-mode .bk-date { color: #777; }
+body.dark-mode .bk-tbd { color: #666; }
+
 .error {
   background-color: rgba(179, 0, 0, 0.1);
   border: 1px solid var(--alert-red);

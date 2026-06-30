@@ -32,6 +32,9 @@ let espnResultsCache = null;
 // Caché de marcadores ESPN en vivo (partidos en curso)
 let espnLiveCache = null;
 
+// Caché del cuadro de Octavos de Final (bracket ESPN)
+let espnOctavosCache = null;
+
 function utcToGuatemala(utcStr) {
   // Guatemala = UTC-6, no DST
   const d = new Date(utcStr);
@@ -48,6 +51,10 @@ async function fetchESPNTimes() {
   const timeCache = {};
   const resultsCache = {};
   const liveCache = {};
+  // Fechas (Guatemala) en las que ESPN ubica los partidos de Octavos de Final
+  const OCTAVOS_DATES = new Set(['2026-07-04', '2026-07-05', '2026-07-06', '2026-07-07']);
+  const KNOWN_NORMALIZED = new Set(Object.values(TEAM_NAME_MAP));
+  const octavosMatches = [];
   const today = new Date();
   const dates = [];
   for (let i = -5; i <= 21; i++) {
@@ -71,6 +78,25 @@ async function fetchESPNTimes() {
       const competitors = event.competitions?.[0]?.competitors || [];
       const homeComp = competitors.find(c => c.homeAway === 'home');
       const awayComp = competitors.find(c => c.homeAway === 'away');
+
+      // Captura el cuadro de Octavos (incluye llaves aún sin definir, ej. "TBD")
+      if (utcStr) {
+        const gtDate = utcToGuatemala(utcStr).date;
+        if (OCTAVOS_DATES.has(gtDate)) {
+          const rawHome = homeComp?.team?.displayName || homeComp?.team?.name || '';
+          const rawAway = awayComp?.team?.displayName || awayComp?.team?.name || '';
+          const normHome = rawHome ? normalizeTeamName(rawHome) : null;
+          const normAway = rawAway ? normalizeTeamName(rawAway) : null;
+          const gt = utcToGuatemala(utcStr);
+          octavosMatches.push({
+            team1: normHome && KNOWN_NORMALIZED.has(normHome) ? normHome : null,
+            team2: normAway && KNOWN_NORMALIZED.has(normAway) ? normAway : null,
+            date: gt.date,
+            time: gt.time
+          });
+        }
+      }
+
       const team1 = normalizeTeamName(homeComp?.team?.name);
       const team2 = normalizeTeamName(awayComp?.team?.name);
       if (!team1 || !team2) continue;
@@ -100,11 +126,18 @@ async function fetchESPNTimes() {
     }
   }
 
+  octavosMatches.sort((a, b) => {
+    if (a.date !== b.date) return a.date.localeCompare(b.date);
+    return (a.time || '').localeCompare(b.time || '');
+  });
+
   espnTimeCache = timeCache;
   espnResultsCache = resultsCache;
   espnLiveCache = liveCache;
+  espnOctavosCache = octavosMatches;
   console.log(`✅ ESPN: ${Object.keys(timeCache).length / 2} partidos con horario GT cargados`);
   console.log(`✅ ESPN: ${Object.keys(resultsCache).length} resultados finalizados, ${Object.keys(liveCache).length} en vivo`);
+  if (octavosMatches.length) console.log(`✅ ESPN: ${octavosMatches.length} partidos del cuadro de Octavos detectados`);
   return timeCache;
 }
 
@@ -112,6 +145,11 @@ function clearESPNCache() {
   espnTimeCache = null;
   espnResultsCache = null;
   espnLiveCache = null;
+  espnOctavosCache = null;
+}
+
+function getESPNOctavos() {
+  return espnOctavosCache;
 }
 
 function getLiveScore(team1, team2) {
