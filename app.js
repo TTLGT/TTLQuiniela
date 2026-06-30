@@ -495,9 +495,10 @@ async function renderPhase(phaseId) {
     const lastName  = nameParts.slice(1).join(' ');
     const team = getTeamForParticipant(p);
     const flagHtml = team ? getFlag(team) : '';
+    const flagSpan = flagHtml ? `<span style="display:block;line-height:1.4;font-size:0.9rem">${flagHtml}</span>` : '';
     const nameHtml  = lastName
-      ? `<span style="display:block;line-height:1.2;font-size:0.62rem">${flagHtml}${firstName}</span><span style="display:block;line-height:1.2;font-size:0.55rem">${lastName}</span>`
-      : `<span style="display:block;line-height:1.2;font-size:0.62rem">${flagHtml}${firstName}</span>`;
+      ? `${flagSpan}<span style="display:block;line-height:1.2;font-size:0.62rem">${firstName}</span><span style="display:block;line-height:1.2;font-size:0.55rem">${lastName}</span>`
+      : `${flagSpan}<span style="display:block;line-height:1.2;font-size:0.62rem">${firstName}</span>`;
     return `<th class="${isHL.trim()}" data-colidx="${colIdx}" data-participant="${p}">
       ${nameHtml}
     </th>`;

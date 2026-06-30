@@ -418,7 +418,10 @@ function renderPhaseStats(phaseId) {
   // Stat 19: Prediction Heatmap
   block.innerHTML += `
     <div class="ps-row">
-      <h4 class="ps-title">Mapa de Predicciones</h4>
+      <div class="ps-title-bar">
+        <h4 class="ps-title">Mapa de Predicciones</h4>
+        <a href="https://futbol-libres.su/" target="_blank" class="watch-link ps-watch-link">📺 Ver partidos en vivo</a>
+      </div>
       <div class="heatmap-scroll"><div class="heatmap-grid" id="hm-${phaseId}"></div></div>
     </div>`;
 

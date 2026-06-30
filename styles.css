@@ -2521,13 +2521,25 @@ body.dark-mode .ps-title { color: #7ba7f0; }
 
 .ps-row { margin-bottom: 1.5rem; }
 
+.ps-title-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.6rem;
+}
+
 .ps-title {
   font-size: 0.82rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--primary-btn);
-  margin-bottom: 0.6rem;
+  margin-bottom: 0;
+}
+
+.ps-watch-link {
+  font-size: 0.72rem;
+  color: var(--alert-red);
 }
 
 /* Most Agreed Card */
