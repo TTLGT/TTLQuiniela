@@ -425,14 +425,22 @@ function renderPhaseStats(phaseId) {
   const hmEl = document.getElementById(`hm-${phaseId}`);
   if (!hmEl) return;
 
+  const hmMonthNames = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
   hmEl.innerHTML = matches.map(match => {
     const hasResult = match.result?.goalsTeamA != null;
     const actual = hasResult ? `${match.result.goalsTeamA}–${match.result.goalsTeamB}` : null;
+    const matchDT = findMatchDateTime(match.teamLocal, match.teamVisitor);
+    let hmDateHtml = '';
+    if (matchDT?.date) {
+      const [, mm, dd] = matchDT.date.split('-');
+      const mName = hmMonthNames[parseInt(mm, 10) - 1] || mm;
+      hmDateHtml = `<span class="hm-date">${dd} ${mName}${matchDT.time ? ` ${matchDT.time}` : ''}</span>`;
+    }
     return `
       <div class="hm-match">
         <div class="hm-header">
           <span class="hm-teams">${getFlag(match.teamLocal)}${esc(match.teamLocal)} vs ${esc(match.teamVisitor)}${getFlag(match.teamVisitor)}</span>
-          ${hasResult ? `<span class="hm-actual">${actual}</span>` : '<span class="hm-pend">Pendiente</span>'}
+          <span class="hm-header-right">${hmDateHtml}${hasResult ? `<span class="hm-actual">${actual}</span>` : '<span class="hm-pend">Pendiente</span>'}</span>
         </div>
         <div class="hm-cells">
           ${participants.map(p => {

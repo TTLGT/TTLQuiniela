@@ -2559,6 +2559,7 @@ body.dark-mode .mac-card { background: #161b22; border-color: #30363d; border-le
 .heatmap-grid {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 0.6rem;
   min-width: 600px;
 }
@@ -2586,9 +2587,12 @@ body.dark-mode .hm-actual { color: #7ba7f0; }
 
 body.dark-mode .hm-header { background: rgba(255,255,255,0.04); border-bottom-color: #30363d; }
 
-.hm-teams  { display: flex; align-items: center; gap: 0.25rem; }
-.hm-actual { font-weight: 800; color: var(--primary-btn); font-size: 0.88rem; }
-.hm-pend   { font-size: 0.72rem; color: #aaa; }
+.hm-teams       { display: flex; align-items: center; gap: 0.25rem; }
+.hm-header-right{ display: flex; align-items: center; gap: 0.5rem; }
+.hm-date        { font-size: 0.72rem; font-weight: 500; color: #888; }
+.hm-actual      { font-weight: 800; color: var(--primary-btn); font-size: 0.88rem; }
+.hm-pend        { font-size: 0.72rem; color: #aaa; }
+body.dark-mode .hm-date { color: #6e7681; }
 
 .hm-cells {
   display: flex;
