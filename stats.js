@@ -715,7 +715,12 @@ function renderHighlights() {
       ? `<div class="shc shc-gray"><div class="shc-icon">🧊</div><div class="shc-label">Racha Fría</div><div class="shc-name">${coldNames}</div><div class="shc-val">${coldVal} sin puntuar</div><div class="shc-sub">${coldVal} juego${coldVal !== 1 ? 's' : ''} consecutivo${coldVal !== 1 ? 's' : ''} sin puntos</div></div>`
       : streaks.some(s => s.hotStreak > 0) ? `<div class="shc shc-gray"><div class="shc-icon">🧊</div><div class="shc-label">Racha Fría</div><div class="shc-name">¡Nadie en racha fría!</div><div class="shc-val">Todos puntuaron</div><div class="shc-sub">¡Todos puntuaron en el último juego, qué suerte!</div></div>` : '',
     nextFav ? `<div class="shc shc-purple"><div class="shc-icon">🏆</div><div class="shc-label">Favorito · Próximo Partido</div><div class="shc-name">${nextFav.favorites.map(f => esc(f)).join(', ')}</div><div class="shc-val">${nextFav.favoriteCount} de ${nextFav.totalPreds} lo eligen</div><div class="shc-sub">${esc(nextFav.teamLocal)} vs ${esc(nextFav.teamVisitor)}</div></div>` : '',
-    exactLeader ? `<div class="shc shc-teal"><div class="shc-icon">🎯</div><div class="shc-label">Rey del Marcador Exacto</div><div class="shc-name">${exactLeader.leaders.map(l => esc(l.participant.split(' ')[0])).join(', ')}</div><div class="shc-val">${exactLeader.maxHits} exacto${exactLeader.maxHits !== 1 ? 's' : ''}</div>${exactLeader.next ? `<div class="shc-sub">Siguiente: ${esc(exactLeader.next.participant.split(' ')[0])} con ${exactLeader.next.exactHits}</div>` : ''}</div>` : ''
+    exactLeader ? (() => {
+      const REINAS = new Set(['Isabel','Mary','Karen']);
+      const allFemale = exactLeader.leaders.every(l => REINAS.has(l.participant.split(' ')[0]));
+      const title = allFemale ? 'Reina del Marcador Exacto' : 'Rey del Marcador Exacto';
+      return `<div class="shc shc-teal"><div class="shc-icon">🎯</div><div class="shc-label">${title}</div><div class="shc-name">${exactLeader.leaders.map(l => esc(l.participant.split(' ')[0])).join(', ')}</div><div class="shc-val">${exactLeader.maxHits} exacto${exactLeader.maxHits !== 1 ? 's' : ''}</div>${exactLeader.next ? `<div class="shc-sub">Siguiente: ${esc(exactLeader.next.participant.split(' ')[0])} con ${exactLeader.next.exactHits}</div>` : ''}</div>`;
+    })() : ''
   ].filter(Boolean);
 
   if (!cards.length) return;
