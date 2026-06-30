@@ -2589,7 +2589,8 @@ body.dark-mode .hm-header { background: rgba(255,255,255,0.04); border-bottom-co
 .hm-teams      { display: flex; align-items: center; gap: 0.25rem; }
 .hm-header-row { display: flex; align-items: center; justify-content: space-between; }
 .hm-date       { font-size: 0.68rem; font-weight: 500; color: #999; margin-bottom: 0.15rem; }
-.hm-actual     { font-weight: 800; color: var(--primary-btn); font-size: 0.88rem; }
+.hm-actual     { font-weight: 800; color: var(--primary-btn); font-size: 0.88rem; display: flex; align-items: center; gap: 0.3rem; }
+.hm-final-label{ font-size: 0.62rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #888; }
 .hm-pend       { font-size: 0.72rem; color: #aaa; }
 body.dark-mode .hm-date { color: #6e7681; }
 

@@ -442,7 +442,7 @@ function renderPhaseStats(phaseId) {
           ${hmDateHtml}
           <div class="hm-header-row">
             <span class="hm-teams">${getFlag(match.teamLocal)}${esc(match.teamLocal)} vs ${esc(match.teamVisitor)}${getFlag(match.teamVisitor)}</span>
-            ${hasResult ? `<span class="hm-actual">${actual}</span>` : '<span class="hm-pend">Pendiente</span>'}
+            ${hasResult ? `<span class="hm-actual"><span class="hm-final-label">Final</span> ${actual}</span>` : '<span class="hm-pend">Pendiente</span>'}
           </div>
         </div>
         <div class="hm-cells">
