@@ -718,7 +718,10 @@ function renderHighlights() {
     exactLeader ? (() => {
       const REINAS = new Set(['Isabel','Mary','Karen']);
       const allFemale = exactLeader.leaders.every(l => REINAS.has(l.participant.split(' ')[0]));
-      const title = allFemale ? 'Reina del Marcador Exacto' : 'Rey del Marcador Exacto';
+      const plural = exactLeader.leaders.length > 1;
+      const title = allFemale
+        ? (plural ? 'Reinas del Marcador Exacto' : 'Reina del Marcador Exacto')
+        : (plural ? 'Reyes del Marcador Exacto' : 'Rey del Marcador Exacto');
       return `<div class="shc shc-teal"><div class="shc-icon">🎯</div><div class="shc-label">${title}</div><div class="shc-name">${exactLeader.leaders.map(l => esc(l.participant)).join(', ')}</div><div class="shc-val">${exactLeader.maxHits} exacto${exactLeader.maxHits !== 1 ? 's' : ''}</div>${exactLeader.next ? `<div class="shc-sub">Siguiente: ${esc(exactLeader.next.participant)} con ${exactLeader.next.exactHits}</div>` : ''}</div>`;
     })() : ''
   ].filter(Boolean);
