@@ -1220,7 +1220,7 @@ function renderPhasePlaceholder(phaseId, section, table) {
     </div>`;
   }
 
-  if (groups.length > 0) {
+  if (phaseId === 'round16' && groups.length > 0) {
     const groupsHtml = groups.map(grp => {
       const rows = standings[grp].map((t, i) => {
         const posClass = i === 0 ? 's-pos-1' : i === 1 ? 's-pos-2' : i === 2 ? 's-pos-3' : '';
