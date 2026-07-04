@@ -1178,9 +1178,10 @@ function renderPhasePlaceholder(phaseId, section, table) {
     final:   'Gran Final'
   };
 
-  const octavosForSubtitle = phaseId === 'round8' && typeof getESPNOctavos === 'function' ? getESPNOctavos() : null;
-  const subtitle = octavosForSubtitle && octavosForSubtitle.length > 0
-    ? 'El cuadro se está formando a medida que avanzan los Dieciseisavos. Equipos confirmados por ESPN:'
+  const previousPhaseLabel = { round8: 'Dieciseisavos', quarters: 'Octavos', semi: 'Cuartos', final: 'Semifinal' };
+  const bracketMatches = typeof getESPNBracket === 'function' ? getESPNBracket(phaseId) : null;
+  const subtitle = bracketMatches && bracketMatches.length > 0
+    ? `El cuadro se está formando a medida que avanzan los ${previousPhaseLabel[phaseId] || 'partidos anteriores'}. Equipos confirmados por ESPN:`
     : 'Los partidos de esta fase se determinarán al concluir la Fase de Grupos';
 
   let html = `<div class="phase-placeholder-header">
@@ -1189,10 +1190,9 @@ function renderPhasePlaceholder(phaseId, section, table) {
     <p class="phase-placeholder-subtitle">${subtitle}</p>
   </div>`;
 
-  if (octavosForSubtitle && octavosForSubtitle.length > 0) {
-    const octavos = octavosForSubtitle;
+  if (bracketMatches && bracketMatches.length > 0) {
     const monthNames = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-    const matchesHtml = octavos.map(m => {
+    const matchesHtml = bracketMatches.map(m => {
       const [, month, day] = m.date.split('-');
       const monthName = monthNames[parseInt(month, 10) - 1] || month;
       const dateStr = m.time ? `${day} ${monthName} · ${m.time}` : `${day} ${monthName}`;
@@ -1215,7 +1215,7 @@ function renderPhasePlaceholder(phaseId, section, table) {
     }).join('');
 
     html += `<div class="bk-preview">
-      <h3 class="bk-preview-title">🗓️ Cuadro de Octavos · Según ESPN</h3>
+      <h3 class="bk-preview-title">🗓️ Cuadro de ${phaseTitles[phaseId] || phaseId} · Según ESPN</h3>
       <div class="bk-grid">${matchesHtml}</div>
     </div>`;
   }

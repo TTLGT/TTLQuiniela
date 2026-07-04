@@ -32,8 +32,17 @@ let espnResultsCache = null;
 // Caché de marcadores ESPN en vivo (partidos en curso)
 let espnLiveCache = null;
 
-// Caché del cuadro de Octavos de Final (bracket ESPN)
-let espnOctavosCache = null;
+// Caché de los cuadros de knockout (bracket ESPN), por fase: { round8: [...], quarters: [...], ... }
+let espnBracketCache = null;
+
+// Fechas (Guatemala) en las que ESPN ubica cada fase de knockout que aún no
+// tiene sus enfrentamientos definidos en el sheet (se van formando en vivo).
+const PHASE_BRACKET_DATES = {
+  round8: new Set(['2026-07-04', '2026-07-05', '2026-07-06', '2026-07-07']),
+  quarters: new Set(['2026-07-09', '2026-07-10', '2026-07-11']),
+  semi: new Set(['2026-07-14', '2026-07-15']),
+  final: new Set(['2026-07-19'])
+};
 
 function utcToGuatemala(utcStr) {
   // Guatemala = UTC-6, no DST
@@ -51,10 +60,9 @@ async function fetchESPNTimes() {
   const timeCache = {};
   const resultsCache = {};
   const liveCache = {};
-  // Fechas (Guatemala) en las que ESPN ubica los partidos de Octavos de Final
-  const OCTAVOS_DATES = new Set(['2026-07-04', '2026-07-05', '2026-07-06', '2026-07-07']);
   const KNOWN_NORMALIZED = new Set(Object.values(TEAM_NAME_MAP));
-  const octavosMatches = [];
+  const bracketMatches = {};
+  for (const phaseId of Object.keys(PHASE_BRACKET_DATES)) bracketMatches[phaseId] = [];
   const today = new Date();
   const dates = [];
   for (let i = -5; i <= 21; i++) {
@@ -79,16 +87,17 @@ async function fetchESPNTimes() {
       const homeComp = competitors.find(c => c.homeAway === 'home');
       const awayComp = competitors.find(c => c.homeAway === 'away');
 
-      // Captura el cuadro de Octavos (incluye llaves aún sin definir, ej. "TBD")
+      // Captura los cuadros de knockout (incluye llaves aún sin definir, ej. "TBD")
       if (utcStr) {
         const gtDate = utcToGuatemala(utcStr).date;
-        if (OCTAVOS_DATES.has(gtDate)) {
+        const phaseId = Object.keys(PHASE_BRACKET_DATES).find(p => PHASE_BRACKET_DATES[p].has(gtDate));
+        if (phaseId) {
           const rawHome = homeComp?.team?.displayName || homeComp?.team?.name || '';
           const rawAway = awayComp?.team?.displayName || awayComp?.team?.name || '';
           const normHome = rawHome ? normalizeTeamName(rawHome) : null;
           const normAway = rawAway ? normalizeTeamName(rawAway) : null;
           const gt = utcToGuatemala(utcStr);
-          octavosMatches.push({
+          bracketMatches[phaseId].push({
             team1: normHome && KNOWN_NORMALIZED.has(normHome) ? normHome : null,
             team2: normAway && KNOWN_NORMALIZED.has(normAway) ? normAway : null,
             date: gt.date,
@@ -126,18 +135,22 @@ async function fetchESPNTimes() {
     }
   }
 
-  octavosMatches.sort((a, b) => {
-    if (a.date !== b.date) return a.date.localeCompare(b.date);
-    return (a.time || '').localeCompare(b.time || '');
-  });
+  for (const phaseId of Object.keys(bracketMatches)) {
+    bracketMatches[phaseId].sort((a, b) => {
+      if (a.date !== b.date) return a.date.localeCompare(b.date);
+      return (a.time || '').localeCompare(b.time || '');
+    });
+  }
 
   espnTimeCache = timeCache;
   espnResultsCache = resultsCache;
   espnLiveCache = liveCache;
-  espnOctavosCache = octavosMatches;
+  espnBracketCache = bracketMatches;
   console.log(`✅ ESPN: ${Object.keys(timeCache).length / 2} partidos con horario GT cargados`);
   console.log(`✅ ESPN: ${Object.keys(resultsCache).length} resultados finalizados, ${Object.keys(liveCache).length} en vivo`);
-  if (octavosMatches.length) console.log(`✅ ESPN: ${octavosMatches.length} partidos del cuadro de Octavos detectados`);
+  for (const [phaseId, matches] of Object.entries(bracketMatches)) {
+    if (matches.length) console.log(`✅ ESPN: ${matches.length} partidos del cuadro de ${phaseId} detectados`);
+  }
   return timeCache;
 }
 
@@ -145,11 +158,11 @@ function clearESPNCache() {
   espnTimeCache = null;
   espnResultsCache = null;
   espnLiveCache = null;
-  espnOctavosCache = null;
+  espnBracketCache = null;
 }
 
-function getESPNOctavos() {
-  return espnOctavosCache;
+function getESPNBracket(phaseId) {
+  return espnBracketCache ? espnBracketCache[phaseId] || null : null;
 }
 
 function getLiveScore(team1, team2) {
