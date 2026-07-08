@@ -3,7 +3,7 @@
    ============================================ */
 
 function calculateScore(prediction, actualResult, phase) {
-  const phaseMultiplier = PHASES[phase] ? PHASES[phase].multiplier : 1;
+  const phasePoints = getPhasePoints(phase);
 
   if (!actualResult || typeof prediction.goalsLocal === 'undefined' || typeof prediction.goalsVisitor === 'undefined') {
     return { points: 0, type: 'no-match', description: 'Sin resultado' };
@@ -14,12 +14,12 @@ function calculateScore(prediction, actualResult, phase) {
   const actualLocal = actualResult.goalsTeamA;
   const actualVisitor = actualResult.goalsTeamB;
 
-  let basePoints = SCORING_RULES.NO_MATCH;
+  let finalPoints = SCORING_RULES.NO_MATCH;
   let matchType = 'no-match';
 
   // Acierto exacto
   if (predLocal === actualLocal && predVisitor === actualVisitor) {
-    basePoints = SCORING_RULES.EXACT_MATCH;
+    finalPoints = phasePoints.exact;
     matchType = 'exact-match';
   }
   // Acierto del ganador/empate
@@ -28,17 +28,13 @@ function calculateScore(prediction, actualResult, phase) {
     (predLocal < predVisitor && actualLocal < actualVisitor) || // Visitante gana ambos
     (predLocal === predVisitor && actualLocal === actualVisitor)  // Empate ambos
   ) {
-    basePoints = SCORING_RULES.WINNER_MATCH;
+    finalPoints = phasePoints.winner;
     matchType = 'winner-match';
   }
 
-  const finalPoints = basePoints * phaseMultiplier;
-
   return {
     points: finalPoints,
-    basePoints,
     type: matchType,
-    multiplier: phaseMultiplier,
     prediction: `${predLocal}-${predVisitor}`,
     actual: `${actualLocal}-${actualVisitor}`
   };

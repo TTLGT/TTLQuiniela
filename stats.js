@@ -124,7 +124,7 @@ function computeMaxPossible() {
     const pending = getPendingMatches(appState.scores[p.participant] || { matches: {} });
     const maxAdd = pending.reduce((s, m) => {
       const pid = getPhaseIdFromStr(m.phase);
-      return s + (SCORING_RULES.EXACT_MATCH * (PHASES[pid]?.multiplier || 1));
+      return s + getPhasePoints(pid).exact;
     }, 0);
     return { participant: p.participant, team: p.team, current: p.total, maxAdd, maxTotal: p.total + maxAdd, canWin: (p.total + maxAdd) >= leader, position: p.position };
   }).sort((a, b) => b.maxTotal - a.maxTotal);
@@ -276,11 +276,10 @@ function computeUnluckyPredictions(phaseId = null) {
     for (const m of phaseId ? allPending.filter(m => getPhaseIdFromStr(m.phase) === phaseId) : allPending) {
       if (!m.prediction || m.prediction === 'NaN-NaN' || m.goalsLocal == null) continue;
       const pid = getPhaseIdFromStr(m.phase);
-      const mult = PHASES[pid]?.multiplier || 1;
-      const potentialPoints = SCORING_RULES.EXACT_MATCH * mult;
+      const potentialPoints = getPhasePoints(pid).exact;
       if (!allPredsByMatch[m.id]) allPredsByMatch[m.id] = [];
       allPredsByMatch[m.id].push({ participant: pName, prediction: m.prediction, potentialPoints });
-      unlucky.push({ participant: pName, matchId: m.id, teamLocal: m.teamLocal, teamVisitor: m.teamVisitor, phase: m.phase, phaseId: pid, multiplier: mult, prediction: m.prediction, potentialPoints });
+      unlucky.push({ participant: pName, matchId: m.id, teamLocal: m.teamLocal, teamVisitor: m.teamVisitor, phase: m.phase, phaseId: pid, prediction: m.prediction, potentialPoints });
     }
   }
 

@@ -29,7 +29,8 @@ const API_ENDPOINTS = {
 const PHASES = {
   groups: { name: 'Fase de Grupos', multiplier: 1, id: 'groups' },
   round16: { name: 'Dieciseisavos', multiplier: 1, id: 'round16' },
-  round8: { name: 'Octavos', multiplier: 1, id: 'round8' },
+  // Octavos usa puntuación fija (reglamento de eliminación directa): 5 pts exacto, 2 pts tendencia
+  round8: { name: 'Octavos', multiplier: 1, id: 'round8', exactPoints: 5, winnerPoints: 2 },
   quarters: { name: 'Cuartos', multiplier: 2, id: 'quarters' },
   semi: { name: 'Semifinal', multiplier: 3, id: 'semi' },
   final: { name: 'Final', multiplier: 5, id: 'final' }
@@ -41,5 +42,15 @@ const SCORING_RULES = {
   WINNER_MATCH: 1,     // Solo ganador correcto
   NO_MATCH: 0          // Sin puntos
 };
+
+// Puntos exacto/tendencia para una fase, respetando overrides fijos (ej. Octavos) o cayendo al multiplicador
+function getPhasePoints(phaseId) {
+  const phase = PHASES[phaseId];
+  if (phase && typeof phase.exactPoints === 'number') {
+    return { exact: phase.exactPoints, winner: phase.winnerPoints };
+  }
+  const multiplier = phase ? phase.multiplier : 1;
+  return { exact: SCORING_RULES.EXACT_MATCH * multiplier, winner: SCORING_RULES.WINNER_MATCH * multiplier };
+}
 
 console.log('%c⚽ Quiniela Mundialista 2026 iniciada', 'color: #041561; font-size: 16px; font-weight: bold;');
