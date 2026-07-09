@@ -137,18 +137,13 @@ function setupDOM() {
     }, { passive: false });
   });
 
-  // Inject legend before each table-wrapper in phase sections
-  const legend = `
-    <div class="legend">
-      <span class="legend-title">Leyenda:</span>
-      <span class="legend-item"><span class="legend-swatch exact"></span> Exacto (3pts)</span>
-      <span class="legend-item"><span class="legend-swatch winner"></span> Ganador correcto (1pt)</span>
-      <span class="legend-item"><span class="legend-swatch none"></span> Sin acierto (0pts)</span>
-    </div>`;
-
   ['groups','round16','round8','quarters','semi','final'].forEach(phaseId => {
     const wrapper = document.querySelector(`#${phaseId} .table-wrapper`);
     if (!wrapper) return;
+
+    // Phase hint — regenerated from PHASES so it never drifts from the real scoring
+    const hintEl = document.querySelector(`#${phaseId} .phase-hint`);
+    if (hintEl) hintEl.textContent = formatPhaseHint(phaseId);
 
     // Progress indicator
     if (!document.getElementById(`progress-${phaseId}`)) {
@@ -158,8 +153,19 @@ function setupDOM() {
       wrapper.parentNode.insertBefore(prog, wrapper);
     }
 
-    // Legend
-    if (!document.querySelector(`#${phaseId} .legend`)) {
+    // Legend — points shown per-phase, matching this phase's actual scoring
+    const points = getPhasePoints(phaseId);
+    const legend = `
+      <div class="legend">
+        <span class="legend-title">Leyenda:</span>
+        <span class="legend-item"><span class="legend-swatch exact"></span> Exacto (${points.exact}pts)</span>
+        <span class="legend-item"><span class="legend-swatch winner"></span> Ganador correcto (${points.winner}pt${points.winner === 1 ? '' : 's'})</span>
+        <span class="legend-item"><span class="legend-swatch none"></span> Sin acierto (0pts)</span>
+      </div>`;
+    const existingLegend = document.querySelector(`#${phaseId} .legend`);
+    if (existingLegend) {
+      existingLegend.outerHTML = legend;
+    } else {
       const legEl = document.createElement('div');
       legEl.innerHTML = legend;
       wrapper.parentNode.insertBefore(legEl.firstElementChild, wrapper);

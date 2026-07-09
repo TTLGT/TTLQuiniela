@@ -2,7 +2,7 @@
    SCORING.JS — Motor de Puntuación
    ============================================ */
 
-function calculateScore(prediction, actualResult, phase) {
+function calculateScore(prediction, actualResult, phase, bonusData) {
   const phasePoints = getPhasePoints(phase);
 
   if (!actualResult || typeof prediction.goalsLocal === 'undefined' || typeof prediction.goalsVisitor === 'undefined') {
@@ -14,27 +14,60 @@ function calculateScore(prediction, actualResult, phase) {
   const actualLocal = actualResult.goalsTeamA;
   const actualVisitor = actualResult.goalsTeamB;
 
-  let finalPoints = SCORING_RULES.NO_MATCH;
-  let matchType = 'no-match';
-
-  // Acierto exacto
-  if (predLocal === actualLocal && predVisitor === actualVisitor) {
-    finalPoints = phasePoints.exact;
-    matchType = 'exact-match';
-  }
-  // Acierto del ganador/empate
-  else if (
+  const isExact = predLocal === actualLocal && predVisitor === actualVisitor;
+  const isTendencia = !isExact && (
     (predLocal > predVisitor && actualLocal > actualVisitor) || // Local gana ambos
     (predLocal < predVisitor && actualLocal < actualVisitor) || // Visitante gana ambos
     (predLocal === predVisitor && actualLocal === actualVisitor)  // Empate ambos
-  ) {
+  );
+
+  let finalPoints = SCORING_RULES.NO_MATCH;
+  let matchType = 'no-match';
+
+  if (isExact) {
+    finalPoints = phasePoints.exact;
+    matchType = 'exact-match';
+  } else if (isTendencia) {
     finalPoints = phasePoints.winner;
     matchType = 'winner-match';
+  }
+
+  // Bonos independientes de +1 pt para fases de eliminación directa avanzadas
+  // (Cuartos, Semifinal, Final) — ver reglamento en config.js PHASES.
+  const bonusPoints = [];
+  if (PHASES[phase]?.bonusRules) {
+    // Diferencia de gol igual al pronóstico (solo aplica sobre un acierto de
+    // tendencia sin marcador exacto — el exacto ya implica la misma diferencia).
+    if (isTendencia && (predLocal - predVisitor) === (actualLocal - actualVisitor)) {
+      finalPoints += 1;
+      bonusPoints.push('diferencia-gol');
+    }
+
+    // Ganador en tiempo extra/penales: solo cuando el marcador de 90' quedó
+    // empatado, el participante también predijo empate, y acertó el ganador.
+    if (
+      actualLocal === actualVisitor && predLocal === predVisitor &&
+      bonusData?.decidedWinner && prediction.penaltyWinner &&
+      prediction.penaltyWinner === bonusData.decidedWinner
+    ) {
+      finalPoints += 1;
+      bonusPoints.push('ganador-penales');
+    }
+
+    // Equipo que anota el primer gol — independiente del acierto de marcador.
+    if (
+      bonusData?.firstGoalTeam && prediction.firstGoalGuess &&
+      prediction.firstGoalGuess === bonusData.firstGoalTeam
+    ) {
+      finalPoints += 1;
+      bonusPoints.push('primer-gol');
+    }
   }
 
   return {
     points: finalPoints,
     type: matchType,
+    bonusPoints,
     prediction: `${predLocal}-${predVisitor}`,
     actual: `${actualLocal}-${actualVisitor}`
   };
@@ -94,7 +127,16 @@ function calculateParticipantScores(predictions, results) {
         ''
       );
 
-      const finalResult = manualResult || findMatchResultByTeams(
+      // Cuartos+ : the 90'-only score (and bonus data) from the knockout summary
+      // fetch takes priority over the plain full-time score, since the reglamento
+      // scores against regulation time, not extra time/penalties.
+      const bonusData = PHASES[phaseId]?.bonusRules
+        ? getKnockoutBonusData(prediction.teamLocal, prediction.teamVisitor)
+        : null;
+
+      const finalResult = manualResult || (bonusData
+        ? { goalsTeamA: bonusData.goalsTeamA, goalsTeamB: bonusData.goalsTeamB }
+        : null) || findMatchResultByTeams(
         results,
         prediction.teamLocal,
         prediction.teamVisitor
@@ -106,7 +148,7 @@ function calculateParticipantScores(predictions, results) {
       const isLive = !finalResult && !!liveResult;
 
       if (effectiveResult) {
-        const scoreData = calculateScore(prediction, effectiveResult, phaseId);
+        const scoreData = calculateScore(prediction, effectiveResult, phaseId, bonusData);
         scoreByPhase[phaseId] += scoreData.points;
         scoreByPhase.total += scoreData.points;
         totalPoints += scoreData.points;

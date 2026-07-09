@@ -104,6 +104,9 @@ function parsePhaseBlockRow(row, startCol, phase, participantName) {
     id: parseInt(idCell),
     phase,
     group,
+    // Same raw slot as `group`, but named for what it actually holds from
+    // Cuartos onward: the participant's guess for which team scores first.
+    firstGoalGuess: group ? normalizeTeamName(group) : null,
     teamLocal: normalizeTeamName(teamLocal),
     goalsLocal: parseInt(goalsLocal),
     goalsVisitor: parseInt(goalsVisitor),

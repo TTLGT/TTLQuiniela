@@ -35,6 +35,11 @@ let espnLiveCache = null;
 // Caché de los cuadros de knockout (bracket ESPN), por fase: { round8: [...], quarters: [...], ... }
 let espnBracketCache = null;
 
+// Caché de datos de bono para fases con reglamento extendido (Cuartos+): marcador
+// en tiempo regular (90'), ganador decidido en tiempo extra/penales, y equipo que
+// anotó el primer gol. Clave "Equipo1 vs Equipo2" en ambas orientaciones.
+let espnKnockoutCache = null;
+
 // Fechas (Guatemala) en las que ESPN ubica cada fase de knockout que aún no
 // tiene sus enfrentamientos definidos en el sheet (se van formando en vivo).
 const PHASE_BRACKET_DATES = {
@@ -79,6 +84,11 @@ async function fetchESPNTimes() {
     )
   );
 
+  // Partidos finalizados en fases con reglamento de bono (Cuartos+) — se les hace
+  // una consulta extra al resumen ESPN para sacar marcador de 90', primer gol y
+  // ganador de tiempo extra/penales.
+  const bonusTargets = [];
+
   for (const data of responses) {
     if (!data?.events) continue;
     for (const event of data.events) {
@@ -87,23 +97,25 @@ async function fetchESPNTimes() {
       const homeComp = competitors.find(c => c.homeAway === 'home');
       const awayComp = competitors.find(c => c.homeAway === 'away');
 
-      // Captura los cuadros de knockout (incluye llaves aún sin definir, ej. "TBD")
+      let phaseId = null;
       if (utcStr) {
         const gtDate = utcToGuatemala(utcStr).date;
-        const phaseId = Object.keys(PHASE_BRACKET_DATES).find(p => PHASE_BRACKET_DATES[p].has(gtDate));
-        if (phaseId) {
-          const rawHome = homeComp?.team?.displayName || homeComp?.team?.name || '';
-          const rawAway = awayComp?.team?.displayName || awayComp?.team?.name || '';
-          const normHome = rawHome ? normalizeTeamName(rawHome) : null;
-          const normAway = rawAway ? normalizeTeamName(rawAway) : null;
-          const gt = utcToGuatemala(utcStr);
-          bracketMatches[phaseId].push({
-            team1: normHome && KNOWN_NORMALIZED.has(normHome) ? normHome : null,
-            team2: normAway && KNOWN_NORMALIZED.has(normAway) ? normAway : null,
-            date: gt.date,
-            time: gt.time
-          });
-        }
+        phaseId = Object.keys(PHASE_BRACKET_DATES).find(p => PHASE_BRACKET_DATES[p].has(gtDate)) || null;
+      }
+
+      // Captura los cuadros de knockout (incluye llaves aún sin definir, ej. "TBD")
+      if (utcStr && phaseId) {
+        const rawHome = homeComp?.team?.displayName || homeComp?.team?.name || '';
+        const rawAway = awayComp?.team?.displayName || awayComp?.team?.name || '';
+        const normHome = rawHome ? normalizeTeamName(rawHome) : null;
+        const normAway = rawAway ? normalizeTeamName(rawAway) : null;
+        const gt = utcToGuatemala(utcStr);
+        bracketMatches[phaseId].push({
+          team1: normHome && KNOWN_NORMALIZED.has(normHome) ? normHome : null,
+          team2: normAway && KNOWN_NORMALIZED.has(normAway) ? normAway : null,
+          date: gt.date,
+          time: gt.time
+        });
       }
 
       const team1 = normalizeTeamName(homeComp?.team?.name);
@@ -132,6 +144,10 @@ async function fetchESPNTimes() {
           }
         }
       }
+
+      if (completed && event.id && phaseId && PHASES[phaseId]?.bonusRules) {
+        bonusTargets.push({ id: event.id, homeNorm: team1, awayNorm: team2 });
+      }
     }
   }
 
@@ -142,10 +158,37 @@ async function fetchESPNTimes() {
     });
   }
 
+  const knockoutCache = {};
+  if (bonusTargets.length) {
+    const bonusResponses = await Promise.all(
+      bonusTargets.map(target =>
+        fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/summary?event=${target.id}`)
+          .then(r => r.json())
+          .then(data => ({ target, data }))
+          .catch(() => null)
+      )
+    );
+    for (const item of bonusResponses) {
+      if (!item) continue;
+      const bonus = computeKnockoutBonusData(item.data, item.target.homeNorm, item.target.awayNorm);
+      if (!bonus) continue;
+      const { homeNorm, awayNorm } = item.target;
+      knockoutCache[`${homeNorm} vs ${awayNorm}`] = bonus;
+      knockoutCache[`${awayNorm} vs ${homeNorm}`] = {
+        goalsTeamA: bonus.goalsTeamB,
+        goalsTeamB: bonus.goalsTeamA,
+        decidedWinner: bonus.decidedWinner,
+        firstGoalTeam: bonus.firstGoalTeam
+      };
+      console.log(`  🎯 Bono knockout: ${homeNorm} ${bonus.goalsTeamA}-${bonus.goalsTeamB} ${awayNorm} (90') | primer gol: ${bonus.firstGoalTeam || '?'} | decidido: ${bonus.decidedWinner || 'n/a'}`);
+    }
+  }
+
   espnTimeCache = timeCache;
   espnResultsCache = resultsCache;
   espnLiveCache = liveCache;
   espnBracketCache = bracketMatches;
+  espnKnockoutCache = knockoutCache;
   console.log(`✅ ESPN: ${Object.keys(timeCache).length / 2} partidos con horario GT cargados`);
   console.log(`✅ ESPN: ${Object.keys(resultsCache).length} resultados finalizados, ${Object.keys(liveCache).length} en vivo`);
   for (const [phaseId, matches] of Object.entries(bracketMatches)) {
@@ -154,11 +197,55 @@ async function fetchESPNTimes() {
   return timeCache;
 }
 
+// A partir del resumen ESPN de un partido, calcula el marcador de 90' (suma de
+// los dos primeros períodos, ignorando tiempo extra), quién anotó el primer gol,
+// y quién ganó finalmente si el marcador de 90' terminó empatado (tiempo extra o
+// penales). Devuelve null si el resumen no trae los datos necesarios.
+function computeKnockoutBonusData(summary, homeNorm, awayNorm) {
+  try {
+    const comps = summary?.header?.competitions?.[0]?.competitors || [];
+    const home = comps.find(c => c.homeAway === 'home');
+    const away = comps.find(c => c.homeAway === 'away');
+    if (!home || !away) return null;
+
+    const homeLine = (home.linescores || []).map(l => Number(l.displayValue) || 0);
+    const awayLine = (away.linescores || []).map(l => Number(l.displayValue) || 0);
+    const goalsTeamA = (homeLine[0] || 0) + (homeLine[1] || 0);
+    const goalsTeamB = (awayLine[0] || 0) + (awayLine[1] || 0);
+
+    let decidedWinner = null;
+    if (goalsTeamA === goalsTeamB) {
+      if (home.winner) decidedWinner = homeNorm;
+      else if (away.winner) decidedWinner = awayNorm;
+    }
+
+    const goals = (summary?.keyEvents || [])
+      .filter(e => e.scoringPlay && e.team?.displayName)
+      .sort((a, b) => (a.period?.number || 0) - (b.period?.number || 0) || (a.clock?.value || 0) - (b.clock?.value || 0));
+    let firstGoalTeam = null;
+    if (goals.length) {
+      const norm = normalizeTeamName(goals[0].team.displayName);
+      firstGoalTeam = (norm === homeNorm || norm === awayNorm) ? norm : null;
+    }
+
+    return { goalsTeamA, goalsTeamB, decidedWinner, firstGoalTeam };
+  } catch (e) {
+    console.warn('⚠️ No se pudo calcular el bono de knockout:', e);
+    return null;
+  }
+}
+
 function clearESPNCache() {
   espnTimeCache = null;
   espnResultsCache = null;
   espnLiveCache = null;
   espnBracketCache = null;
+  espnKnockoutCache = null;
+}
+
+function getKnockoutBonusData(teamLocal, teamVisitor) {
+  if (!espnKnockoutCache) return null;
+  return espnKnockoutCache[`${teamLocal} vs ${teamVisitor}`] || null;
 }
 
 function getESPNBracket(phaseId) {
