@@ -86,23 +86,15 @@ function parsePhaseBlockRow(row, startCol, phase, participantName) {
     return null;
   }
 
-  const slot1 = (row[startCol + 1] || '').trim();
-  const slot2 = (row[startCol + 2] || '').trim();
-  const slot3 = (row[startCol + 3] || '').trim();
-  const slot4 = (row[startCol + 4] || '').trim();
-  const slot5 = (row[startCol + 5] || '').trim();
-  const slot6 = (row[startCol + 6] || '').trim();
-
-  // Auto-detect layout: if slot1 is itself a team name (no "Grupo" column present),
-  // shift everything one slot left. Otherwise slot1 is the group/blank column.
-  let group, teamLocal, goalsLocal, goalsVisitor, teamVisitor, penaltyWinner;
-  if (slot1 && isNaN(slot1) && slot1.length > 1) {
-    group = '';
-    teamLocal = slot1; goalsLocal = slot2; goalsVisitor = slot3; teamVisitor = slot4; penaltyWinner = slot6;
-  } else {
-    group = slot1;
-    teamLocal = slot2; goalsLocal = slot3; goalsVisitor = slot4; teamVisitor = slot5; penaltyWinner = slot6;
-  }
+  // Slot 1 is always a non-team sub-header column: the group letter in Fase de
+  // Grupos, blank in Dieciseisavos/Octavos, or the "1er Gol" guess in Cuartos+.
+  // It is never the local team, so the block layout is fixed — no shifting.
+  const group = (row[startCol + 1] || '').trim();
+  const teamLocal = (row[startCol + 2] || '').trim();
+  const goalsLocal = (row[startCol + 3] || '').trim();
+  const goalsVisitor = (row[startCol + 4] || '').trim();
+  const teamVisitor = (row[startCol + 5] || '').trim();
+  const penaltyWinner = (row[startCol + 6] || '').trim();
 
   if (!teamLocal || !teamVisitor || !/^\d+$/.test(goalsLocal) || !/^\d+$/.test(goalsVisitor)) {
     return null;
