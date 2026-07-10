@@ -39,6 +39,7 @@ const TEAM_NAME_MAP = {
   "Países Bajos": "Paises Bajos",
   "Belgium": "Belgica",
   "Belgica": "Belgica",
+  "Bélgica": "Belgica",
   "Italy": "Italia",
   "Switzerland": "Suiza",
   "Suiza": "Suiza",
