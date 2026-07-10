@@ -1195,6 +1195,7 @@ tbody tr:hover .sticky-col {
 .score-pill .pill-score { font-weight: 600; }
 .score-pill .pill-pts  { font-size: 0.7rem; font-weight: 700; }
 .pts-live { color: #dc3545; animation: live-pulse 1.5s ease-in-out infinite; }
+.pill-bonus { font-size: 0.7rem; line-height: 1; margin-top: 0.1rem; cursor: help; }
 
 td.exact-match  { background-color: transparent; text-align: center; }
 td.winner-match { background-color: transparent; text-align: center; }
@@ -1324,6 +1325,80 @@ body.dark-mode .legend-title {
 .legend-swatch.exact  { background-color: rgba(40,167,69,0.18); border-color: rgba(40,167,69,0.3); }
 .legend-swatch.winner { background-color: rgba(255,193,7,0.22);  border-color: rgba(255,193,7,0.4); }
 .legend-swatch.none   { background-color: rgba(180,180,180,0.15); border-color: rgba(180,180,180,0.3); }
+
+/* ============================================
+   BONUS BREAKDOWN (Cuartos+ : quién ganó qué bono)
+   ============================================ */
+
+.bonus-breakdown {
+  padding: 0.75rem 1.25rem;
+  background-color: white;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  margin-bottom: 0.75rem;
+  font-size: 0.85rem;
+}
+
+.bonus-breakdown-title {
+  font-weight: 700;
+  color: var(--primary-dark);
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.bonus-breakdown-empty {
+  color: #777;
+  font-size: 0.82rem;
+}
+
+.bonus-match-block {
+  margin-bottom: 0.6rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px dashed rgba(0,0,0,0.08);
+}
+
+.bonus-match-block:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.bonus-match-title {
+  font-weight: 600;
+  font-size: 0.82rem;
+  margin-bottom: 0.3rem;
+  color: #333;
+}
+
+.bonus-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.8rem;
+}
+
+.bonus-tag {
+  background-color: rgba(4,21,97,0.08);
+  color: var(--primary-dark);
+  padding: 0.15rem 0.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.bonus-participant {
+  background-color: rgba(40,167,69,0.12);
+  padding: 0.1rem 0.45rem;
+  border-radius: 10px;
+}
+
+body.dark-mode .bonus-breakdown { background-color: #1e2530; }
+body.dark-mode .bonus-match-title { color: #ddd; }
+body.dark-mode .bonus-tag { background-color: rgba(255,255,255,0.08); color: #cfd8e6; }
+body.dark-mode .bonus-participant { background-color: rgba(40,167,69,0.22); color: #eaffef; }
+body.dark-mode .bonus-match-block { border-bottom-color: rgba(255,255,255,0.08); }
 
 /* ============================================
    STATUS BADGE (Finalizado / Pendiente)

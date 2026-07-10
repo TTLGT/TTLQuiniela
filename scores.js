@@ -440,6 +440,21 @@ function findMatchDateTime(teamLocal, teamVisitor) {
   return null;
 }
 
+// Solo revisa el override manual (MANUAL_RESULTS), sin caer al feed de ESPN.
+// Usado por las fases con bono (Cuartos+) para que el marcador de 90' calculado
+// desde el resumen ESPN no quede tapado por el marcador de tiempo completo que
+// getMatchResult() también sabe encontrar.
+function getManualResultOnly(teamLocal, teamVisitor) {
+  const key1 = `${teamLocal} vs ${teamVisitor}`;
+  const key2 = `${teamVisitor} vs ${teamLocal}`;
+  if (MANUAL_RESULTS[key1]) return MANUAL_RESULTS[key1];
+  if (MANUAL_RESULTS[key2]) {
+    const result = MANUAL_RESULTS[key2];
+    return { goalsTeamA: result.goalsTeamB, goalsTeamB: result.goalsTeamA };
+  }
+  return null;
+}
+
 function getMatchResult(teamLocal, teamVisitor, dateStr) {
   const key1 = `${teamLocal} vs ${teamVisitor}`;
   const key2 = `${teamVisitor} vs ${teamLocal}`;

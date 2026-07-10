@@ -171,6 +171,14 @@ function setupDOM() {
       wrapper.parentNode.insertBefore(legEl.firstElementChild, wrapper);
     }
 
+    // Bonus breakdown — only for phases with the extended reglamento (Cuartos+)
+    if (PHASES[phaseId]?.bonusRules && !document.getElementById(`bonus-breakdown-${phaseId}`)) {
+      const bonusEl = document.createElement('div');
+      bonusEl.className = 'bonus-breakdown';
+      bonusEl.id = `bonus-breakdown-${phaseId}`;
+      wrapper.parentNode.insertBefore(bonusEl, wrapper);
+    }
+
     // Table collapse toggle — starts collapsed
     if (!document.getElementById(`tabla-toggle-${phaseId}`)) {
       tableVisible[phaseId] = false;
@@ -463,6 +471,7 @@ async function renderPhase(phaseId) {
     const tf = table.querySelector('tfoot');
     if (tf) tf.innerHTML = '';
     renderProgressIndicator(phaseId, []);
+    renderBonusBreakdown(phaseId, []);
     return;
   }
 
@@ -638,12 +647,16 @@ async function renderPhase(phaseId) {
       const isMatchLive = !hasResult && pred.isLive;
       const liveScoreStr = isMatchLive && pred.liveResult ? `${pred.liveResult.goalsTeamA}-${pred.liveResult.goalsTeamB}` : null;
       const actual  = hasResult ? `${match.result.goalsTeamA}-${match.result.goalsTeamB}` : (liveScoreStr ? `🔴 ${liveScoreStr}` : 'Sin resultado');
-      const tip     = `Pronóstico: ${pred.prediction} | ${isMatchLive ? `En vivo: ${liveScoreStr}` : `Real: ${actual}`} | +${pred.points}pts${isMatchLive ? ' (provisional)' : ''}`;
+      const bonusNames = (pred.bonusPoints || []).map(b => BONUS_LABELS[b]?.label || b);
+      const bonusTip = bonusNames.length ? ` | Bonos: ${bonusNames.join(', ')}` : '';
+      const tip     = `Pronóstico: ${pred.prediction} | ${isMatchLive ? `En vivo: ${liveScoreStr}` : `Real: ${actual}`} | +${pred.points}pts${isMatchLive ? ' (provisional)' : ''}${bonusTip}`;
+      const bonusIcons = (pred.bonusPoints || []).map(b => `<span class="pill-bonus" title="${BONUS_LABELS[b]?.label || b}">${BONUS_LABELS[b]?.icon || '➕'}</span>`).join('');
 
       return `<td class="${pred.type}${isHL}" data-colidx="${colIdx}" data-tooltip="${tip}">
         <span class="score-pill">
           <span class="pill-score">${pred.prediction}</span>
           <span class="pill-pts${isMatchLive && pred.points > 0 ? ' pts-live' : ''}">${pred.points}pts</span>
+          ${bonusIcons}
         </span>
       </td>`;
     }).join('');
@@ -679,6 +692,7 @@ async function renderPhase(phaseId) {
   // Apply sticky left widths, render progress + cards
   applyStickyColumns(tableId, numFixed);
   renderProgressIndicator(phaseId, allMatches);
+  renderBonusBreakdown(phaseId, allMatches);
   renderPhaseCards(phaseId, sortedMatches, participants);
   renderCardGrid(phaseId, sortedMatches, participants, selectedParticipant);
   buildStickyPortal(phaseId);
@@ -750,6 +764,60 @@ function renderProgressIndicator(phaseId, allMatches) {
       <div class="progress-bar-fill" style="width:${pct}%"></div>
     </div>
     <span style="font-weight:700;color:var(--primary-btn)">${pct}%</span>`;
+}
+
+// ==================== BONUS BREAKDOWN (Cuartos+) ====================
+
+const BONUS_LABELS = {
+  'diferencia-gol': { icon: '📏', label: 'Diferencia de gol' },
+  'ganador-penales': { icon: '🎯', label: 'Ganador en tiempo extra/penales' },
+  'primer-gol': { icon: '⚽', label: 'Primer gol' }
+};
+
+function renderBonusBreakdown(phaseId, allMatches) {
+  const container = document.getElementById(`bonus-breakdown-${phaseId}`);
+  if (!container) return;
+  if (!PHASES[phaseId]?.bonusRules) { container.innerHTML = ''; return; }
+
+  const finishedMatches = allMatches.filter(m =>
+    m.result != null && m.result.goalsTeamA !== null && m.result.goalsTeamA !== undefined
+  );
+
+  if (!finishedMatches.length) {
+    container.innerHTML = `
+      <div class="bonus-breakdown-title">🎁 Bonos de esta fase</div>
+      <div class="bonus-breakdown-empty">Los bonos (diferencia de gol, ganador en tiempo extra/penales, primer gol) se mostrarán aquí conforme se jueguen los partidos.</div>`;
+    return;
+  }
+
+  let anyBonus = false;
+  let blocks = '';
+
+  finishedMatches.forEach(m => {
+    const byBonus = {};
+    Object.entries(m.predictions).forEach(([participant, pred]) => {
+      (pred.bonusPoints || []).forEach(b => {
+        byBonus[b] = byBonus[b] || [];
+        byBonus[b].push(participant);
+      });
+    });
+    const bonusKeys = Object.keys(byBonus);
+    if (!bonusKeys.length) return;
+    anyBonus = true;
+    blocks += `
+      <div class="bonus-match-block">
+        <div class="bonus-match-title">Partido ${m.id} — ${m.teamLocal} vs ${m.teamVisitor}</div>
+        ${bonusKeys.map(key => {
+          const meta = BONUS_LABELS[key] || { icon: '➕', label: key };
+          const names = byBonus[key].map(p => `<span class="bonus-participant">${esc(p)}</span>`).join(' ');
+          return `<div class="bonus-row"><span class="bonus-tag">${meta.icon} ${meta.label} (+1)</span> ${names}</div>`;
+        }).join('')}
+      </div>`;
+  });
+
+  container.innerHTML = `
+    <div class="bonus-breakdown-title">🎁 Bonos otorgados en esta fase</div>
+    ${anyBonus ? blocks : '<div class="bonus-breakdown-empty">Nadie ganó un bono extra en los partidos ya jugados de esta fase.</div>'}`;
 }
 
 // ==================== MOBILE CARD VIEW ====================

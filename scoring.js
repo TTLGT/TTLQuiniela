@@ -120,27 +120,26 @@ function calculateParticipantScores(predictions, results) {
         continue;
       }
 
-      // Manual results take priority over the feed
-      const manualResult = getMatchResult(
-        prediction.teamLocal,
-        prediction.teamVisitor,
-        ''
-      );
-
-      // Cuartos+ : the 90'-only score (and bonus data) from the knockout summary
-      // fetch takes priority over the plain full-time score, since the reglamento
-      // scores against regulation time, not extra time/penalties.
-      const bonusData = PHASES[phaseId]?.bonusRules
+      const usesBonusRules = !!PHASES[phaseId]?.bonusRules;
+      const bonusData = usesBonusRules
         ? getKnockoutBonusData(prediction.teamLocal, prediction.teamVisitor)
         : null;
 
-      const finalResult = manualResult || (bonusData
-        ? { goalsTeamA: bonusData.goalsTeamA, goalsTeamB: bonusData.goalsTeamB }
-        : null) || findMatchResultByTeams(
-        results,
-        prediction.teamLocal,
-        prediction.teamVisitor
-      );
+      let finalResult;
+      if (usesBonusRules) {
+        // Cuartos+: a true manual override wins, then the 90'-only score from the
+        // knockout summary fetch (the reglamento scores regulation time, not the
+        // full-time score ESPN's plain scoreboard would give us), then the usual
+        // fallbacks if the summary fetch hasn't resolved yet.
+        finalResult = getManualResultOnly(prediction.teamLocal, prediction.teamVisitor)
+          || (bonusData ? { goalsTeamA: bonusData.goalsTeamA, goalsTeamB: bonusData.goalsTeamB } : null)
+          || getMatchResult(prediction.teamLocal, prediction.teamVisitor, '')
+          || findMatchResultByTeams(results, prediction.teamLocal, prediction.teamVisitor);
+      } else {
+        // Manual results take priority over the feed
+        const manualResult = getMatchResult(prediction.teamLocal, prediction.teamVisitor, '');
+        finalResult = manualResult || findMatchResultByTeams(results, prediction.teamLocal, prediction.teamVisitor);
+      }
 
       // For in-progress matches, use the live score as a provisional result
       const liveResult = !finalResult ? getLiveScore(prediction.teamLocal, prediction.teamVisitor) : null;
