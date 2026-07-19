@@ -47,6 +47,37 @@ async function readSheetData(sheetName, range = 'A1:AZ500') {
   }
 }
 
+// Lee varias pestañas en una sola llamada a la API (values:batchGet) en vez de
+// una request por participante — con muchos participantes cargando la página
+// a la vez (ej. el día de la Final), N requests secuenciales agotan la cuota
+// de lectura por minuto de Google Sheets y las tablas quedan sin datos.
+async function readMultipleSheetsData(sheetNames, range = 'A1:AZ500') {
+  if (sheetNames.length === 0) return {};
+
+  const rangesParam = sheetNames
+    .map(name => `ranges=${encodeURIComponent(`'${name}'!${range}`)}`)
+    .join('&');
+  const url = `${API_ENDPOINTS.SHEETS_API}/${SHEETS_CONFIG.PREDICCIONES_SHEET}/values:batchGet?${rangesParam}&key=${GOOGLE_SHEETS_API_KEY}`;
+
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (data.error) {
+      throw new Error(data.error.message);
+    }
+
+    const result = {};
+    (data.valueRanges || []).forEach((valueRange, idx) => {
+      result[sheetNames[idx]] = valueRange.values || [];
+    });
+    return result;
+  } catch (error) {
+    console.error('❌ Error leyendo pestañas en batch:', error);
+    return {};
+  }
+}
+
 // Cada fase (Grupos, Dieciseisavos, Octavos, Cuartos, Semifinal, Final) ocupa
 // un bloque de 7 columnas: [PARTIDO, Grupo, Local, GolesLocal, GolesVisitor, Visitor, PenaltyWinner]
 // colocados uno junto al otro en la misma fila de encabezado.
@@ -156,17 +187,18 @@ async function readPredictionsFromSheets() {
 
   // Obtener nombres de todas las pestañas
   const sheetNames = await getAllSheetNames();
-  
-  const allPredictions = {};
-  const participantNames = getAllParticipants();
 
-  for (const sheetName of sheetNames) {
-    // Solo leer las pestañas que corresponden a participantes
-    if (participantNames.includes(sheetName)) {
-      const sheetData = await readSheetData(sheetName);
-      const matches = parseMatchesFromSheet(sheetData, sheetName);
-      allPredictions[sheetName] = matches;
-    }
+  const participantNames = getAllParticipants();
+  const participantSheetNames = sheetNames.filter(name => participantNames.includes(name));
+
+  // Una sola llamada batchGet para todas las pestañas de participantes, en vez
+  // de una request por participante (ver readMultipleSheetsData).
+  const sheetDataByName = await readMultipleSheetsData(participantSheetNames);
+
+  const allPredictions = {};
+  for (const sheetName of participantSheetNames) {
+    const matches = parseMatchesFromSheet(sheetDataByName[sheetName] || [], sheetName);
+    allPredictions[sheetName] = matches;
   }
 
   sheetsCache = allPredictions;

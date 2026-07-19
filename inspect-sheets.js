@@ -139,9 +139,8 @@ async function inspectGoogleSheets() {
   console.log('Revisa los datos arriba e informa sobre la estructura de columnas en cada Sheet.');
 }
 
-// Ejecutar automáticamente
-if (typeof GOOGLE_SHEETS_API_KEY !== 'undefined') {
-  inspectGoogleSheets();
-} else {
-  console.error('❌ ERROR: config.js no está cargado. Asegúrate de que está incluido en index.html antes de este script.');
-}
+// Nota: este script YA NO se ejecuta automáticamente al cargar la página —
+// hacerlo duplicaba las llamadas a la Google Sheets API en cada carga (junto
+// a la carga real de app.js/sheets.js) y provocaba errores 429 "Quota
+// exceeded" que dejaban las tablas sin datos. Para inspeccionar los sheets,
+// llama inspectGoogleSheets() manualmente desde la consola (F12).
