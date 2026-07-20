@@ -7,6 +7,8 @@ const MANUAL_RESULTS = {
   // Formato: "TeamA vs TeamB (YYYY-MM-DD)": { goalsTeamA: X, goalsTeamB: Y }
   // Ejemplo: "Mexico vs USA (2026-06-12)": { goalsTeamA: 2, goalsTeamB: 1 }
   "Portugal vs RD del Congo": { goalsTeamA: 1, goalsTeamB: 1 },
+  // Dieciseisavos, 2026-07-01: goles de Balogun y Tillman
+  "USA vs Bosnia y Herzegovina": { goalsTeamA: 2, goalsTeamB: 0 },
 };
 
 // Fechas/horarios manuales (para partidos que el feed aún no tiene en su calendario)

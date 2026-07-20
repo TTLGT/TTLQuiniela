@@ -10,6 +10,7 @@ const TEAM_NAME_MAP = {
   "México": "Mexico",
   "United States": "USA",
   "USA": "USA",
+  "Estados Unidos": "USA",
   "Canada": "Canada",
 
   // América del Sur
